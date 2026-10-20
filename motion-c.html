@@ -18,40 +18,49 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--sans);letter-spacing:-0.01em;
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:400 12px/1.4 var(--sans);letter-spacing:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
-.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:auto minmax(0,1fr) auto;gap:0 28px;padding-block:18px}
-header{grid-column:1/-1;display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding-bottom:16px}
-header .wm{height:22px;width:auto;align-self:center;color:var(--ink)}
-header h1{font-size:20px;font-weight:700;margin:0;letter-spacing:-0.02em}
-header p{margin:0;color:var(--ink-2)}
-.fmt{margin-left:auto;display:flex;gap:4px}
-button,.btn{font:500 13px/1 var(--sans);letter-spacing:-0.01em;color:var(--ink);background:transparent;border:1px solid var(--hair);padding:9px 12px;border-radius:2px;cursor:pointer}
-button:hover{border-color:var(--ink-3)}
-button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.stage{min-height:0;min-width:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--well);position:relative}
+.app{height:100%;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) 232px;grid-template-rows:auto minmax(0,1fr) auto;gap:0 24px;padding-block:14px}
+header{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding-bottom:12px;min-width:0}
+header .wm{height:16px;width:auto;color:var(--ink)}
+header h1{font-size:13px;font-weight:500;margin:0;letter-spacing:-0.01em}
+header p{margin:0;color:var(--ink-3);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fmt{margin-left:auto;display:flex;gap:12px}
+/* 버튼은 글자만 — 선택된 것만 진하게 + 밑줄 */
+button,.btn{font:400 12px/1.2 var(--sans);color:var(--ink-3);background:none;border:0;border-bottom:1px solid transparent;padding:2px 0;border-radius:0;cursor:pointer}
+button:hover{color:var(--ink)}
+button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.stage{min-height:0;min-width:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--well)}
 canvas{display:block;box-shadow:0 0 0 1px var(--hair)}
-aside{grid-row:2/4;grid-column:2;overflow:auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:22px;padding-bottom:8px}
-aside h2{font-size:13px;font-weight:700;margin:0 0 10px;letter-spacing:-0.01em}
-.row{display:grid;grid-template-columns:88px minmax(0,1fr) 44px;align-items:center;gap:10px;margin:6px 0}
-.row label{color:var(--ink-2);font-size:13px}
-.row output{font-variant-numeric:tabular-nums;text-align:right;font-size:12px;color:var(--ink-2)}
-input[type=range]{width:100%;accent-color:var(--ink)}
-.tog{display:flex;flex-wrap:wrap;gap:6px}
-.bar{grid-column:1;display:flex;align-items:center;gap:12px;padding-top:14px;flex-wrap:wrap}
-.bar input[type=range]{flex:1;min-width:140px}
-.time{font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:13px;min-width:92px}
-.note{color:var(--ink-2);font-size:12px;line-height:1.6;margin:0}
-#rec{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-#out{width:100%;height:70px;font:12px/1.4 ui-monospace,monospace;color:var(--ink-2);background:var(--well);border:1px solid var(--hair);box-sizing:border-box;padding:6px}
+aside{grid-row:2/4;grid-column:2;overflow:auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin}
+aside section{display:grid;gap:3px}
+aside h2{font-size:11px;font-weight:500;color:var(--ink-3);margin:0 0 2px}
+.row{display:grid;grid-template-columns:62px minmax(0,1fr) 30px;align-items:center;gap:8px;min-height:20px}
+.row label,.row>span{color:var(--ink-2);font-size:12px;white-space:nowrap}
+.row output{font-variant-numeric:tabular-nums;text-align:right;font-size:11px;color:var(--ink-3)}
+.row.tg{grid-template-columns:62px minmax(0,1fr)}
+.row.tg div{display:flex;gap:10px;flex-wrap:wrap}
+/* 얇은 슬라이더: 1px 선 + 작은 점 */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:14px;background:none;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--ink-3)}
+input[type=range]::-moz-range-track{height:1px;background:var(--ink-3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:9px;border-radius:50%;background:var(--ink);margin-top:-4px;border:0}
+input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;background:var(--ink);border:0}
+.bar{grid-column:1;display:flex;align-items:center;gap:14px;padding-top:10px}
+.bar input[type=range]{flex:1;min-width:0}
+.time{font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:11px;min-width:70px;text-align:right}
+.note{color:var(--ink-3);font-size:11px;line-height:1.5;margin:4px 0 0;min-height:1.5em}
+#rec{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#out{width:100%;height:56px;font:11px/1.4 ui-monospace,monospace;color:var(--ink-2);background:var(--well);border:1px solid var(--hair);box-sizing:border-box;padding:6px}
 a{color:var(--ink)}
 @media (max-width:860px){
+  html,body{height:auto;overflow:auto}
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto;height:auto}
-  html,body{height:auto}
   .stage{aspect-ratio:16/9;max-width:100%}
-  aside{grid-row:auto;grid-column:1;overflow:visible;padding-top:22px}
+  aside{grid-row:auto;grid-column:1;overflow:visible;padding-top:18px}
   .bar{grid-column:1}
 }
 </style>
@@ -212,10 +221,10 @@ const $=s=>document.querySelector(s),clamp=SM.clamp,smooth=SM.smooth;
 const MOTIF={id:'C',still:0.35,
   defaults:{fmt:'16:9',len:8,steps:2.5,every:'one',strands:6,spacing:16,stroke:1.6,radius:150,twLen:1.7,dotGap:13,dotR:2.8,depth:0.85,twist:1,flow:40,wob:0.3,bg:'light',accent:false,cap:false,dir:'down'},
   groups:[
-    ['연출',[['len','길이(초)',4,20,0.5],['steps','화면 안 계단 수',1.5,6,0.5],['flow','흐름 속도',0,160,1],['wob','숨쉬기',0,1.2,0.05],['dir','tog','방향',[['down','오른쪽 아래로'],['up','오른쪽 위로']]],['every','tog','비틀림 위치',[['one','가로→세로 꺾임만'],['all','모든 꺾임']]]]],
+    ['연출',[['len','길이(초)',4,20,0.5],['steps','계단 수',1.5,6,0.5],['flow','흐름 속도',0,160,1],['wob','숨쉬기',0,1.2,0.05],['dir','tog','방향',[['down','아래로'],['up','위로']]],['every','tog','비틀림',[['one','한 모서리'],['all','모든 모서리']]]]],
     ['다발',[['strands','가닥 수',2,12,1],['spacing','간격',6,48,1],['stroke','선 두께',0.4,8,0.1],['radius','챔퍼 길이',20,360,1]]],
     ['전환 (점 · 비틀기)',[['twLen','비틀림 구간',0.6,4,0.05],['dotGap','점 간격',6,40,1],['dotR','점 크기',0.8,8,0.1],['depth','깊이감',0,1.5,0.05],['twist','반 바퀴 수',0,3,0.5]]],
-    ['색 · 표시',[['bg','tog','배경',[['light','흰 배경'],['dark','검은 배경']]],['accent','tog','전환 색',[['true','전환 점 강조'],['false','단색']]],['cap','tog','각도 표시',[['true','45° 표시'],['false','숨기기']]]]],
+    ['색 · 표시',[['bg','tog','배경',[['light','흰색'],['dark','검정']]],['accent','tog','전환 색',[['true','강조'],['false','단색']]],['cap','tog','각도 표시',[['true','보이기'],['false','숨기기']]]]],
   ],
   _g:null,_k:'',
   geom(W,H,p){
@@ -286,12 +295,12 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
 const panel=$('#panel');
 let html='';
 MOTIF.groups.forEach(g=>{html+=`<section><h2>${g[0]}</h2>`;
-  g[1].forEach(r=>{if(r[1]==='tog'){html+=`<div class="tog" role="group" aria-label="${r[2]}">`+r[3].map(o=>`<button data-k="${r[0]}" data-v="${o[0]}">${o[1]}</button>`).join('')+'</div>'}
+  g[1].forEach(r=>{if(r[1]==='tog'){html+=`<div class="row tg"><span>${r[2]}</span><div role="group" aria-label="${r[2]}">`+r[3].map(o=>`<button data-k="${r[0]}" data-v="${o[0]}">${o[1]}</button>`).join('')+'</div></div>'}
     else html+=`<div class="row"><label for="p-${r[0]}">${r[1]}</label><input id="p-${r[0]}" type="range" min="${r[2]}" max="${r[3]}" step="${r[4]}" data-k="${r[0]}"><output id="o-${r[0]}"></output></div>`});
   html+='</section>'});
 html+=`<section><h2>내보내기</h2>
-  <div id="rec"><button id="bRec">영상 녹화 (1회 반복)</button><button id="bSvg">현재 프레임 SVG 복사</button><button id="bReset">기본값</button></div>
-  <p class="note" id="recNote" style="margin-top:10px">녹화는 루프 한 번 길이만큼 실시간으로 진행돼요. 끝나면 저장 버튼이 생겨요.</p>
+  <div id="rec"><button id="bRec">영상 녹화</button><button id="bSvg">SVG 복사</button><button id="bReset">기본값</button></div>
+  <p class="note" id="recNote"></p>
   <textarea id="out" hidden aria-label="SVG 코드" readonly></textarea></section>`;
 panel.innerHTML=html;
 function sync(){panel.querySelectorAll('input[data-k]').forEach(i=>{i.value=P[i.dataset.k];$('#o-'+i.dataset.k).textContent=+(+P[i.dataset.k]).toFixed(2)});
@@ -309,7 +318,7 @@ $('#bRec').addEventListener('click',()=>{
   const st=cv.captureStream(60),rec=new MediaRecorder(st,{mimeType:type,videoBitsPerSecond:16e6}),chunks=[];
   rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
   rec.onstop=()=>{const blob=new Blob(chunks,{type}),url=URL.createObjectURL(blob),ext=type.includes('mp4')?'mp4':'webm';
-    $('#bRec').disabled=false;$('#bRec').textContent='영상 녹화 (1회 반복)';
+    $('#bRec').disabled=false;$('#bRec').textContent='영상 녹화';
     const fn=`SLIP_motif-${MOTIF.id}_${P.fmt.replace(':','x')}.${ext}`,b=document.createElement('button');b.id='bSave';b.textContent=`${ext.toUpperCase()} 저장 (${(blob.size/1e6).toFixed(1)}MB)`;
     b.addEventListener('click',async()=>{
       // claude.ai 안에서는 downloads 기능으로, 로컬 파일로 열었을 때는 일반 링크로 저장
@@ -318,7 +327,7 @@ $('#bRec').addEventListener('click',()=>{
       else{const a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();a.remove()}});
     const old=$('#bSave');if(old)old.remove();$('#rec').appendChild(b);window.__lastVideo=blob;
     $('#recNote').textContent='녹화가 끝났어요. 저장 버튼을 눌러 주세요.'};
-  t=0;playing=true;$('#play').textContent='일시정지';$('#bRec').disabled=true;$('#bRec').textContent='녹화 중…';
+  t=0;playing=true;$('#play').textContent='일시정지';$('#bRec').disabled=true;$('#bRec').textContent='녹화 중…';$('#recNote').textContent='한 바퀴 길이만큼 녹화하고 있어요.';
   rec.start();setTimeout(()=>rec.stop(),P.len*1000+120)});
 sync();setFmt(P.fmt||'16:9');
 window.__motion={P,setT:v=>{t=v*P.len;paint()},rec:()=>$('#bRec').click()};
