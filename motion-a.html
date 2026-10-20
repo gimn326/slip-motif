@@ -18,7 +18,7 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}
-html,body{height:100%}
+html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--sans);letter-spacing:-0.01em;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
 .app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:auto minmax(0,1fr) auto;gap:0 28px;padding-block:18px}
@@ -31,8 +31,8 @@ button,.btn{font:500 13px/1 var(--sans);letter-spacing:-0.01em;color:var(--ink);
 button:hover{border-color:var(--ink-3)}
 button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.stage{min-height:0;display:flex;align-items:center;justify-content:center;background:var(--well);position:relative}
-canvas{display:block;max-width:100%;max-height:100%;box-shadow:0 0 0 1px var(--hair)}
+.stage{min-height:0;min-width:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--well);position:relative}
+canvas{display:block;box-shadow:0 0 0 1px var(--hair)}
 aside{grid-row:2/4;grid-column:2;overflow:auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:22px;padding-bottom:8px}
 aside h2{font-size:13px;font-weight:700;margin:0 0 10px;letter-spacing:-0.01em}
 .row{display:grid;grid-template-columns:88px minmax(0,1fr) 44px;align-items:center;gap:10px;margin:6px 0}
@@ -210,20 +210,21 @@ const $=s=>document.querySelector(s),clamp=SM.clamp,smooth=SM.smooth;
 /* 모티프 A — 흐름 → 개입 → 복귀
    라운드 다발이 들어와 실패 지점에서 점으로 흩어지고 반 바퀴 뒤집힌 뒤, 다시 선으로 이어져 S자로 빠져나감 */
 const MOTIF={id:'A',still:0.62,
-  defaults:{fmt:'16:9',len:8,strands:6,spacing:24,stroke:4.2,radius:230,dotGap:22,dotR:5.2,depth:0.75,twist:1,flow:60,wob:0.35,bg:'light',accent:true,cap:true,mode:'draw'},
+  defaults:{fmt:'16:9',len:8,strands:6,spacing:24,stroke:4.2,radius:230,dotGap:22,dotR:5.2,depth:0.75,twist:1,flow:60,wob:0.35,bg:'light',accent:true,cap:true,mode:'draw',frame:'fit'},
   groups:[
-    ['연출',[['mode','tog','연출',[['draw','그려지고 지워짐'],['flow','흐름만 반복']]],['len','길이(초)',4,16,0.5],['flow','흐름 속도',0,200,1],['wob','숨쉬기',0,1.2,0.05]]],
+    ['연출',[['mode','tog','연출',[['draw','그려지고 지워짐'],['flow','흐름만 반복']]],['len','길이(초)',4,16,0.5],['flow','흐름 속도',0,200,1],['wob','숨쉬기',0,1.2,0.05],['frame','tog','구도',[['fit','시안 구도 (여백)'],['bleed','화면 밖까지']]]]],
     ['다발',[['strands','가닥 수',2,12,1],['spacing','간격',8,60,1],['stroke','선 두께',0.6,12,0.1],['radius','코너 반경',0,480,1]]],
     ['개입 (점 · 비틀기)',[['dotGap','점 간격',8,60,1],['dotR','점 크기',1,14,0.1],['depth','깊이감',0,1.5,0.05],['twist','반 바퀴 수',0,4,0.5]]],
     ['색 · 캡션',[['bg','tog','배경',[['light','흰 배경'],['dark','검은 배경']]],['accent','tog','개입 색',[['true','개입 점 강조'],['false','단색']]],['cap','tog','캡션',[['true','캡션 보이기'],['false','캡션 숨기기']]]]],
   ],
   _g:null,_k:'',
   geom(W,H,p){
-    const k=[W,H,p.radius].join();if(this._k===k)return this._g;
+    const k=[W,H,p.radius,p.frame].join();if(this._k===k)return this._g;
     const m=Math.min(W,H),tall=H>W;
     // 원 시안 A의 비례: 위 가로 → 아래로 S → 아래 가로
     const y1=tall?0.30*H:0.30*H,y2=tall?0.66*H:0.70*H,xm=tall?0.56*W:0.52*W;
-    const nodes=[[-0.06*W,y1],[xm,y1],[xm,y2],[1.06*W,y2]];
+    // 시안 구도: 피그마 시안 A(800×500)의 노드 비율 그대로 — 화면 안에 여백을 두고 들어감
+    const nodes=p.frame==='bleed'?[[-0.06*W,y1],[xm,y1],[xm,y2],[1.06*W,y2]]:[[0.05*W,0.24*H],[0.5875*W,0.24*H],[0.5875*W,0.76*H],[0.95*W,0.76*H]];
     const F=SM.build(nodes,'round',p.radius*m/1080);
     this._g={F,nodes};this._k=k;return this._g;
   },
@@ -249,7 +250,7 @@ const MOTIF={id:'A',still:0.62,
       c.font=`500 ${fs}px "Noto Sans KR", sans-serif`;c.textAlign='left';
       const lab=(u,txt,dy)=>{const q=at(u),a=p.mode==='draw'?clamp((to-u)/(80*s),0,1)*clamp((u-from)/(80*s),0,1):1;if(a<=0)return;
         c.save();c.globalAlpha=a;c.fillStyle=col.sub;c.fillText(txt,q.x,q.y+dy);c.restore()};
-      lab(ev(0.04),'흐름',-bw-22*s);
+      lab(ev(p.frame==='bleed'?0.04:0.02),'흐름',-bw-22*s);
       lab(ev(0.25),'실패 지점 · 개입',-bw-22*s-p.dotR*s);
       lab(ev(0.80),'복귀',bw+22*s+fs);
     }
@@ -257,14 +258,17 @@ const MOTIF={id:'A',still:0.62,
 };
 
 const P=Object.assign({},MOTIF.defaults);
-const KEY='slip-motion-'+MOTIF.id+'-v1';
+const KEY='slip-motion-'+MOTIF.id+'-v2';
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)Object.assign(P,s)}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}};
 
 const cv=$('#cv'),ctx=cv.getContext('2d');
 const FMT={'16:9':[1920,1080],'1:1':[1080,1080],'9:16':[1080,1920]};
+function fit(){const st=$('.stage'),pad=Math.min(32,st.clientWidth*0.03),aw=st.clientWidth-pad*2,ah=st.clientHeight-pad*2;if(aw<=0||ah<=0)return;
+  const k=Math.min(aw/cv.width,ah/cv.height);cv.style.width=Math.floor(cv.width*k)+'px';cv.style.height=Math.floor(cv.height*k)+'px'}
+new ResizeObserver(fit).observe(document.querySelector('.stage'));
 function setFmt(f){P.fmt=f;const[w,h]=FMT[f];cv.width=w;cv.height=h;document.querySelectorAll('.fmt button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===f));
-  if(window.matchMedia('(max-width:860px)').matches)$('.stage').style.aspectRatio=w+'/'+h;save();paint()}
+  if(window.matchMedia('(max-width:860px)').matches)$('.stage').style.aspectRatio=w+'/'+h;fit();save();paint()}
 
 function pal(){const cs=getComputedStyle(document.documentElement),v=k=>cs.getPropertyValue(k).trim();
   return P.bg==='dark'?{bg:'#111111',ink:'#F2F2F2',sub:'#8A8A8A',accent:v('--accent')||'#F08566'}:{bg:'#FFFFFF',ink:'#111111',sub:'#7A7A7A',accent:v('--accent')||'#E86F51'}}
