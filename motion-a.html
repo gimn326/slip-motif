@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>SLIP 모션 A</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 레이아웃: 위 제목줄 · 가운데 무대(비율 고정 캔버스) · 오른쪽 조절 패널 · 아래 타임라인 */
+:root{
+  --bg:#FFFFFF; --ink:#171717; --ink-2:#666666; --ink-3:#9A9A9A; --hair:#E4E4E4; --well:#F3F3F2; --accent:#E86F51;
+  --sans:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--sans);letter-spacing:-0.01em;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:auto minmax(0,1fr) auto;gap:0 28px;padding-block:18px}
+header{grid-column:1/-1;display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding-bottom:16px}
+header .wm{height:22px;width:auto;align-self:center;color:var(--ink)}
+header h1{font-size:20px;font-weight:700;margin:0;letter-spacing:-0.02em}
+header p{margin:0;color:var(--ink-2)}
+.fmt{margin-left:auto;display:flex;gap:4px}
+button,.btn{font:500 13px/1 var(--sans);letter-spacing:-0.01em;color:var(--ink);background:transparent;border:1px solid var(--hair);padding:9px 12px;border-radius:2px;cursor:pointer}
+button:hover{border-color:var(--ink-3)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{min-height:0;display:flex;align-items:center;justify-content:center;background:var(--well);position:relative}
+canvas{display:block;max-width:100%;max-height:100%;box-shadow:0 0 0 1px var(--hair)}
+aside{grid-row:2/4;grid-column:2;overflow:auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:22px;padding-bottom:8px}
+aside h2{font-size:13px;font-weight:700;margin:0 0 10px;letter-spacing:-0.01em}
+.row{display:grid;grid-template-columns:88px minmax(0,1fr) 44px;align-items:center;gap:10px;margin:6px 0}
+.row label{color:var(--ink-2);font-size:13px}
+.row output{font-variant-numeric:tabular-nums;text-align:right;font-size:12px;color:var(--ink-2)}
+input[type=range]{width:100%;accent-color:var(--ink)}
+.tog{display:flex;flex-wrap:wrap;gap:6px}
+.bar{grid-column:1;display:flex;align-items:center;gap:12px;padding-top:14px;flex-wrap:wrap}
+.bar input[type=range]{flex:1;min-width:140px}
+.time{font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:13px;min-width:92px}
+.note{color:var(--ink-2);font-size:12px;line-height:1.6;margin:0}
+#rec{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#out{width:100%;height:70px;font:12px/1.4 ui-monospace,monospace;color:var(--ink-2);background:var(--well);border:1px solid var(--hair);box-sizing:border-box;padding:6px}
+a{color:var(--ink)}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto;height:auto}
+  html,body{height:auto}
+  .stage{aspect-ratio:16/9;max-width:100%}
+  aside{grid-row:auto;grid-column:1;overflow:visible;padding-top:22px}
+  .bar{grid-column:1}
+}
+</style>
+
+<div class="app">
+  <header>
+    <svg class="wm" viewBox="127 -692 2059 694" fill="currentColor" role="img" aria-label="SLIP"><path id="S-0" d="M211.6 -307.07L222.63 -302.74L230.52 -300.34L242 -297.83L254.49 -296.25L424.34 -271.85L127.12 -78.35L127.68 -74.34L130.96 -73.62L534.26 -208.96L545.15 -214.08L555.34 -220.71L562.4 -226.66L570.76 -235.77L576.15 -243.45L581.96 -254.55L585.2 -263.47L587.4 -272.73L588.67 -288.52L587.77 -300.09L585.82 -309.41L582.81 -318.42L578.8 -326.98L573.95 -334.95L568.21 -342.35L559.45 -351.03L549.63 -358.29L539 -364.08L527.79 -368.36L521.06 -370.14L387.08 -425.4L655.22 -622.13L654.63 -625.45L651.41 -626.46L242.33 -526.24L231.68 -523.98L223.77 -521.68L216 -518.84L208.4 -515.45L201.02 -511.52L193.9 -507.04L187.09 -502.02L177.08 -493.1L171.27 -486.8L163.05 -476.01L158.53 -468.63L153.98 -459.76L150.66 -451.7L147.99 -443.38L145.05 -429.94L143.76 -416.22L143.94 -404.09L144.86 -395.37L147.63 -381.89L150.26 -373.56L153.97 -364.29L157.86 -356.51L162.34 -349.09L170.42 -338.2L176.19 -331.84L186.08 -322.79L192.86 -317.71L199.95 -313.16L207.3 -309.14Z" fill-rule="nonzero"/><path id="L-1" d="M786.32 1.57L804.72 1.83L813.27 1.11L821.71 -0.49L829.93 -2.95L1136.94 -113.44L1136.57 -117.02L1134.58 -118.12L864.62 -156.01L900.15 -625.7L897 -626.77L894.37 -624.73L684.49 -151.42L681.78 -143.54L678.69 -130.75L677.14 -117.67L677.29 -102.44L678.38 -92.87L680.02 -84.67L682.29 -76.64L687.03 -64.42L693.15 -52.88L697.72 -46.01L705.85 -35.95L711.58 -30.12L721.33 -21.86L727.95 -17.25L734.84 -13.15L749.26 -6.47L756.72 -3.89L767.57 -1.07L778.6 0.8Z" fill-rule="nonzero"/><path id="I-2" d="M1379.36 -17.96L1385.48 -18.27L1391.53 -19.22L1397.46 -20.8L1403.18 -22.98L1408.65 -25.75L1413.8 -29.08L1418.57 -32.92L1422.92 -37.24L1426.79 -41.98L1430.15 -47.11L1432.96 -52.56L1435.18 -58.27L1436.8 -64.18L1437.79 -70.22L1498.89 -624.52L1496.23 -626.77L1492.43 -624.88L1322.58 -91.59L1321.33 -85.59L1320.72 -79.49L1320.75 -73.36L1321.42 -67.27L1322.72 -61.28L1324.63 -55.46L1327.14 -49.87L1330.22 -44.57L1333.84 -39.62L1337.95 -35.08L1342.51 -30.99L1347.47 -27.39L1352.78 -24.33L1358.38 -21.85L1364.21 -19.95L1370.2 -18.68L1376.3 -18.04Z" fill-rule="nonzero"/><path id="P-3" d="M1947.35 -303.02L1954.76 -302.87L1970.25 -303.48L1985.68 -305.08L1997.44 -306.9L2012.61 -310.22L2027.57 -314.51L2042.23 -319.77L2056.55 -325.99L2070.46 -333.15L2083.89 -341.23L2096.78 -350.2L2101.46 -354.14L2106.15 -357.58L2120.67 -370.74L2131.54 -382.22L2141.61 -394.45L2150.82 -407.39L2159.12 -420.96L2166.45 -435.11L2172.75 -449.77L2178 -464.87L2179.74 -471.44L2181.75 -477.73L2183.42 -485.58L2186.04 -504.74L2186.6 -521.12L2186.15 -532.25L2184.77 -544.54L2182.49 -556.69L2179.31 -568.63L2173.79 -583.98L2168.67 -595.17L2162.77 -605.93L2156.12 -616.22L2148.77 -625.98L2140.77 -635.17L2132.17 -643.75L2123.02 -651.7L2113.38 -658.97L2103.3 -665.56L2092.84 -671.45L2082.03 -676.61L2070.94 -681.05L2059.61 -684.75L2048.1 -687.72L2036.43 -689.94L2016.46 -692.08L2005.86 -692.33L1761.57 -691.91L1748.71 -690.12L1735.52 -686.74L1726.2 -683.21L1713.9 -676.89L1702.48 -668.84L1694.37 -661.47L1687.1 -653.17L1682.91 -647.39L1679.15 -641.28L1674.21 -631.25L1670.54 -620.62L1668.75 -612.93L1667.77 -605.09L1653.1 -403.74L1649.47 -398.26L1645.92 -390.78L1643.59 -382.83L1642.51 -374.63L1642.73 -366.35L1644.23 -358.21L1645.92 -352.95L1648.93 -346.48L1630.38 -74.14L1633.97 -73.37L1636.12 -75.5L1723.2 -316.95ZM1808.79 -554.27L2008.61 -554.03L2013.38 -552.8L2018.07 -550.41L2022.79 -546.49L2026.7 -541.65L2029.19 -537.25L2032.41 -527.31L2033.11 -521.98L2032.95 -514.8L2030.84 -504.48L2028.96 -498.5L2026.7 -492.7L2024.13 -487.2L2021.17 -481.79L2014.33 -471.87L2006.48 -463.23L1997.74 -455.92L1993.02 -452.73L1988.23 -449.97L1983.19 -447.51L1978.16 -445.48L1973.02 -443.83L1967.69 -442.52L1962.53 -441.63L1957.48 -441.11L1948.13 -440.76L1763.72 -429.3Z" fill-rule="nonzero"/></svg>
+    <h1>모티프 A 모션</h1>
+    <p>흐름 → 개입 → 복귀</p>
+    <div class="fmt" role="group" aria-label="화면 비율">
+      <button data-f="16:9" aria-pressed="true">16:9</button><button data-f="1:1">1:1</button><button data-f="9:16">9:16</button>
+    </div>
+  </header>
+  <div class="stage"><canvas id="cv" width="1920" height="1080" aria-label="모티프 A 모션 모션"></canvas></div>
+  <aside id="panel"></aside>
+  <div class="bar">
+    <button id="play" aria-pressed="true">일시정지</button>
+    <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="재생 위치">
+    <span class="time" id="time">0.0 / 8.0초</span>
+  </div>
+</div>
+
+<script>
+/* SLIP 모티프 엔진 — 모티프 랩(slip-motif-lab)의 중심선·평행 다발·개입 이벤트 계산을 캔버스용으로 옮긴 것 */
+const SM=(()=>{
+const D2R=Math.PI/180,smooth=x=>x*x*(3-2*x),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+// 노드 → 라운드/챔퍼/샤프 코너가 있는 중심선. corners[]에 코너 구간(중심선 인덱스)을 기록
+function centerline(N,corner,radius){
+  const n=N.length,out=[[N[0][0],N[0][1]]],corners=[];
+  for(let i=1;i<n-1;i++){
+    const V=N[i],A=N[i-1],B=N[i+1],o=V[2]||{},c=o.c||corner,R=o.r!=null?o.r:radius;
+    const d1=[V[0]-A[0],V[1]-A[1]],d2=[B[0]-V[0],B[1]-V[1]],L1=Math.hypot(...d1),L2=Math.hypot(...d2);
+    const i0=out.length;
+    if(c==='sharp'||R<=0||L1<1e-6||L2<1e-6){out.push([V[0],V[1]]);corners.push({i0,i1:out.length-1,node:i});continue}
+    const u1=[d1[0]/L1,d1[1]/L1],u2=[d2[0]/L2,d2[1]/L2],cr=u1[0]*u2[1]-u1[1]*u2[0],dt=u1[0]*u2[0]+u1[1]*u2[1],tau=Math.atan2(Math.abs(cr),dt);
+    if(tau<1e-3){out.push([V[0],V[1]]);continue}
+    const a1=i-1===0?L1:L1/2,a2=i+1===n-1?L2:L2/2;
+    if(c==='chamfer'){const t=Math.min(R,a1,a2);out.push([V[0]-u1[0]*t,V[1]-u1[1]*t],[V[0]+u2[0]*t,V[1]+u2[1]*t]);corners.push({i0,i1:out.length-1,node:i,turn:Math.sign(cr)});continue}
+    const tt=Math.tan(tau/2),t=Math.min(R*tt,a1,a2),Re=t/tt;
+    const P1=[V[0]-u1[0]*t,V[1]-u1[1]*t],P2=[V[0]+u2[0]*t,V[1]+u2[1]*t],sd=cr>0?1:-1;
+    const C=[P1[0]-u1[1]*sd*Re,P1[1]+u1[0]*sd*Re];
+    const q0=Math.atan2(P1[1]-C[1],P1[0]-C[0]);let sw=Math.atan2(P2[1]-C[1],P2[0]-C[0])-q0;
+    while(sw>Math.PI)sw-=2*Math.PI;while(sw<-Math.PI)sw+=2*Math.PI;
+    const k=Math.max(2,Math.ceil(Math.abs(sw)/(2.5*D2R)));
+    for(let j=0;j<=k;j++){const q=q0+sw*j/k;out.push([C[0]+Re*Math.cos(q),C[1]+Re*Math.sin(q)])}
+    corners.push({i0,i1:out.length-1,node:i,turn:Math.sign(cr)});
+  }
+  out.push([N[n-1][0],N[n-1][1]]);
+  // 길이 0 구간 제거하면서 코너 인덱스 보정
+  const P=[],map=[];out.forEach((p,i)=>{if(!P.length||Math.hypot(p[0]-P[P.length-1][0],p[1]-P[P.length-1][1])>1e-4)P.push(p);map[i]=P.length-1});
+  corners.forEach(c=>{c.i0=map[c.i0];c.i1=map[c.i1]});
+  return{P,corners};
+}
+function miters(P){
+  const n=P.length,nm=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[-dy/l,dx/l]};
+  return P.map((p,i)=>{
+    if(i===0)return nm(P[0],P[1]);if(i===n-1)return nm(P[n-2],P[n-1]);
+    const a=nm(P[i-1],P[i]),b=nm(P[i],P[i+1]);let m=[a[0]+b[0],a[1]+b[1]];const l=Math.hypot(...m);
+    if(l<1e-6)return a;m=[m[0]/l,m[1]/l];const k=Math.max(m[0]*a[0]+m[1]*a[1],0.25);return[m[0]/k,m[1]/k]});
+}
+// 중심선을 ds 간격으로 균일 재샘플링. 코너 구간은 길이(u) 값으로 돌려줌
+function build(nodes,corner,radius,ds=1.5){
+  const {P,corners}=centerline(nodes,corner,radius),M=miters(P);
+  const cum=[0];for(let i=1;i<P.length;i++)cum.push(cum[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]));
+  const Lt=cum[cum.length-1],cnt=Math.max(1,Math.ceil(Lt/ds)),S=new Array(cnt+1);let s=0;
+  for(let j=0;j<=cnt;j++){const u=Lt*j/cnt;while(s<P.length-2&&cum[s+1]<u)s++;
+    const l=cum[s+1]-cum[s]||1,t=clamp((u-cum[s])/l,0,1);
+    S[j]={u,x:P[s][0]+(P[s+1][0]-P[s][0])*t,y:P[s][1]+(P[s+1][1]-P[s][1])*t,mx:M[s][0]+(M[s+1][0]-M[s][0])*t,my:M[s][1]+(M[s+1][1]-M[s][1])*t,
+      phi:0,sh:0,k:1,m:0,vis:1}}
+  return{S,Lt,ds:Lt/cnt,corners:corners.map(c=>({u0:cum[c.i0],u1:cum[c.i1],node:c.node,turn:c.turn,x:nodes[c.node][0],y:nodes[c.node][1]})),nodes};
+}
+// y(페이지 좌표) 이상이 되는 첫 지점의 길이값 — 위에서 아래로 내려가는 경로용
+function uAtY(F,y){const S=F.S;for(let j=0;j<S.length;j++)if(S[j].y>=y)return S[j].u;return F.Lt}
+
+/* 이벤트: {type, a, b (길이 px), amt}
+   twist 반 바퀴 수 · shift 옆 이동 px · spread 간격 배율 · dots 점으로 · lines 선으로 · brk 끊김 */
+function states(F,j0,j1,events,base){
+  const ev=events.slice().sort((p,q)=>p.a-q.a),S=F.S;
+  for(let j=j0;j<=j1;j++){const s=S[j];let phi=0,sh=0,k=1,m=base||0,vis=1;
+    for(const e of ev){const a=e.a,b=Math.max(e.b,a+1),lin=s.u<=a?0:s.u>=b?1:(s.u-a)/(b-a),x=smooth(lin);
+      if(e.type==='twist')phi+=Math.PI*e.amt*lin+(e.wob||0)*Math.sin(Math.PI*lin);
+      else if(e.type==='shift')sh+=e.amt*x;
+      else if(e.type==='spread')k*=1+(e.amt-1)*x;
+      else if(e.type==='dots')m=m+(1-m)*x;
+      else if(e.type==='lines')m=m*(1-x);
+      else if(e.type==='brk'){if(s.u>a&&s.u<b)vis=0}}
+    s.phi=phi;s.sh=sh;s.k=k;s.m=m;s.vis=vis}
+}
+
+/* 그리기
+   o: strands spacing stroke color dotColor dotGap dotR depth events from to phase view:[x0,y0,x1,y1] ox oy (이동) */
+function draw(ctx,F,o){
+  const S=F.S,ds=F.ds,last=S.length-1;
+  let j0=clamp(Math.floor((o.from||0)/ds),0,last),j1=clamp(Math.ceil((o.to==null?F.Lt:o.to)/ds),0,last);
+  if(j1<=j0)return;
+  const n=Math.max(1,Math.round(o.strands)),om=(n-1)/2*o.spacing||1,g=Math.max(2,o.dotGap),ph=o.phase||0;
+  const pad=(n*o.spacing+o.dotR*4+40),V=o.view;
+  // 화면 밖 샘플 건너뛰기: 보이는 구간만 계산
+  if(V){let a=-1,b=-1;for(let j=j0;j<=j1;j++){const s=S[j];if(s.x>V[0]-pad&&s.x<V[2]+pad&&s.y>V[1]-pad&&s.y<V[3]+pad){if(a<0)a=j;b=j}}
+    if(a<0)return;j0=Math.max(j0,a-2);j1=Math.min(j1,b+2)}
+  states(F,j0,j1,o.events||[],o.base);
+  const dots=[];
+  ctx.lineCap=o.cap||'butt';ctx.lineJoin='round';ctx.strokeStyle=o.color;
+  for(let i=0;i<n;i++){
+    const off0=(i-(n-1)/2)*o.spacing;let open=false,curW=0,px=0,py=0,prevK=null;
+    const flush=()=>{if(open){ctx.lineWidth=curW;ctx.stroke();open=false}};
+    for(let j=j0;j<=j1;j++){
+      const s=S[j],off=off0*s.k*Math.cos(s.phi)+s.sh,z=n>1?(off0/om)*Math.sin(s.phi):0;
+      const x=s.x+s.mx*off,y=s.y+s.my*off,w=Math.max(0.05,o.stroke*(1+z*o.depth));
+      const q=(s.u-ph)/g,fr=q-Math.floor(q),on=s.vis&&s.m<0.999&&(s.m<0.001||Math.abs(fr-0.5)<(1-s.m)/2);
+      if(on){const wq=Math.round(w*8)/8;
+        if(!open){ctx.beginPath();ctx.moveTo(x,y);open=true;curW=wq}
+        else{ctx.lineTo(x,y);if(Math.abs(wq-curW)>0.12){ctx.lineWidth=curW;ctx.stroke();ctx.beginPath();ctx.moveTo(x,y);curW=wq}}
+      }else flush();
+      const K=Math.floor(q-0.5);
+      if(prevK!==null&&K!==prevK&&s.vis&&s.m>0.001){const r=o.dotR*s.m*(1+z*o.depth);if(r>0.05)dots.push(x,y,r,z)}
+      prevK=K;px=x;py=y;
+    }
+    flush();
+  }
+  if(dots.length){
+    const idx=[];for(let k=0;k<dots.length;k+=4)idx.push(k);idx.sort((p,q)=>dots[p+3]-dots[q+3]);
+    ctx.fillStyle=o.dotColor||o.color;ctx.beginPath();
+    for(const k of idx){ctx.moveTo(dots[k]+dots[k+2],dots[k+1]);ctx.arc(dots[k],dots[k+1],dots[k+2],0,Math.PI*2)}
+    ctx.fill();
+  }
+}
+/* 캔버스 대신 SVG 문자열을 만드는 최소 컨텍스트 — 현재 프레임을 피그마로 붙여넣기 위함 (이동 변환만 지원) */
+function svgCtx(W,H){
+  const f=v=>Math.round(v*100)/100,out=[],stack=[];let tx=0,ty=0,d='',circles=[];
+  const c={lineWidth:1,strokeStyle:'#000',fillStyle:'#000',lineCap:'butt',lineJoin:'round',globalAlpha:1,font:'16px sans-serif',textAlign:'left',textBaseline:'alphabetic',
+    save(){stack.push([tx,ty,this.globalAlpha])},restore(){const s=stack.pop();if(s){[tx,ty,this.globalAlpha]=s}},
+    translate(x,y){tx+=x;ty+=y},setTransform(){tx=0;ty=0},
+    beginPath(){d='';circles=[]},moveTo(x,y){d+=`M${f(x+tx)} ${f(y+ty)}`},lineTo(x,y){d+=`L${f(x+tx)} ${f(y+ty)}`},
+    arc(x,y,r){circles.push([x+tx,y+ty,r])},rect(x,y,w,h){d+=`M${f(x+tx)} ${f(y+ty)}h${f(w)}v${f(h)}h${f(-w)}Z`},
+    stroke(){if(d)out.push(`<path d="${d}" fill="none" stroke="${this.strokeStyle}" stroke-width="${f(this.lineWidth)}" stroke-linecap="${this.lineCap}" stroke-linejoin="${this.lineJoin}"${this.globalAlpha<1?` opacity="${f(this.globalAlpha)}"`:''}/>`)},
+    fill(){if(circles.length)out.push(`<g fill="${this.fillStyle}"${this.globalAlpha<1?` opacity="${f(this.globalAlpha)}"`:''}>`+circles.map(q=>`<circle cx="${f(q[0])}" cy="${f(q[1])}" r="${f(q[2])}"/>`).join('')+'</g>');
+      if(d)out.push(`<path d="${d}" fill="${this.fillStyle}"/>`)},
+    fillRect(x,y,w,h){out.push(`<rect x="${f(x+tx)}" y="${f(y+ty)}" width="${f(w)}" height="${f(h)}" fill="${this.fillStyle}"/>`)},
+    clearRect(){},
+    fillText(t,x,y){const m=/(\d+(?:\.\d+)?)px/.exec(this.font),sz=m?m[1]:16,wt=/\b([5-9]00|bold)\b/.test(this.font)?' font-weight="700"':'';
+      const an=this.textAlign==='center'?'middle':this.textAlign==='right'||this.textAlign==='end'?'end':'start';
+      out.push(`<text x="${f(x+tx)}" y="${f(y+ty)}" font-family="Noto Sans KR" font-size="${sz}"${wt} text-anchor="${an}" fill="${this.fillStyle}"${this.globalAlpha<1?` opacity="${f(this.globalAlpha)}"`:''}>${String(t).replace(/[&<>]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</text>`)},
+    measureText(t){return{width:String(t).length*10}},
+    toString(){return`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${out.join('')}</svg>`}};
+  return c;
+}
+return{build,draw,uAtY,states,smooth,clamp,svgCtx};
+})();
+
+</script>
+<script>
+(()=>{
+const $=s=>document.querySelector(s),clamp=SM.clamp,smooth=SM.smooth;
+/* 모티프 A — 흐름 → 개입 → 복귀
+   라운드 다발이 들어와 실패 지점에서 점으로 흩어지고 반 바퀴 뒤집힌 뒤, 다시 선으로 이어져 S자로 빠져나감 */
+const MOTIF={id:'A',still:0.62,
+  defaults:{fmt:'16:9',len:8,strands:6,spacing:24,stroke:4.2,radius:230,dotGap:22,dotR:5.2,depth:0.75,twist:1,flow:60,wob:0.35,bg:'light',accent:true,cap:true,mode:'draw'},
+  groups:[
+    ['연출',[['mode','tog','연출',[['draw','그려지고 지워짐'],['flow','흐름만 반복']]],['len','길이(초)',4,16,0.5],['flow','흐름 속도',0,200,1],['wob','숨쉬기',0,1.2,0.05]]],
+    ['다발',[['strands','가닥 수',2,12,1],['spacing','간격',8,60,1],['stroke','선 두께',0.6,12,0.1],['radius','코너 반경',0,480,1]]],
+    ['개입 (점 · 비틀기)',[['dotGap','점 간격',8,60,1],['dotR','점 크기',1,14,0.1],['depth','깊이감',0,1.5,0.05],['twist','반 바퀴 수',0,4,0.5]]],
+    ['색 · 캡션',[['bg','tog','배경',[['light','흰 배경'],['dark','검은 배경']]],['accent','tog','개입 색',[['true','개입 점 강조'],['false','단색']]],['cap','tog','캡션',[['true','캡션 보이기'],['false','캡션 숨기기']]]]],
+  ],
+  _g:null,_k:'',
+  geom(W,H,p){
+    const k=[W,H,p.radius].join();if(this._k===k)return this._g;
+    const m=Math.min(W,H),tall=H>W;
+    // 원 시안 A의 비례: 위 가로 → 아래로 S → 아래 가로
+    const y1=tall?0.30*H:0.30*H,y2=tall?0.66*H:0.70*H,xm=tall?0.56*W:0.52*W;
+    const nodes=[[-0.06*W,y1],[xm,y1],[xm,y2],[1.06*W,y2]];
+    const F=SM.build(nodes,'round',p.radius*m/1080);
+    this._g={F,nodes};this._k=k;return this._g;
+  },
+  frame(c,W,H,tau,p,col){
+    const{F}=this.geom(W,H,p),Lt=F.Lt,s=Math.min(W,H)/1080;
+    const ev=f=>f*Lt;
+    const cyc=Math.max(0,Math.round(p.len*p.flow/p.dotGap));
+    const phase=p.dotGap*cyc*tau;
+    const t0=ev(0.26),t1=ev(0.43);
+    let from=0,to=Lt,amt=p.twist,hold=1;
+    if(p.mode==='draw'){
+      to=Lt*1.02*smooth(clamp((tau-0.03)/0.55,0,1));
+      from=Lt*smooth(clamp((tau-0.80)/0.18,0,1));
+      amt=p.twist*smooth(clamp((to-t0)/(t1-t0),0,1));
+      hold=smooth(clamp((tau-0.45)/0.15,0,1))*(1-smooth(clamp((tau-0.78)/0.12,0,1)));
+    }
+    const wob=p.wob*Math.sin(2*Math.PI*tau*2)*hold;
+    const events=[{type:'dots',a:ev(0.24),b:ev(0.27)},{type:'twist',a:t0,b:t1,amt,wob},{type:'lines',a:ev(0.43),b:ev(0.46)}];
+    SM.draw(c,F,{strands:p.strands,spacing:p.spacing*s,stroke:p.stroke*s,color:col.ink,dotColor:p.accent?col.accent:col.ink,
+      dotGap:p.dotGap*s,dotR:p.dotR*s,depth:p.depth,events,from,to,phase:phase*s,view:[0,0,W,H]});
+    if(p.cap){
+      const S=F.S,at=u=>S[clamp(Math.round(u/F.ds),0,S.length-1)],fs=Math.round(26*s),bw=(p.strands-1)/2*p.spacing*s;
+      c.font=`500 ${fs}px "Noto Sans KR", sans-serif`;c.textAlign='left';
+      const lab=(u,txt,dy)=>{const q=at(u),a=p.mode==='draw'?clamp((to-u)/(80*s),0,1)*clamp((u-from)/(80*s),0,1):1;if(a<=0)return;
+        c.save();c.globalAlpha=a;c.fillStyle=col.sub;c.fillText(txt,q.x,q.y+dy);c.restore()};
+      lab(ev(0.04),'흐름',-bw-22*s);
+      lab(ev(0.25),'실패 지점 · 개입',-bw-22*s-p.dotR*s);
+      lab(ev(0.80),'복귀',bw+22*s+fs);
+    }
+  }
+};
+
+const P=Object.assign({},MOTIF.defaults);
+const KEY='slip-motion-'+MOTIF.id+'-v1';
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)Object.assign(P,s)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}};
+
+const cv=$('#cv'),ctx=cv.getContext('2d');
+const FMT={'16:9':[1920,1080],'1:1':[1080,1080],'9:16':[1080,1920]};
+function setFmt(f){P.fmt=f;const[w,h]=FMT[f];cv.width=w;cv.height=h;document.querySelectorAll('.fmt button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===f));
+  if(window.matchMedia('(max-width:860px)').matches)$('.stage').style.aspectRatio=w+'/'+h;save();paint()}
+
+function pal(){const cs=getComputedStyle(document.documentElement),v=k=>cs.getPropertyValue(k).trim();
+  return P.bg==='dark'?{bg:'#111111',ink:'#F2F2F2',sub:'#8A8A8A',accent:v('--accent')||'#F08566'}:{bg:'#FFFFFF',ink:'#111111',sub:'#7A7A7A',accent:v('--accent')||'#E86F51'}}
+
+let t=0,playing=!window.matchMedia('(prefers-reduced-motion: reduce)').matches,last=null;
+if(!playing)t=P.len*MOTIF.still;
+function paint(c=ctx){const w=cv.width,h=cv.height,tau=(t%P.len)/P.len;
+  c.setTransform&&c===ctx&&c.setTransform(1,0,0,1,0,0);
+  const col=pal();c.fillStyle=col.bg;c.fillRect(0,0,w,h);
+  MOTIF.frame(c,w,h,tau,P,col);
+  if(c===ctx){$('#scrub').value=Math.round(tau*1000);$('#time').textContent=(tau*P.len).toFixed(1)+' / '+P.len.toFixed(1)+'초'}}
+function loop(ts){if(last!=null&&playing)t+=(ts-last)/1000;last=ts;paint();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+$('#play').addEventListener('click',()=>{playing=!playing;$('#play').textContent=playing?'일시정지':'재생';$('#play').setAttribute('aria-pressed',playing)});
+$('#play').textContent=playing?'일시정지':'재생';$('#play').setAttribute('aria-pressed',playing);
+$('#scrub').addEventListener('input',e=>{t=e.target.value/1000*P.len;paint()});
+document.querySelectorAll('.fmt button').forEach(b=>b.addEventListener('click',()=>setFmt(b.dataset.f)));
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();$('#play').click()}});
+
+/* 패널 */
+const panel=$('#panel');
+let html='';
+MOTIF.groups.forEach(g=>{html+=`<section><h2>${g[0]}</h2>`;
+  g[1].forEach(r=>{if(r[1]==='tog'){html+=`<div class="tog" role="group" aria-label="${r[2]}">`+r[3].map(o=>`<button data-k="${r[0]}" data-v="${o[0]}">${o[1]}</button>`).join('')+'</div>'}
+    else html+=`<div class="row"><label for="p-${r[0]}">${r[1]}</label><input id="p-${r[0]}" type="range" min="${r[2]}" max="${r[3]}" step="${r[4]}" data-k="${r[0]}"><output id="o-${r[0]}"></output></div>`});
+  html+='</section>'});
+html+=`<section><h2>내보내기</h2>
+  <div id="rec"><button id="bRec">영상 녹화 (1회 반복)</button><button id="bSvg">현재 프레임 SVG 복사</button><button id="bReset">기본값</button></div>
+  <p class="note" id="recNote" style="margin-top:10px">녹화는 루프 한 번 길이만큼 실시간으로 진행돼요. 끝나면 저장 버튼이 생겨요.</p>
+  <textarea id="out" hidden aria-label="SVG 코드" readonly></textarea></section>`;
+panel.innerHTML=html;
+function sync(){panel.querySelectorAll('input[data-k]').forEach(i=>{i.value=P[i.dataset.k];$('#o-'+i.dataset.k).textContent=+(+P[i.dataset.k]).toFixed(2)});
+  panel.querySelectorAll('button[data-k]').forEach(b=>b.setAttribute('aria-pressed',String(P[b.dataset.k])===b.dataset.v))}
+panel.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;P[k]=+e.target.value;$('#o-'+k).textContent=+P[k].toFixed(2);save();if(!playing)paint()});
+panel.addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b)return;const v=b.dataset.v;P[b.dataset.k]=v==='true'?true:v==='false'?false:v;sync();save();paint()});
+$('#bReset').addEventListener('click',()=>{const f=P.fmt;Object.assign(P,MOTIF.defaults,{fmt:f});sync();save();paint()});
+$('#bSvg').addEventListener('click',async()=>{const c=SM.svgCtx(cv.width,cv.height);const col=pal();c.fillStyle=col.bg;c.fillRect(0,0,cv.width,cv.height);
+  MOTIF.frame(c,cv.width,cv.height,(t%P.len)/P.len,P,col);const s=String(c);
+  try{await navigator.clipboard.writeText(s);$('#recNote').textContent='현재 프레임 SVG를 복사했어요. 피그마 캔버스에 붙여넣으면 벡터로 들어가요.'}
+  catch(err){const o=$('#out');o.hidden=false;o.value=s;o.select();$('#recNote').textContent='클립보드 접근이 막혀 있어요. 아래 칸의 코드를 직접 복사해 주세요.'}});
+$('#bRec').addEventListener('click',()=>{
+  if(!cv.captureStream||!window.MediaRecorder){$('#recNote').textContent='이 브라우저는 캔버스 녹화를 지원하지 않아요. 크롬에서 열어 주세요.';return}
+  const types=['video/mp4;codecs=avc1.640028','video/mp4','video/webm;codecs=vp9','video/webm'],type=types.find(x=>MediaRecorder.isTypeSupported(x));
+  const st=cv.captureStream(60),rec=new MediaRecorder(st,{mimeType:type,videoBitsPerSecond:16e6}),chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=()=>{const blob=new Blob(chunks,{type}),url=URL.createObjectURL(blob),ext=type.includes('mp4')?'mp4':'webm';
+    $('#bRec').disabled=false;$('#bRec').textContent='영상 녹화 (1회 반복)';
+    const fn=`SLIP_motif-${MOTIF.id}_${P.fmt.replace(':','x')}.${ext}`,b=document.createElement('button');b.id='bSave';b.textContent=`${ext.toUpperCase()} 저장 (${(blob.size/1e6).toFixed(1)}MB)`;
+    b.addEventListener('click',async()=>{
+      // claude.ai 안에서는 downloads 기능으로, 로컬 파일로 열었을 때는 일반 링크로 저장
+      const dl=window.claude&&window.claude.use?await window.claude.use('downloads').catch(()=>null):null;
+      if(dl){try{await dl.save({filename:fn,data:blob});$('#recNote').textContent='저장했어요.'}catch(err){$('#recNote').textContent=err&&err.code==='declined'?'저장을 취소했어요.':'이 화면에서는 저장할 수 없어요. 파일을 크롬에서 직접 열어 주세요.'}}
+      else{const a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();a.remove()}});
+    const old=$('#bSave');if(old)old.remove();$('#rec').appendChild(b);window.__lastVideo=blob;
+    $('#recNote').textContent='녹화가 끝났어요. 저장 버튼을 눌러 주세요.'};
+  t=0;playing=true;$('#play').textContent='일시정지';$('#bRec').disabled=true;$('#bRec').textContent='녹화 중…';
+  rec.start();setTimeout(()=>rec.stop(),P.len*1000+120)});
+sync();setFmt(P.fmt||'16:9');
+window.__motion={P,setT:v=>{t=v*P.len;paint()},rec:()=>$('#bRec').click()};
+})();
+</script>
+
+</body>
+</html>
