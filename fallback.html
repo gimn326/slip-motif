@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SLIP 폴백 애니메이션</title>
+<title>SLIP 폴백 애니메이션 (실제 브랜드)</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +21,8 @@
   --bg:#111315; --panel:#1a1d21; --ink:#eef0f2; --muted:#9aa1a9; --line:#30353b; --soft:#202429;
   --body:#2b2e33; --body-edge:#41464d; color-scheme:dark }
 html,body{height:100%}
+/* 입력할 글자가 없는 화면 — 더블클릭 · 드래그로 글자가 선택돼 파랗게 칠해지는 것 막기 */
+body{-webkit-user-select:none;user-select:none}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.6;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
 .top{display:flex;flex-wrap:wrap;gap:8px 14px;opacity:.9;align-items:center;justify-content:center;margin:0 auto 10px;max-width:1100px}
@@ -290,14 +292,27 @@ function setText(lines,sub,ty=560,size=72){
   return g;
 }
 // BRANDS-START
-// 가상 매장 브랜드 (실제 회사 아님). light = 흰 바탕일 때, dark = 검정 바탕(B 바탕 · A의 승인 면)일 때 로고 처리
+// 실제 매장 브랜드 (로컬 확인용 — 로고: 위키미디어 공용 파일 · 직접 그린 근사 도형, 상표는 각 회사 소유)
+// light = 흰 바탕, dark = 검정 바탕(B 바탕 · A의 승인 면). 대비는 WCAG 1.4.11 그래픽 3:1 기준
 const BRANDS={
-  bake:{name:'반죽상점',sub:'BANJUK BAKERY',color:'#D9662B',btnInk:'#fff',mark:'circle',ch:'반',
-    light:{rule:'원본 (주황 · 흰 위 3.6:1)'},dark:{rule:'원본 (주황 · 검정 위 5.3:1)'}},
-  green:{name:'초록장터',sub:'CHOROK MARKET',color:'#1E7A4B',btnInk:'#fff',mark:'leaf',ch:'초',
-    light:{rule:'원본 (초록 · 흰 위 5.3:1)'},dark:{rule:'원본 (초록 · 검정 위 3.5:1)'}},
-  navy:{name:'남색면옥',sub:'NAMSAEK RAMEN',color:'#24356E',btnInk:'#fff',mark:'square',ch:'남',
-    light:{rule:'원본 (남색 · 흰 위 11.6:1)'},dark:{rule:'반전 — 남색이 검정 위 1.6:1 → 표식 흰 면 + 남색 글자, 영문은 밝은 남색',markFill:'#fff',chFill:'#24356E',subFill:'#9BB0F0'}},
+  mcd:{name:'맥도날드',color:'#DB0007',btnInk:'#fff',
+    light:{file:'brand_logos/mcdonalds.svg',w:126,badge:'#DB0007',rule:'④ 배지 — 노랑 아치가 흰 위 1.5:1 → 맥도날드 공식 레드 박스 위에'},
+    dark:{file:'brand_logos/mcdonalds.svg',w:126,rule:'① 원본 — 노랑 아치 · 검정 위 12.5:1'}},
+  mega:{name:'메가MGC커피',color:'#FFD400',btnInk:'#111',
+    light:{file:'brand_logos/megacoffee.png',w:300,rule:'① 원본 — 검정 글자 · 흰 위 18.9:1'},
+    dark:{file:'brand_logos/megacoffee_dark.png',w:300,rule:'② 시그니처 색 — 검정 글자가 사라짐 → 메가 노랑 #FFD400 (13.2:1)'}},
+  moms:{name:'맘스터치',color:'#F0A500',btnInk:'#111',
+    light:{file:'brand_logos/momstouch.svg',w:300,rule:'① 원본 — 갈색 8.7:1 · 노랑 2.0:1 (공식 조합 유지)'},
+    dark:{file:'brand_logos/momstouch_dark.svg',w:300,rule:'③ 반전 — 갈색이 검정 위 2.2:1 → 흰색, 노랑 TOUCH는 그대로 (9.4:1)'}},
+  compose:{name:'컴포즈커피',color:'#FDD22B',btnInk:'#111',
+    light:{file:'brand_logos/compose_light.svg',w:300,rule:'③ 단색 — 노랑이 흰 위 1.5:1 → 검정 단색'},
+    dark:{file:'brand_logos/compose.svg',w:300,rule:'① 원본 — 노랑 · 검정 위 13.0:1'}},
+  musinsa:{name:'무신사',color:'#121212',btnInk:'#fff',colorDark:'#ffffff',btnInkDark:'#111',
+    light:{file:'brand_logos/musinsa.svg',w:300,rule:'① 원본 — 검정 워드마크 · 흰 위 21:1 (무신사 공식 사이트 파비콘 벡터)'},
+    dark:{file:'brand_logos/musinsa_dark.svg',w:300,rule:'③ 반전 — 시그니처 색이 검정뿐 → 흰 워드마크 (무신사 OG 이미지와 같은 조합)'}},
+  nike:{name:'나이키',color:'#121212',btnInk:'#fff',colorDark:'#ffffff',btnInkDark:'#111',
+    light:{file:'brand_logos/nike.svg',w:190,rule:'① 원본 — 검정 스우시 (위키미디어 공용 Logo_NIKE.svg)'},
+    dark:{file:'brand_logos/nike_dark.svg',w:190,rule:'③ 반전 — 흰 스우시 (검정 위)'}},
 };
 // BRANDS-END
 // 로고 대안 규칙 (검정/흰 바탕과 겹칠 때, 그래픽 대비 3:1 = WCAG 1.4.11 기준):
@@ -308,6 +323,8 @@ function drawBrandLogo(dk){
   const b=BRANDS[brand],v=dk?b.dark:b.light,ink=dk?'#fff':'#111';$('rLogo').textContent=v.rule;
   const mk=(tag,at)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);g.appendChild(e);return e};
   if(v.badge)mk('rect',{x:64,y:70,width:v.w+32,height:130,rx:24,fill:v.badge});
+  if(v.word){mk('text',{x:80,y:160,'font-size':64,'font-weight':800,'letter-spacing':6,fill:v.ink}).textContent=v.word;return}
+  if(v.swoosh){mk('path',{d:SWOOSH,transform:'translate(80 92) scale(.95)',fill:v.swoosh});return}
   if(v.file){mk('image',{href:v.file,x:80,y:80,width:v.w,height:110,preserveAspectRatio:'xMinYMid meet'});return}
   const mf=v.markFill||b.color;
   if(b.mark==='circle')mk('circle',{cx:135,cy:135,r:55,fill:mf});else mk('rect',{x:80,y:80,width:110,height:110,rx:b.mark==='leaf'?40:14,fill:mf});
@@ -411,10 +428,12 @@ function go(step){
   if(step==='swipe'){setText([],[]);act.disabled=true;hint.textContent='긁는 중'}
   if(step==='auth'){setText([],[]);act.disabled=true;hint.textContent='승인 신호가 오면 바로 다음 화면으로 넘어갑니다.'}
   if(step==='done'){show('amt',false);setText([],[]);show('doneT',true);
-    const tt=$('doneTitle');tt.setAttribute('x',FX()-24);tt.setAttribute('y',FY()+12);
-    // 글자 왼쪽에 호 → 호 + 문장 + 마침표 점 = 심볼이 문장을 감쌈(T6-5)
-    // 호의 열린 끝과 글자 사이 = 글자 크기의 절반(숨 쉴 자리), 굵기 = 반지름 ÷ 4 (T6-5 비율)
-    try{const bb=tt.getBBox(),r=bb.height*.34,gap=48,cx=bb.x-gap+r*.57,cy=bb.y+bb.height*.55;$('doneArc').setAttribute('d',arcD(cx,cy,r));$('doneArc').setAttribute('stroke-width',F4(r/4))}catch(e){}
+    // 호는 마침표 점 옆에 — 점을 중심으로 한 '(' = 주연 호 + 가운데 점과 같은 심볼 짜임(K6). 문장은 호 바깥으로 비켜남
+    // 반지름 42 · 굵기 = 반지름 ÷ 4 (T6-5 비율), 호 바깥 끝과 글자 사이 40
+    const tt=$('doneTitle'),dr=42,dgap=40,tx=FX()-dr-F4(dr/8)-dgap;tt.setAttribute('x',tx);tt.setAttribute('y',FY()+12);tt.setAttribute('font-size',96);
+    // 세로 카드(점 자리가 왼쪽)일 때 문장이 왼쪽 여백 80을 넘으면 글자 크기를 줄여 맞춤
+    try{const w=tt.getBBox().width;if(tx-w<80)tt.setAttribute('font-size',Math.floor(96*(tx-80)/w))}catch(e){}
+    $('doneArc').setAttribute('d',arcD(FX(),FY(),dr));$('doneArc').setAttribute('stroke-width',F4(dr/4));
     placeICcard(0);act.textContent='처음부터';hint.textContent='점이 화면 전체를 덮는 면으로 번지며 흑백이 뒤집히고, 가운데 남은 흰 점이 마침표가 됩니다.';placeMS(0,false)}
   if(step==='miss'){
     if(st.missKind==='ic'){setText(['칩을 읽지 못했어요'],['카드를 빼서 다시 넣어 주세요.'],560,72);{const q=P().tgt;disp.dot={x:q.x,y:q.y,r:10}}/* 점은 투입구 자리에서 시작해 위로 올라감 */hint.textContent='돌던 호가 멈춰 눈 자리로 물러나고, 점이 위로 올라가 눈 가운데서 한 번 깜빡이고 잠깐 쉰 뒤, 다시 투입구로 내려가 재결제를 안내합니다.'}
@@ -519,6 +538,98 @@ const COLLAB={
       <text x="540" y="${AY+300}" font-size="34" text-anchor="middle" fill="#7a4a1a" font-weight="700">갓 구운 빵처럼, 한 번에</text>`}},
 };
 // COLLAB-REAL-START
+delete COLLAB.bake;
+// 협업 장면 공통 무드(맥도날드 봉투 장면 기준): 납작한 색면 · 단순한 도형 · 열면 안에 든 것이 드러남. 선은 거의 쓰지 않음.
+// p = 긁은 진행(0 → 1), dir = 'h' 가로 / 'v' 위→아래, bump = 경계(호)를 지날 때의 한 번(12°)
+const E3=t=>1-Math.pow(1-Math.min(1,Math.max(0,t)),3);
+const F=n=>Math.round(n*10)/10;
+// 테이크아웃 컵: 화면 가운데 구도(뚜껑 구멍 = 빨대 자리, 가로 = 컵홀더 끼우기)
+function cupScene(c,o){
+  const CX=540,R=AY+30,HX=CX+80,TW=190,BW=140,HT=470,sh=o.sleeve;
+  const cup=`<ellipse cx="${CX}" cy="${R+HT}" rx="${BW}" ry="10" fill="#000" opacity=".08"/>
+    <path d="M${CX-TW},${R} L${CX+TW},${R} L${CX+BW},${R+HT} L${CX-BW},${R+HT} Z" fill="${o.cup||'#f1f1f1'}"/>`;
+  // 컵홀더(슬리브) = 제자리(R+150~300) 기준 dy만큼 내려가 있고 rot만큼 기울어짐
+  const sleeve=(dy,rot)=>`<g transform="translate(0 ${F(dy)}) rotate(${F(rot)} ${CX} ${R+225})">
+    <path d="M${CX-TW+14},${R+150} L${CX+TW-14},${R+150} L${CX+TW-34},${R+300} L${CX-TW+34},${R+300} Z" fill="${sh}"/>
+    ${o.logo?`<image href="${o.logo}" x="${CX-120}" y="${R+188}" width="240" height="72" preserveAspectRatio="xMidYMid meet"/>`:''}</g>`;
+  const lid=(dy,rot)=>`<g transform="translate(0 ${F(dy)}) rotate(${F(rot)} ${CX} ${R})">
+    <rect x="${CX-TW-14}" y="${R-22}" width="${2*TW+28}" height="30" rx="12" fill="#ffffff"/>
+    <rect x="${CX-TW-14}" y="${R-2}" width="${2*TW+28}" height="10" rx="5" fill="#d9d9d9"/>
+    <path d="M${CX-150},${R-22} L${CX+150},${R-22} L${CX+122},${R-64} L${CX-122},${R-64} Z" fill="#f4f4f4"/>
+    <rect x="${CX+50}" y="${R-38}" width="60" height="16" rx="8" fill="#2b2b2b"/></g>`;
+  if(c.dir==='v'){ // 위→아래 긁기 = 빨대 꽂기: 뚜껑은 닫혀 있고, 빨대가 내려와 구멍(점 자리)으로 들어감
+    const HY=R-30,tip=HY-700+700*E3(c.p),len=560,tilt=12*c.bump;
+    return `${cup}${sleeve(0,0)}${lid(0,0)}<clipPath id="strawClip"><rect x="0" y="0" width="1080" height="${HY}"/></clipPath>
+      <g clip-path="url(#strawClip)" transform="rotate(${F(tilt)} ${HX} ${F(tip)})"><rect x="${HX-15}" y="${F(tip-len)}" width="30" height="${len}" rx="6" fill="${o.straw||'#2b2b2b'}"/>
+      ${o.stripe?[0,1,2,3,4,5].map(i=>`<rect x="${HX-15}" y="${F(tip-len+40+i*80)}" width="30" height="26" fill="${o.stripe}"/>`).join(''):''}</g>`;
+  }
+  // 가로 긁기 = 컵홀더 끼우기: 뚜껑 닫힌 컵 아래에서 홀더가 기울어진 채 밀려 올라와, 경계에서 한 번 12° 흔들리고, 끝에 '쏙' 걸림
+  const k=E3(c.p),dy=400*(1-k)+(c.p>.97?-4:0),rot=10*(1-k)+12*c.bump;
+  return `${cup}${sleeve(dy,rot)}${lid(0,0)}`;
+}
+Object.assign(COLLAB,{
+  musinsa:{name:'무신사 — 택배 박스 테이프',idea:'긁는 선 = 박스 위 테이프를 떼는 손. 카드가 지나간 만큼 테이프가 말려 올라가고 그 밑 이음새가 드러남',
+    draw:c=>{
+      // 3/4 박스(납작한 세 면) — 윗면 이음새를 따라 테이프가 붙어 있음
+      const L0=230,L1=950,SY=810,xa=L0+(L1-L0)*E3(c.p),peel=xa-L0;
+      const top=`<path d="M180,860 L900,860 L1000,760 L280,760 Z" fill="#2a2a2a"/>`;
+      const front=`<rect x="180" y="860" width="720" height="400" fill="#141414"/><path d="M900,860 L1000,760 L1000,1160 L900,1260 Z" fill="#0b0b0b"/>
+        <image href="brand_logos/musinsa_dark.svg" x="330" y="1010" width="420" height="80"/>`;
+      const gap=Math.min(8,2+peel/90);
+      const seam=`<rect x="${L0}" y="${SY-gap/2}" width="${F(peel)}" height="${F(gap)}" fill="#000"/>`;
+      const tapeTop=`<path d="M${F(xa)},${SY-28} L${L1+20},${SY-28} L${L1-2},${SY+28} L${F(xa-22)},${SY+28} Z" fill="#cfcfcf"/>
+        <rect x="${F(xa)}" y="${SY-28}" width="${F(Math.max(0,L1+20-xa))}" height="6" fill="#e8e8e8"/>
+        <path d="M${L1-2},${SY+28} L${L1+20},${SY-28} L${L1+20},${SY+110} L${L1-2},${SY+160} Z" fill="#bdbdbd"/>
+        ${L1-xa>260?`<text x="${F(xa+40)}" y="${SY+8}" font-size="22" font-weight="800" letter-spacing="8" fill="#7a7a7a">MUSINSA</text>`:''}`;
+      // 떼어 낸 테이프: 붙은 자리에서 둥글게 말려 올라가 뒤로 젖혀진 넓은 리본. 위로 향한 면 = 접착면(한 톤 어둡게), 가장자리 빛, 박스 위 그림자
+      let free='';
+      if(peel>6){const Lf=Math.min(400,peel),rot=12*c.bump*Math.PI/180,P0=[xa,SY-4],P1=[xa+36,SY-170],P2=[xa-.55*Lf,SY-130-.45*Lf];
+        const pts=[];for(let i=0;i<=14;i++){const u=i/14,x=(1-u)*(1-u)*P0[0]+2*u*(1-u)*P1[0]+u*u*P2[0],y=(1-u)*(1-u)*P0[1]+2*u*(1-u)*P1[1]+u*u*P2[1];
+          const dx=x-P0[0],dy=y-P0[1];pts.push([P0[0]+dx*Math.cos(rot)-dy*Math.sin(rot),P0[1]+dx*Math.sin(rot)+dy*Math.cos(rot)])}
+        const W2=27,side=[],side2=[];for(let i=0;i<pts.length;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],tx=b[0]-a[0],ty=b[1]-a[1],l=Math.hypot(tx,ty)||1,nx=-ty/l*W2,ny=tx/l*W2;side.push([pts[i][0]+nx,pts[i][1]+ny]);side2.push([pts[i][0]-nx,pts[i][1]-ny])}
+        const P=a=>a.map(q=>F(q[0])+','+F(q[1])).join(' ');
+        free=`<path d="M${F(xa-20)},${SY+26} Q${F(xa-Lf*.25)},${SY+40} ${F(xa-Lf*.5)},${SY+26} L${F(xa-Lf*.5)},${SY+6} Z" fill="#000" opacity=".28"/>
+          <polygon points="${P(side)} ${P(side2.slice().reverse())}" fill="#c2c2c2"/>
+          <polyline points="${P(side)}" fill="none" stroke="#eeeeee" stroke-width="5" stroke-linecap="round"/>
+          <polyline points="${P(side2)}" fill="none" stroke="#a8a8a8" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="${F(xa+8)}" cy="${SY-16}" rx="22" ry="26" fill="#d9d9d9"/><ellipse cx="${F(xa+12)}" cy="${SY-20}" rx="10" ry="14" fill="#a3a3a3"/>`}
+      return `${top}${front}${seam}${tapeTop}${free}`}},
+  nike:{name:'나이키 — 함께 달리기',idea:'긁는 속도 = 달리는 속도. 다리 박자가 실제 긁기 속도에서 나오고, 호(경계) 자리에서 허들을 넘고, 결승 테이프가 끊기는 자리가 점이 됨',
+    draw:c=>{const x=Math.min(c.hx,AX)-40,jump=-70*c.bump,ph=c.hx/38,sl=Math.min(260,c.v*.12),brk=c.done||c.hx>=AX;
+      return `<rect x="0" y="${AY+16}" width="1080" height="150" fill="#d8573a"/>
+      <rect x="0" y="${AY+16}" width="1080" height="8" fill="#ffffff"/><rect x="0" y="${AY+88}" width="1080" height="5" fill="#ffffff" opacity=".7"/>
+      <rect x="${AX-AR-6}" y="${AY-70}" width="12" height="86" fill="#f2f2f2"/><rect x="${AX-AR+34}" y="${AY-70}" width="12" height="86" fill="#f2f2f2"/><rect x="${AX-AR-14}" y="${AY-86}" width="68" height="20" fill="#ffffff"/>
+      ${brk?`<path d="M${AX},${AY-150} q-60,30 -110,110" stroke="#FA5400" stroke-width="10" fill="none"/><path d="M${AX},${AY-150} q60,30 110,110" stroke="#FA5400" stroke-width="10" fill="none"/>`:`<line x1="${AX-160}" y1="${AY-150}" x2="${AX+160}" y2="${AY-150}" stroke="#FA5400" stroke-width="10"/>`}
+      ${[0,1,2].map(i=>`<rect x="${F(x-60-sl*(1-i*.25))}" y="${F(AY-160-i*46+jump)}" width="${F(sl*(1-i*.25))}" height="8" rx="4" fill="${c.ink}" opacity="${.25+i*.2}"/>`).join('')}
+      ${c.done?'':runner(x,AY+10+jump,ph,c.ink)}
+      <image href="brand_logos/${c.ink==='#fefefe'?'nike_dark':'nike'}.svg" x="70" y="${AY+220}" width="300" height="108"/>`}},
+  mcd:{name:'맥도날드 — 봉투 뜯기 / 빨대',idea:'가로 긁기 = 종이봉투 윗단을 뜯어 감자튀김이 올라옴 · 위→아래 긁기 = 컵에 빨대를 꽂음',
+    draw:c=>{if(c.dir==='v')return cupScene(c,{sleeve:'#DB0007',logo:'brand_logos/mcdonalds.svg',straw:'#ffffff',stripe:'#DB0007',drink:'#3b1f12'});
+      const T=tear(200,880,AY,80,c.hx,26);
+      const fries=[0,1,2,3,4,5,6,7,8].map(i=>{const fx=240+i*72,open=Math.max(0,Math.min(1,(c.hx-fx)/160));return `<rect x="${fx}" y="${fmt(AY-20-open*(150+(i%3)*40))}" width="34" height="260" rx="6" fill="#FFC72C"/>`}).join('');
+      return `${fries}<rect x="200" y="${AY+40}" width="680" height="440" fill="#B98B56"/>
+      <rect x="200" y="${AY+380}" width="680" height="100" fill="#DB0007"/><image href="brand_logos/mcdonalds.svg" x="490" y="${AY+395}" width="100" height="70"/>
+      ${T.up?`<polygon points="${T.up}" fill="#A47645"/><polygon points="${T.lo}" fill="#B98B56"/>`:''}
+      <rect x="${fmt(T.ix)}" y="${AY-40}" width="${fmt(T.iw)}" height="80" fill="#A47645"/>`}},
+  mega:{name:'메가MGC커피 — 컵홀더 끼우기 / 빨대',idea:'가로 긁기 = 컵 아래에서 컵홀더가 밀려 올라와 끼워짐(경계에서 한 번 12° 흔들림) · 위→아래 긁기 = 빨대가 구멍(점 자리)으로',
+    draw:c=>cupScene(c,{sleeve:'#FFD400',logo:'brand_logos/megacoffee.png',straw:'#1d1d1d',drink:'#3f2a1d'})},
+  compose:{name:'컴포즈커피 — 컵홀더 끼우기 / 빨대',idea:'가로 = 컵홀더 끼우기 · 위→아래 = 빨대 꽂기, 컴포즈 노랑 슬리브',
+    draw:c=>cupScene(c,{sleeve:'#FDD22B',logo:'brand_logos/compose_light.svg',straw:'#1d1d1d',drink:'#3f2a1d'})},
+  moms:{name:'맘스터치 — 버거 포장지 펼치기 / 빨대',idea:'공식 사진(2020-11 새 BI)의 흰 버거 포장지 · 흰 종이컵. 가로 긁기 = 포장지 양 날개가 차례로 펼쳐져 버거가 드러남 · 위→아래 = 흰 컵에 검은 빨대',
+    draw:c=>{if(c.dir==='v')return cupScene(c,{cup:'#ece7dc',sleeve:'#fbfaf6',logo:'brand_logos/momstouch.svg',straw:'#1d1d1d',drink:'#2a1a12'});
+      const CX=AX-200,CY=AY+40,W=520,H=380,kl=E3(c.p*2),kr=E3(c.p*2-1),tl=12*c.bump;
+      const burger=`<g transform="translate(${CX} ${CY})">
+        <rect x="-200" y="70" width="400" height="56" rx="26" fill="#E3A33C"/>
+        <rect x="-214" y="20" width="428" height="62" rx="20" fill="#9a5426"/><rect x="-206" y="14" width="412" height="20" rx="10" fill="#F2A900"/>
+        <path d="M-220,8 q27,-22 55,0 t55,0 t55,0 t55,0 t55,0 t55,0 t55,0 t55,0 L220,24 L-220,24 Z" fill="#7BC043"/>
+        <path d="M-200,6 C-200,-140 200,-140 200,6 Z" fill="#E8A640"/>
+        ${[[-110,-60],[-40,-90],[40,-80],[110,-50],[-70,-30],[10,-40],[80,-20]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="9" ry="5" fill="#fff6dc"/>`).join('')}</g>`;
+      const paper=`<rect x="${CX-W/2}" y="${CY-H/2}" width="${W}" height="${H}" rx="6" fill="#f6f3ec"/>`;
+      const flap=(side,k)=>{const sx=side<0?CX-W/2:CX+W/2,w=W/2*(1-2*k),col=k<.5?'#fbfaf6':'#e7e2d6';
+        return `<g transform="rotate(${F(side<0?-tl:0)} ${sx} ${CY})"><path d="M${sx},${CY-H/2} L${F(sx-side*w)},${CY-H/2+20} L${F(sx-side*w)},${CY+H/2-20} L${sx},${CY+H/2} Z" fill="${col}"/></g>`};
+      return `${paper}${burger}${flap(-1,kl)}${flap(1,kr)}
+        <image href="brand_logos/momstouch.svg" x="${CX-110}" y="${CY+H/2+40}" width="220" height="80"/>`}},
+});
 // COLLAB-REAL-END
 function collabActive(){return collabOn&&brand&&COLLAB[brand]}
 function collabHead(s,t){
