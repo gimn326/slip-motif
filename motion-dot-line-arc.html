@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SLIP 점·선·호 모션</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 레이아웃: 위 제목줄 · 가운데 무대(비율 고정 캔버스) · 오른쪽 조절 패널 · 아래 타임라인 + 단계 */
+:root{
+  --bg:#FFFFFF; --ink:#171717; --ink-2:#666666; --ink-3:#9A9A9A; --hair:#E4E4E4; --well:#F3F3F2; --accent:#E86F51;
+  --sans:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121212;--ink:#EDEDED;--ink-2:#A3A3A3;--ink-3:#6E6E6E;--hair:#2B2B2B;--well:#1B1B1B;--accent:#F08566;color-scheme:dark}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:400 12px/1.4 var(--sans);letter-spacing:-0.01em;user-select:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+.app{height:100%;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) 232px;grid-template-rows:auto minmax(0,1fr) auto auto;gap:0 24px;padding-block:14px}
+header{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding-bottom:12px;min-width:0}
+header h1{font-size:13px;font-weight:500;margin:0;white-space:nowrap}
+header p{margin:0;color:var(--ink-3);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fmt{margin-left:auto;display:flex;gap:12px}
+button{font:400 12px/1.2 var(--sans);color:var(--ink-3);background:none;border:0;border-bottom:1px solid transparent;padding:2px 0;border-radius:0;cursor:pointer}
+button:hover{color:var(--ink)}
+button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+.stage{min-height:0;min-width:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--well)}
+canvas{display:block;box-shadow:0 0 0 1px var(--hair)}
+aside{grid-row:2/5;grid-column:2;overflow:auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin}
+aside section{display:grid;gap:3px}
+aside h2{font-size:11px;font-weight:500;color:var(--ink-3);margin:0 0 2px}
+.row{display:grid;grid-template-columns:62px minmax(0,1fr) 30px;align-items:center;gap:8px;min-height:20px}
+.row label,.row>span{color:var(--ink-2);font-size:12px;white-space:nowrap}
+.row output{font-variant-numeric:tabular-nums;text-align:right;font-size:11px;color:var(--ink-3)}
+.row.tg{grid-template-columns:62px minmax(0,1fr)}
+.row.tg div{display:flex;gap:10px;flex-wrap:wrap}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:14px;background:none;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--ink-3)}
+input[type=range]::-moz-range-track{height:1px;background:var(--ink-3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:9px;border-radius:50%;background:var(--ink);margin-top:-4px;border:0}
+input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;background:var(--ink);border:0}
+.bar{grid-column:1;display:flex;align-items:center;gap:14px;padding-top:10px}
+.bar input[type=range]{flex:1;min-width:0}
+.time{font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:11px;min-width:70px;text-align:right}
+/* 단계 줄: 타임라인 위치와 같은 비율로 놓음 */
+.steps{grid-column:1;position:relative;height:30px;margin:4px 84px 0 64px}
+.steps button{position:absolute;top:0;transform:translateX(-1px);white-space:nowrap;text-align:left;border-left:1px solid var(--hair);border-bottom:0;padding:0 0 0 6px;line-height:1.3}
+.steps button small{display:block;color:var(--ink-3);font-size:10px}
+.steps button.on{color:var(--ink);border-left-color:var(--ink)}
+.note{color:var(--ink-3);font-size:11px;line-height:1.5;margin:4px 0 0;min-height:1.5em}
+.story{color:var(--ink-2);font-size:12px;line-height:1.6;margin:0}
+#rec{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+@media (max-width:860px){
+  html,body{height:auto;overflow:auto}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto auto;height:auto}
+  header{flex-wrap:wrap}
+  header p{white-space:normal}
+  .stage{aspect-ratio:16/9;max-width:100%}
+  aside{grid-row:auto;grid-column:1;overflow:visible;padding-top:18px}
+  .steps{margin:4px 0 0;height:auto;display:flex;flex-wrap:wrap;gap:6px 12px}
+  .steps button{position:static;transform:none}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>점 · 선 · 호 모션</h1>
+    <p>점이 모여 선이 되고, 선이 돌아 호가 되고, 호와 점이 만나 결제를 끝내는 점으로 돌아온다</p>
+    <div class="fmt" role="group" aria-label="화면 비율">
+      <button data-f="16:9" aria-pressed="true">16:9</button><button data-f="1:1">1:1</button><button data-f="9:16">9:16</button>
+    </div>
+  </header>
+  <div class="stage"><canvas id="cv" width="1920" height="1080" aria-label="점이 선이 되고 호가 되어 마침표 점으로 돌아오는 SLIP 심볼 모션"></canvas></div>
+  <aside id="panel"></aside>
+  <div class="bar">
+    <button id="play" aria-pressed="true">일시정지</button>
+    <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="재생 위치">
+    <span class="time" id="time">0.0 / 10.0초</span>
+  </div>
+  <div class="steps" id="steps"></div>
+</div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const io=u=>(u=clamp(u),u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2);   // 천천히-빠르게-천천히
+const out=u=>(u=clamp(u),1-Math.pow(1-u,3));
+const back=u=>{u=clamp(u);const c=1.6;return 1+(c+1)*Math.pow(u-1,3)+c*Math.pow(u-1,2)};  // 살짝 넘쳤다 돌아옴
+const seg=(t,a,b)=>clamp((t-a)/(b-a));
+
+/* 심볼 기하 (단위 = SVG 200 상자) */
+const R=64, SW=16, DOT=16, SPAN=110*Math.PI/180, L=R*SPAN;   // 호 길이 = 선 길이
+const C={x:0,y:-28};                                         // 최종 호 중심 = 큰 점 자리 (호+점 묶음이 화면 가운데 오도록)
+const DX=-L/2-SW/2;                                          // 다이 자리 = 다 뽑힌 선의 왼쪽 끝 (선이 화면 가운데에 오도록)
+// 고정 난수(매번 같은 흩어짐)
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+// 입자: 모양 없이 다이 왼쪽에 성기게 흩어진 점. 가로 자리는 0–1 비율(nx)로 두고 화면 폭에 맞춰 펼침
+const GRID=[];
+for(let tries=0;GRID.length<40&&tries<4000;tries++){
+  const nx=rnd(),ny=(rnd()-.5)*2;   // 특정 모양 없이 고르게 흩어짐
+  if(GRID.every(q=>Math.hypot((q.nx-nx)*150,(q.ny-ny)*32)>11))GRID.push({nx,ny})}
+GRID.forEach(p=>{p.y=p.ny*32;p.ph=rnd()*6.28;p.ph2=rnd()*6.28;p.sp=0.8+rnd()*0.9;p.a=rnd()});
+// 다이에 가까운 입자부터 빨려 들어감
+[...GRID].sort((p,q)=>q.nx-p.nx).forEach((p,i)=>p.o=i/(GRID.length-1));
+
+
+/* 시간표(초, 속도 1 기준) */
+const T={len:10,
+  ap:[0,1.0],             // 입자가 나타남
+  g0:1.7,gs:1.3,gd:0.8,   // 병합: 입자가 차례로 다이로 빨려 들어감 (시작, 차례 간격 전체, 한 입자 이동 시간)
+  die:[1.3,1.7,3.9,4.2],  // 다이 나타남 · 사라짐
+  cap:[3.9,4.2],          // 다이를 빠져나온 선의 왼쪽 끝이 둥글어짐
+  cu:[4.2,6.0],           // 선이 돌면서 휘어 호가 됨
+  dt:[5.8,6.4],           // 호 위에 큰 점이 생김
+  mg:[7.1,8.4],           // 호가 돌며 점으로 감겨 들어감
+  pu:[8.4,9.0],           // 마침표 박동
+  fd:[9.6,10]};           // (입자 시작일 때) 사라짐
+const STEPS=[['입자',0,'흩어진 점'],['병합',T.g0,'다이를 지나 선 →'],['호',T.cu[0],'돌면서 휨'],['호 + 점',T.dt[0],'큰 점이 생김'],['점',T.mg[0],'마침표로']];
+
+const DEF={fmt:'16:9',bg:'light',speed:1,turns:'1',size:1,start:'grid',die:'on'};
+const P=Object.assign({},DEF);
+const KEY='slip-dot-line-arc-v2';
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)Object.assign(P,s)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}};
+
+/* 선(곡률 κ, 가운데 점 M, 진행 방향 θ) 위의 점 — κ=0이면 직선 */
+function curvePts(M,th,k,n=72){
+  const tx=Math.cos(th),ty=Math.sin(th),nx=Math.sin(th),ny=-Math.cos(th),pts=[];
+  for(let i=0;i<=n;i++){const s=-L/2+L*i/n;let a,b;
+    if(Math.abs(k)<1e-6){a=s;b=0}else{const f=k*s;a=Math.sin(f)/k;b=(1-Math.cos(f))/k}
+    pts.push([M.x+a*tx+b*nx,M.y+a*ty+b*ny])}
+  return pts}
+
+function frame(c,w,h,t,col){
+  const k=Math.min(w/330,h/260)*P.size;
+  c.save();c.translate(w/2,h/2);c.scale(k,k);
+  c.fillStyle=col.ink;c.strokeStyle=col.ink;c.lineCap='round';c.lineJoin='round';
+  const dot=(x,y,r)=>{if(r<=0.01)return;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()};
+  const poly=pts=>{c.lineWidth=SW;c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.stroke()};
+  const turns=+P.turns;
+
+  if(P.start==='grid')c.globalAlpha=1-seg(t,...T.fd);
+
+  const gEnd=T.g0+T.gs+T.gd;
+
+  if(t<T.cu[0]){
+    // ① 흩어진 입자 → ② 다이로 빨려 들어가 일정한 두께의 선으로 밀려나옴 (방향성 →)
+    let fill=0;
+    const xmin=Math.max(-205,-w/2/k+12),xmax=DX-14;
+    GRID.forEach(p=>{
+      p.x=p.sx=lerp(xmin,xmax,p.nx);p.d=Math.hypot(p.x-C.x,p.y-C.y);
+      let x=p.x,y=p.y,r=2.2;
+      if(P.start==='grid'){const a=seg(t,T.ap[0]+p.a*0.7,T.ap[0]+p.a*0.7+0.3);r*=back(a)}
+      else{const a=seg(t,p.a*0.45,p.a*0.45+0.75);const e=out(a);x=lerp(C.x,p.x,e);y=lerp(C.y,p.y,e);r=lerp(5,2.2,e)}
+      // 섞임: 제자리에서 느리게 흔들림
+      const wx=Math.sin(t*1.9*p.sp+p.ph)*2.6,wy=Math.cos(t*1.5*p.sp+p.ph2)*2.6;
+      x+=wx;y+=wy;
+      const s0=T.g0+p.o*T.gs,g=seg(t,s0,s0+T.gd);
+      fill+=seg(g,0.75,1)/GRID.length;
+      if(g>0){const ix=g*g*g;   // 다이에 가까워질수록 빨라짐
+        x=lerp(x,DX,ix);y=lerp(y,0,io(g));r*=1-seg(g,0.8,1)}
+      if(g<1)dot(x,y,r)});
+    if(P.start==='scatter')dot(C.x,C.y,DOT*(1-out(seg(t,0,0.5))));   // 시작: 마침표 점이 흩어져 입자가 됨
+    // 다이를 빠져나온 선: 왼쪽 끝은 다이에 붙어 납작, 오른쪽 끝은 둥글게
+    const len=(L+SW)*fill,h2=SW/2;
+    if(len>0.5){const rc=io(seg(t,...T.cap)),x0=DX+h2*rc,x1=DX+len-h2;
+      c.beginPath();
+      if(x1>x0){c.rect(x0,-h2,x1-x0,SW)}
+      c.arc(Math.max(x1,x0),0,Math.min(h2,len/2),-Math.PI/2,Math.PI/2);
+      if(rc>0)c.arc(DX+h2,0,h2*rc,Math.PI/2,Math.PI*1.5);
+      c.fill()}
+    // 다이: 선 위아래 짧은 두 획
+    if(P.die==='on'){const da=seg(t,T.die[0],T.die[1])*(1-seg(t,T.die[2],T.die[3]));
+      if(da>0){c.save();c.globalAlpha*=da;c.lineWidth=1.6;c.lineCap='butt';c.beginPath();
+        c.moveTo(DX,-h2-3);c.lineTo(DX,-h2-21);c.moveTo(DX,h2+3);c.lineTo(DX,h2+21);c.stroke();c.restore()}}
+  }else if(t<T.mg[0]){
+    // ③ 선이 돌면서 휘어 호가 됨
+    const p=seg(t,...T.cu),e=io(p);
+    const th=Math.PI*2*turns*e;
+    const kap=(1/R)*io(seg(t,T.cu[0]+0.25,T.cu[1]));
+    const M={x:0,y:lerp(0,C.y+R,e)};
+    poly(curvePts(M,th,kap));
+    // ④ 호 위에 큰 점
+    dot(C.x,C.y,DOT*back(seg(t,...T.dt)));
+  }else{
+    // ⑤ 호가 돌며 점 안으로 감겨 들어감 → 마침표
+    const p=seg(t,...T.mg),e=io(p);
+    const rho=R*(1-e),rot=-Math.PI*1.5*io(p);
+    if(rho>0.5){const a0=Math.PI/2-SPAN/2+rot,pts=[];
+      for(let i=0;i<=72;i++){const a=a0+SPAN*i/72;pts.push([C.x+rho*Math.cos(a),C.y+rho*Math.sin(a)])}
+      poly(pts)}
+    const pu=seg(t,...T.pu);
+    dot(C.x,C.y,DOT*(1+0.2*Math.sin(Math.PI*pu)));
+  }
+  c.restore();c.globalAlpha=1;
+}
+
+const cv=$('#cv'),ctx=cv.getContext('2d');
+const FMT={'16:9':[1920,1080],'1:1':[1080,1080],'9:16':[1080,1920]};
+function fit(){const st=$('.stage'),pad=Math.min(32,st.clientWidth*0.03),aw=st.clientWidth-pad*2,ah=st.clientHeight-pad*2;if(aw<=0||ah<=0)return;
+  const k=Math.min(aw/cv.width,ah/cv.height);cv.style.width=Math.floor(cv.width*k)+'px';cv.style.height=Math.floor(cv.height*k)+'px'}
+new ResizeObserver(fit).observe($('.stage'));
+function setFmt(f){P.fmt=f;const[w,h]=FMT[f];cv.width=w;cv.height=h;document.querySelectorAll('.fmt button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===f));
+  if(window.matchMedia('(max-width:860px)').matches)$('.stage').style.aspectRatio=w+'/'+h;fit();save();paint()}
+const pal=()=>P.bg==='dark'?{bg:'#111111',ink:'#F2F2F2'}:{bg:'#FFFFFF',ink:'#111111'};
+
+const LEN=()=>T.len/P.speed;
+let t=0,playing=!window.matchMedia('(prefers-reduced-motion: reduce)').matches,last=null;
+if(!playing)t=6.6/T.len*LEN();   // 움직임 줄이기 설정이면 완성된 심볼(호+점)에서 멈춤
+function paint(){const w=cv.width,h=cv.height,len=LEN(),tau=(t%len)/len,ts=tau*T.len;
+  ctx.setTransform(1,0,0,1,0,0);const col=pal();ctx.fillStyle=col.bg;ctx.fillRect(0,0,w,h);
+  frame(ctx,w,h,ts,col);
+  $('#scrub').value=Math.round(tau*1000);$('#time').textContent=(tau*len).toFixed(1)+' / '+len.toFixed(1)+'초';
+  let cur=0;STEPS.forEach((s,i)=>{if(ts>=s[1])cur=i});
+  document.querySelectorAll('.steps button').forEach((b,i)=>b.classList.toggle('on',i===cur))}
+function loop(ts){if(last!=null&&playing)t+=(ts-last)/1000;last=ts;paint();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+function setPlay(v){playing=v;$('#play').textContent=v?'일시정지':'재생';$('#play').setAttribute('aria-pressed',v)}
+$('#play').addEventListener('click',()=>setPlay(!playing));setPlay(playing);
+$('#scrub').addEventListener('input',e=>{t=e.target.value/1000*LEN();paint()});
+document.querySelectorAll('.fmt button').forEach(b=>b.addEventListener('click',()=>setFmt(b.dataset.f)));
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();$('#play').click()}});
+
+$('#steps').innerHTML=STEPS.map((s,i)=>`<button data-i="${i}" style="left:${s[1]/T.len*100}%">${s[0]}<small>${s[2]}</small></button>`).join('');
+$('#steps').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;t=STEPS[b.dataset.i][1]/T.len*LEN()+0.001;paint()});
+
+/* 패널 */
+const panel=$('#panel');
+panel.innerHTML=`
+<section><h2>메모</h2>
+  <p class="story">왼쪽 점 격자만 사용 → 점이 쭉 모여 선으로, 여기까지 방향성 →. (10-25 추가: 호 모양 격자 대신 그냥 흩어진 입자 → 다이를 지나 일정한 두께의 선) 선이 동글동글 돌면서 호가 되고 그 위에 큰 점. 호와 점이 만나 결제를 완결짓는 점으로 돌아옴.</p></section>
+<section><h2>움직임</h2>
+  <div class="row"><label for="p-speed">속도</label><input id="p-speed" type="range" min="0.5" max="1.5" step="0.05" data-k="speed"><output id="o-speed"></output></div>
+  <div class="row tg"><span>도는 횟수</span><div role="group" aria-label="도는 횟수"><button data-k="turns" data-v="1">1바퀴</button><button data-k="turns" data-v="2">2바퀴</button><button data-k="turns" data-v="3">3바퀴</button></div></div>
+  <div class="row tg"><span>다이</span><div role="group" aria-label="다이 표시"><button data-k="die" data-v="on">보임</button><button data-k="die" data-v="off">숨김</button></div></div>
+  <div class="row tg"><span>시작</span><div role="group" aria-label="시작"><button data-k="start" data-v="grid">입자부터</button><button data-k="start" data-v="scatter">점이 흩어지며</button></div></div>
+  <p class="note">'점이 흩어지며'는 끝의 마침표 점이 다시 입자로 흩어져 이음매 없이 반복돼요.</p></section>
+<section><h2>화면</h2>
+  <div class="row tg"><span>바탕</span><div role="group" aria-label="바탕"><button data-k="bg" data-v="light">흰 바탕</button><button data-k="bg" data-v="dark">검정 바탕</button></div></div>
+  <div class="row"><label for="p-size">크기</label><input id="p-size" type="range" min="0.6" max="1.4" step="0.05" data-k="size"><output id="o-size"></output></div></section>
+<section><h2>내보내기</h2>
+  <div id="rec"><button id="bRec">영상 녹화</button><button id="bReset">기본값</button></div>
+  <p class="note" id="recNote"></p></section>`;
+function sync(){panel.querySelectorAll('input[data-k]').forEach(i=>{i.value=P[i.dataset.k];$('#o-'+i.dataset.k).textContent=+(+P[i.dataset.k]).toFixed(2)});
+  panel.querySelectorAll('button[data-k]').forEach(b=>b.setAttribute('aria-pressed',String(P[b.dataset.k])===b.dataset.v))}
+panel.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;
+  const tau=(t%LEN())/LEN();P[k]=+e.target.value;t=tau*LEN();$('#o-'+k).textContent=+P[k].toFixed(2);save();paint()});
+panel.addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b)return;P[b.dataset.k]=b.dataset.v;sync();save();paint()});
+$('#bReset').addEventListener('click',()=>{const f=P.fmt;Object.assign(P,DEF,{fmt:f});sync();save();paint()});
+$('#bRec').addEventListener('click',()=>{
+  if(!cv.captureStream||!window.MediaRecorder){$('#recNote').textContent='이 브라우저는 캔버스 녹화를 지원하지 않아요. 크롬에서 열어 주세요.';return}
+  const types=['video/mp4;codecs=avc1.640028','video/mp4','video/webm;codecs=vp9','video/webm'],type=types.find(x=>MediaRecorder.isTypeSupported(x));
+  const st=cv.captureStream(60),rec=new MediaRecorder(st,{mimeType:type,videoBitsPerSecond:16e6}),chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=()=>{const blob=new Blob(chunks,{type}),url=URL.createObjectURL(blob),ext=type.includes('mp4')?'mp4':'webm';
+    $('#bRec').disabled=false;$('#bRec').textContent='영상 녹화';
+    const fn=`SLIP_dot-line-arc_${P.fmt.replace(':','x')}_${P.bg}.${ext}`,b=document.createElement('button');b.id='bSave';b.textContent=`${ext.toUpperCase()} 저장 (${(blob.size/1e6).toFixed(1)}MB)`;
+    b.addEventListener('click',async()=>{
+      // 일반 링크로 저장 (지원하는 환경에서는 저장 기능 사용)
+      const dl=window.claude&&window.claude.use?await window.claude.use('downloads').catch(()=>null):null;
+      if(dl){try{await dl.save({filename:fn,data:blob});$('#recNote').textContent='저장했어요.'}catch(err){$('#recNote').textContent=err&&err.code==='declined'?'저장을 취소했어요.':'이 화면에서는 저장할 수 없어요. 파일을 크롬에서 직접 열어 주세요.'}}
+      else{const a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();a.remove()}});
+    const old=$('#bSave');if(old)old.remove();$('#rec').appendChild(b);
+    $('#recNote').textContent='녹화가 끝났어요. 저장 버튼을 눌러 주세요.'};
+  t=0;setPlay(true);$('#bRec').disabled=true;$('#bRec').textContent='녹화 중…';$('#recNote').textContent='한 바퀴 길이만큼 녹화하고 있어요.';
+  rec.start();setTimeout(()=>rec.stop(),LEN()*1000+120)});
+sync();setFmt(P.fmt||'16:9');
+window.__motion={P,setT:s=>{t=s/T.len*LEN();paint()}};
+})();
+</script>
+
+</body>
+</html>
