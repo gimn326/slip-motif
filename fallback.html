@@ -297,7 +297,7 @@ function drawBrandLogo(dk){
   mk('text',{x:214,y:140,'font-size':46,'font-weight':700,fill:ink,id:'bName'}).textContent=b.name;
   mk('text',{x:216,y:180,'font-size':22,'letter-spacing':3,fill:v.subFill||b.color}).textContent=b.sub;
 }
-function refreshLogo(force){const flooded=st.step==='done'&&(performance.now()-st.t0)/1000>.25,dk=(ver==='B')!==flooded;if(force||dk!==st.lastDk){st.lastDk=dk;drawBrandLogo(dk)}}
+function refreshLogo(force){const flooded=st.step==='done'&&(performance.now()-st.t0)/1000>.38,dk=(ver==='B')!==flooded;if(force||dk!==st.lastDk){st.lastDk=dk;drawBrandLogo(dk)}}
 function chips(){const c=$('brandChips');c.innerHTML='';[['','없음'],...Object.entries(BRANDS).map(([k,b])=>[k,b.name])].forEach(([k,n])=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',(brand||'')===k);b.onclick=()=>{brand=k||null;refreshLogo(true);chips();syncCollabUI();go(st.step)};c.appendChild(b)})}
 chips();
 function setButtons(list){
@@ -390,7 +390,7 @@ function go(step){
     const tt=$('doneTitle');tt.setAttribute('x',AX-24);tt.setAttribute('y',AY+12);
     placeICcard(0);act.textContent='처음부터';hint.textContent='점이 화면 전체를 덮는 면으로 번지며 흑백이 뒤집히고, 가운데 남은 흰 점이 마침표가 됩니다.';placeMS(0,false)}
   if(step==='miss'){
-    if(st.missKind==='ic'){setText(['칩을 읽지 못했어요'],['카드를 빼서 다시 넣어 주세요.'],560,72);hint.textContent='돌던 호가 멈춰 눈 자리로 물러나고, 점이 투입구로 돌아가 한 번 더 짚습니다. 1.4초 뒤 다시 넣기 안내.'}
+    if(st.missKind==='ic'){setText(['칩을 읽지 못했어요'],['카드를 빼서 다시 넣어 주세요.'],560,72);{const q=P().tgt;disp.dot={x:q.x,y:q.y,r:10}}/* 점은 투입구 자리에서 시작해 위로 올라감 */hint.textContent='돌던 호가 멈춰 눈 자리로 물러나고, 점이 위로 올라가 눈 가운데서 한 번 깜빡이고 잠깐 쉰 뒤, 다시 투입구로 내려가 재결제를 안내합니다.'}
     else{setText(['한 번 더','긁어 주세요'],[st.missWhy||'끝까지 한 번에 긁어 주세요.'],560,72);placeICcard(0,false);placeMS(GROOVE_X0-CARD_L+30,true);
       hint.textContent='긁은 선은 지우지 않고 가는 흔적으로 남기고(앞으로만), 점이 선의 시작점에 와서 "여기서 다시"를 짚습니다. 바로 다시 긁을 수 있어요.'}
   }
@@ -521,23 +521,24 @@ function frame(now){
   if(s==='select'){corner=CORNER;cDot=CORNER.dr;if(t>1&&!st.icDrag)start()} // 1초 정지 → 넣기 안내로
   if(s==='prompt'){
     // 모서리 심볼이 눈 자리로 → 점이 투입구 쪽을 봄
-    const a=st.retry?1:ease(clamp(t/.8,0,1));const p=mix({x:CORNER.x,y:CORNER.y,r:CORNER.r,sw:CORNER.sw,dr:CORNER.dr},{x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw,dr:EYE.dr},a);
-    hero={x:p.x,y:p.y,r:p.r,sw:p.sw};const look=ease(clamp((t-.7)/.6,0,1));
+    const tp=st.retry?t+.8:t; // 재시도: 점이 이미 눈 가운데서 쉬고 왔으니 조금 일찍 내려감
+    const a=st.retry?1:ease(clamp(t/1.1,0,1));const p=mix({x:CORNER.x,y:CORNER.y,r:CORNER.r,sw:CORNER.sw,dr:CORNER.dr},{x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw,dr:EYE.dr},a);
+    hero={x:p.x,y:p.y,r:p.r,sw:p.sw};const look=ease(clamp((tp-1.0)/.9,0,1));
     const L=look*165,dir=P().look; // 눈동자가 호 가장자리까지 확실히 굴러감
     let dx=p.x+dir[0]*L,dy=p.y+dir[1]*L,dr=p.dr*lerp(1,.8,look);
     // 지표: 바라본 다음, 점이 먼저 투입구까지 가서 '여기'를 짚고 돌아옴 (반복)
     // 한 번만 투입구까지 내려가 멈춤 → 그 자리에서 박동처럼 아주 살짝만 (재촉하지 않게)
-    if(t>1.3){const u=clamp((t-1.3)/.8,0,1),k=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1; // 살짝 지나쳤다 돌아오는 도착(back-out)
+    if(tp>1.9){const u=clamp((tp-1.9)/1.2,0,1),k=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1; // 살짝 지나쳤다 돌아오는 도착(back-out)
       const tgt=P().tgt;
-      const land=t>2.1?Math.exp(-(t-2.1)*5):0; // 도착 순간 한 번 크게 '여기'
-      const beat=t>2.6?Math.pow(Math.max(0,Math.sin((t-2.6)*Math.PI/1.2)),6):0; // 그 뒤엔 1.2초마다 작은 박동
+      const land=tp>3.1?Math.exp(-(tp-3.1)*3.5):0; // 도착 순간 한 번 크게 '여기'
+      const beat=tp>3.8?Math.pow(Math.max(0,Math.sin((tp-3.8)*Math.PI/1.6)),6):0; // 그 뒤엔 1.6초마다 작은 박동
       dx=lerp(dx,tgt.x,k);dy=lerp(dy,tgt.y,k);dr=lerp(dr,14,Math.min(1,u))*(1+.55*land+.12*beat);
       $('slotLine').setAttribute('stroke-width',8+10*land)}
     hDot={x:dx,y:dy,r:dr};
   }
   if(s==='insert'){
     // 손으로 끄는 동안은 손 위치 그대로, 놓으면 남은 만큼 0.45초 속도로 마저 들어감
-    if(!st.manual)st.insP=clamp((st.insP||0)+dt/.45,0,1);
+    if(!st.manual)st.insP=clamp((st.insP||0)+dt/.7,0,1);
     const p=st.insP,e=st.manual?p:p*p;hero={x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw};
     placeICcard(e);
     // 점은 투입구에 멈춘 채 카드를 받아들이고, 카드가 다 들어가면 점이 눈 자리로 돌아감
@@ -548,9 +549,9 @@ function frame(now){
   if(s==='read'){
     placeICcard(1);
     // 눈 → Macro로 확 당겨짐(0.45초) → 점을 축으로 호가 회전. 한 바퀴마다 가속 · 감속해 역동적으로.
-    const Z=.7,z=clamp(t/Z,0,1),zz=1-Math.pow(1-z,4);
+    const Z=1.0,z=clamp(t/Z,0,1),zz=1-Math.pow(1-z,4);
     const m=mix({x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw,dr:EYE.dr},MAC,zz);
-    const REV=1.6,u=Math.max(0,t-Z*.6)/REV,turn=360*(u+.11*Math.sin(2*Math.PI*u)); // 멈추지 않고 빨라졌다 느려졌다
+    const REV=2.2,u=Math.max(0,t-Z*.6)/REV,turn=360*(u+.11*Math.sin(2*Math.PI*u)); // 멈추지 않고 빨라졌다 느려졌다
     const sp0=P().tgt; // 점은 투입구에서 출발해 확대된 중심으로
     hero={x:m.x,y:m.y,r:m.r,sw:m.sw,a0:125+turn,a1:235+turn};hDot={x:lerp(sp0.x,m.x,zz),y:lerp(sp0.y,m.y,zz),r:lerp(10,m.dr,zz)};
     if(t>=+icT.value){st.tries++;$('rTry').textContent=st.tries;if(st.tries<+tries.value){st.retry=true;placeICcard(0);if(st.failNew){st.missKind='ic';go('miss')}else go('prompt')}else{go('fail')}}
@@ -558,7 +559,7 @@ function frame(now){
   if(s==='fail'){corner=CORNER;cDot=0; // D 조연: 호만 남고, 점은 빠져나와 길잡이가 됨
     $('gDot').setAttribute('r',0);$('gLine').setAttribute('x1',200);$('gLine').setAttribute('y1',1400);$('gLine').setAttribute('x2',880);$('gLine').setAttribute('y2',1400);$('gLine').setAttribute('stroke-width',3);
     // 지표: 모서리 호에서 점이 내려와 긁는 길의 시작점에 앉고, 실제 긁기 속도로 길을 한 번 보여 줌 (반복)
-    const v=+sp.value*25.4*U, run=680/v, drop=.6, hold=.5, cyc=drop+.25+run+hold;
+    const v=+sp.value*25.4*U, run=680/v, drop=.9, hold=.8, cyc=drop+.25+run+hold;
     const c=t<cyc?t:drop+((t-drop)%(cyc-drop));
     if(c<drop){const e=ease(c/drop);hDot={x:lerp(CORNER.x,200,e),y:lerp(CORNER.y,1400,e),r:lerp(4,14,e)}}
     else if(c<drop+.25){hDot={x:200,y:1400,r:14}}
@@ -583,41 +584,42 @@ function frame(now){
     if(tail>=AX){st.line=null;hDot={x:AX,y:AY,r:ASW/2}} // 선의 둥근 끝 = 같은 지름의 점
   }
   if(s==='miss'&&st.missKind==='ic'){
-    // 멈춤: 돌던 Macro 호가 눈 자리로 물러나고, 점은 투입구로 돌아가 두 번 깜빡여 '다시 여기'
-    hero={x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw};const q=P().tgt,bl=t>.5?Math.abs(Math.sin((t-.5)*Math.PI*2.2)):1;
-    hDot={x:q.x,y:q.y,r:10*(t>.5&&t<1.4?.4+.6*bl:1)};
-    if(t>=1.4){st.retry=true;go('prompt')}
+    // 멈춤: 돌던 Macro 호가 눈 자리로 물러나고, 점은 위로 올라가 눈 가운데로 돌아옴 → 한 번 깜빡 → 잠깐 쉼 → 다시 넣기 안내에서 투입구로 내려감
+    hero={x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw};
+    const blink=t>1.3&&t<1.65?Math.sin(Math.PI*(t-1.3)/.35):0; // 눈 감았다 뜨기
+    hDot={x:EYE.x,y:EYE.y,r:EYE.dr*(1-blink)};
+    if(t>=2.5){st.retry=true;go('prompt')}
   }
   if(s==='miss'&&st.missKind==='ms'){
     // 호는 그대로(주연 유지) 가늘어지고, 긁은 선은 그 자리에 가는 흔적으로 → 점이 선의 시작점에 와서 박동
     hero={x:AX,y:AY,r:AR,sw:ASW*.4};
-    const sx=60;const k=ease(clamp(t/.6,0,1)),beat=t>.6?Math.pow(Math.max(0,Math.sin((t-.6)*Math.PI/1.2)),6):0;
+    const sx=60;const k=ease(clamp(t/.9,0,1)),beat=t>.9?Math.pow(Math.max(0,Math.sin((t-.9)*Math.PI/1.6)),6):0;
     hDot={x:lerp(AX,sx,k),y:AY,r:lerp(6,16,k)*(1+.15*beat)};
   }
   if(s==='reject'&&st.failNew){
     // 반전 없음. 확인의 점을 거두고(크기 0), 큰 호는 모서리 조연으로 물러남 — 마침표가 없다 = 끝나지 않았다
-    corner=t>.5?CORNER:null;cDot=0;hero=t<.5?{x:CORNER.x,y:CORNER.y,r:CORNER.r,sw:CORNER.sw}:null;hDot=null;
+    corner=t>.8?CORNER:null;cDot=0;hero=t<.8?{x:CORNER.x,y:CORNER.y,r:CORNER.r,sw:CORNER.sw}:null;hDot=null;
   }
   if(s==='done'){ // 호는 사라지고, 점 자리에서 글자가 왼쪽으로 펼쳐지며 점은 마침표로 줄어듦
     hero=null;
     // 면 전환: 점이 화면 전체를 덮는 검은 면으로 번짐 → 흑백 반전. 가운데 흰 점이 남아 마침표가 되고, 그 자리에서 흰 글자가 펼쳐짐
-    const fl=clamp(t/.6,0,1),fe=fl<1?1-Math.pow(1-fl,3):1;setDot('flood',AX,AY,lerp(ASW/2,2200,fe));
-    const r=ease(clamp((t-.2)/.45,0,1));setDot('period',AX,AY,lerp(0,12,r));
-    const rv=ease(clamp((t-.3)/.6,0,1)),rx=lerp(AX,0,rv);const R=$('revealRect');R.setAttribute('x',rx);R.setAttribute('width',AX+20-rx);
+    const fl=clamp(t/.9,0,1),fe=fl<1?1-Math.pow(1-fl,3):1;setDot('flood',AX,AY,lerp(ASW/2,2200,fe));
+    const r=ease(clamp((t-.3)/.6,0,1));setDot('period',AX,AY,lerp(0,12,r));
+    const rv=ease(clamp((t-.45)/.9,0,1)),rx=lerp(AX,0,rv);const R=$('revealRect');R.setAttribute('x',rx);R.setAttribute('width',AX+20-rx);
     if(rv>=1){R.setAttribute('x',0);R.setAttribute('width',1080)}
   }
   const cOn=drawCollab(s,t);if(cOn&&(s==='swipe'||s==='auth'||s==='miss')){hero=null}
   // 매장 이름 글자색: 바탕이 어두우면 흰색 (B 바탕, A의 승인 검정 면) — 로고 표식과 영문은 매장 색 그대로
   if(brand)refreshLogo(false);
   // 적용 — 목표값을 부드럽게 따라감. 사라질 때는 그 자리에서 굵기 · 크기만 0으로.
-  const K_=s==='read'?9:12;
+  const K_=s==='read'?6:7; // 낮을수록 천천히 부드럽게 따라감
   const ct=corner?{x:corner.x,y:corner.y,r:corner.r,sw:corner.sw}:(disp.corner?{...disp.corner,sw:0}:null);
   if(ct){disp.corner=follow(disp.corner||{...ct,sw:0},ct,K_,dt)}disp.cdot=lerp(disp.cdot,corner?cDot:0,1-Math.exp(-K_*dt));
   const ht=hero?{x:hero.x,y:hero.y,r:hero.r,sw:hero.sw,a0:hero.a0??125,a1:hero.a1??235}:(disp.hero?{...disp.hero,sw:0}:null);
   if(ht){if(disp.hero&&Math.abs(disp.hero.a0-ht.a0)>400){disp.hero.a0=ht.a0;disp.hero.a1=ht.a1}disp.hero=follow(disp.hero||{...ht,sw:0},ht,K_,dt)}
-  const exact=s==='fail'||s==='insert'||(s==='prompt'&&t>1.3); // 길잡이 점은 실제 긁기 속도 그대로
+  const exact=s==='fail'||s==='insert'||(s==='prompt'&&(st.retry?t+.8:t)>1.9); // 길잡이 점은 실제 긁기 속도 그대로
   const dtg=hDot?{x:hDot.x,y:hDot.y,r:hDot.r}:(disp.dot?{...disp.dot,r:0}:null);
-  if(dtg)disp.dot=exact?{...dtg}:follow(disp.dot||{...dtg,r:0},dtg,K_+4,dt);
+  if(dtg)disp.dot=exact?{...dtg}:follow(disp.dot||{...dtg,r:0},dtg,K_+3,dt);
   const C_=disp.corner;setArc('cornerArc',C_&&C_.sw>.3?C_:null);setDot('cornerDot',C_?C_.x:0,C_?C_.y:0,disp.cdot);
   setArc('heroArc',disp.hero&&disp.hero.sw>.3?disp.hero:null);setDot('heroDot',disp.dot?disp.dot.x:0,disp.dot?disp.dot.y:0,disp.dot?disp.dot.r:0);
   // 후광: 그래픽보다 조금 넓은 반투명 흰 띠 (흐림 필터는 매 프레임 비싸서 뺌)
@@ -636,9 +638,9 @@ function frame(now){
   // 자동 재생
   if(st.auto){
     if(s==='select'&&t>.8)start();
-    else if(s==='prompt'&&t>(st.retry?1.0:1.4))insert();
+    else if(s==='prompt'&&t>(st.retry?2.6:3.4))insert();
     else if((s==='fail'||(s==='miss'&&st.missKind==='ms'))&&t>1.4)autoSwipe();
-    else if((s==='done'||s==='reject')&&t>2.6)go('select');
+    else if((s==='done'||s==='reject')&&t>3.4)go('select');
   }
   requestAnimationFrame(frame);
 }
