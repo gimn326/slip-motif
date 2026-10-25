@@ -23,11 +23,15 @@
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.6;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
-.top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:center;margin:0 auto 10px;max-width:1100px}
-.top .lbl{font-size:12px;color:var(--muted);font-weight:600}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chips button{padding:6px 12px;font-size:13.5px;border-radius:999px}
-.chips button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
+.top{display:flex;flex-wrap:wrap;gap:8px 14px;opacity:.9;align-items:center;justify-content:center;margin:0 auto 10px;max-width:1100px}
+.top .lbl{font-size:11.5px;color:var(--muted);font-weight:400}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+/* 위 막대는 조작용이라 시선을 뺏지 않게: 가는 테두리 · 보통 굵기 · 선택은 옅은 면 */
+.top button{font-weight:400;font-size:12.5px;border:1px solid var(--line);color:var(--muted);background:transparent;padding:4px 10px;border-radius:999px}
+.top button[aria-pressed=true]{background:var(--soft);color:var(--ink);border-color:var(--muted)}
+.top .seg{border:1px solid var(--line);border-radius:999px}
+.top .seg button{border:0;border-radius:0;padding:4px 10px;font-size:12.5px}
+.top .seg button[aria-pressed=true]{background:var(--soft);color:var(--ink)}
 .wrap{position:relative}
 .pop{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:72px;width:250px;max-height:calc(100vh - 90px);overflow:auto;font-size:13px;padding:12px;background:var(--panel);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);display:grid;gap:10px;opacity:.96}
 @media (max-width:900px){.pop{position:static;width:auto;max-height:none;margin-top:12px}}
@@ -253,7 +257,7 @@ $('okB').onclick=()=>{st.ok=true;$('okB').setAttribute('aria-pressed','true');$(
 const SWAP={'#111':'#fff','#111111':'#ffffff','#fff':'#111','#ffffff':'#111111','rgba(17,17,17,.06)':'rgba(255,255,255,.1)','rgba(255,255,255,.1)':'rgba(17,17,17,.06)'};
 function swapTree(){$('screen').querySelectorAll('*').forEach(el=>{for(const a of ['fill','stroke']){const v=el.getAttribute(a);if(v&&SWAP[v.toLowerCase()])el.setAttribute(a,SWAP[v.toLowerCase()])}})}
 const INK=()=>ver==='B'?'#fff':'#111', PAPER=()=>ver==='B'?'#111':'#fff';
-function setVer(v){if(v!==ver){swapTree();ver=v}refreshLogo(true);$('vA').setAttribute('aria-pressed',v==='A');$('vB').setAttribute('aria-pressed',v==='B');
+function setVer(v){if(v!==ver){swapTree();ver=v}refreshLogo(true);if(st.step==='select'||st.step==='reject')go(st.step);$('vA').setAttribute('aria-pressed',v==='A');$('vB').setAttribute('aria-pressed',v==='B');
   try{localStorage.setItem('slipVer',v)}catch(e){}}
 $('vA').onclick=()=>setVer('A');$('vB').onclick=()=>setVer('B');
 $('fNew').onclick=()=>{st.failNew=true;$('fNew').setAttribute('aria-pressed','true');$('fOld').setAttribute('aria-pressed','false')};
@@ -301,8 +305,8 @@ function setButtons(list){
   list.forEach(([label,filled,y,fn])=>{
     if(filled&&brand){ // 주 버튼은 매장 색 (반전 · 면 전환 영향 없음)
       const b=document.createElementNS(NS,'g');b.style.cursor='pointer';
-      const r=document.createElementNS(NS,'rect');r.setAttribute('x',80);r.setAttribute('y',y);r.setAttribute('width',920);r.setAttribute('height',170);r.setAttribute('rx',36);r.setAttribute('fill',BRANDS[brand].color);
-      const t=document.createElementNS(NS,'text');t.setAttribute('x',540);t.setAttribute('y',y+101);t.setAttribute('font-size',46);t.setAttribute('font-weight',700);t.setAttribute('text-anchor','middle');t.setAttribute('fill',BRANDS[brand].btnInk);t.textContent=label;
+      const r=document.createElementNS(NS,'rect');r.setAttribute('x',80);r.setAttribute('y',y);r.setAttribute('width',920);r.setAttribute('height',170);r.setAttribute('rx',36);const bk=BRANDS[brand],dkB=ver==='B';r.setAttribute('fill',dkB&&bk.colorDark?bk.colorDark:bk.color); // 검정 브랜드 색은 검정 바탕에서 흰 버튼으로
+      const t=document.createElementNS(NS,'text');t.setAttribute('x',540);t.setAttribute('y',y+101);t.setAttribute('font-size',46);t.setAttribute('font-weight',700);t.setAttribute('text-anchor','middle');t.setAttribute('fill',dkB&&bk.btnInkDark?bk.btnInkDark:bk.btnInk);t.textContent=label;
       b.append(r,t);if(fn)b.addEventListener('click',fn);bg.appendChild(b);return}
     const b=document.createElementNS(NS,'g');b.style.cursor='pointer';
     const r=document.createElementNS(NS,'rect');r.setAttribute('x',80);r.setAttribute('y',y);r.setAttribute('width',920);r.setAttribute('height',170);r.setAttribute('rx',36);
@@ -514,19 +518,21 @@ let lastNow=performance.now();
 function frame(now){
   const t=(now-st.t0)/1000, s=st.step, dt=Math.min(.05,(now-lastNow)/1000);lastNow=now;
   let corner=null,cDot=0,hero=null,hDot=null,ghost=null;
-  if(s==='select'){corner=CORNER;cDot=CORNER.dr}
+  if(s==='select'){corner=CORNER;cDot=CORNER.dr;if(t>1&&!st.icDrag)start()} // 1초 정지 → 넣기 안내로
   if(s==='prompt'){
     // 모서리 심볼이 눈 자리로 → 점이 투입구 쪽을 봄
     const a=st.retry?1:ease(clamp(t/.8,0,1));const p=mix({x:CORNER.x,y:CORNER.y,r:CORNER.r,sw:CORNER.sw,dr:CORNER.dr},{x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw,dr:EYE.dr},a);
     hero={x:p.x,y:p.y,r:p.r,sw:p.sw};const look=ease(clamp((t-.7)/.6,0,1));
-    const L=look*90,dir=P().look;
+    const L=look*165,dir=P().look; // 눈동자가 호 가장자리까지 확실히 굴러감
     let dx=p.x+dir[0]*L,dy=p.y+dir[1]*L,dr=p.dr*lerp(1,.8,look);
     // 지표: 바라본 다음, 점이 먼저 투입구까지 가서 '여기'를 짚고 돌아옴 (반복)
     // 한 번만 투입구까지 내려가 멈춤 → 그 자리에서 박동처럼 아주 살짝만 (재촉하지 않게)
-    if(t>1.3){const k=ease(clamp((t-1.3)/1.0,0,1));
+    if(t>1.3){const u=clamp((t-1.3)/.8,0,1),k=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1; // 살짝 지나쳤다 돌아오는 도착(back-out)
       const tgt=P().tgt;
-      const beat=k>=1?Math.pow(Math.max(0,Math.sin((t-2.3)*Math.PI/1.2)),6):0; // 1.2초마다 짧은 박동
-      dx=lerp(dx,tgt.x,k);dy=lerp(dy,tgt.y,k);dr=lerp(dr,10,k)*(1+.12*beat)}
+      const land=t>2.1?Math.exp(-(t-2.1)*5):0; // 도착 순간 한 번 크게 '여기'
+      const beat=t>2.6?Math.pow(Math.max(0,Math.sin((t-2.6)*Math.PI/1.2)),6):0; // 그 뒤엔 1.2초마다 작은 박동
+      dx=lerp(dx,tgt.x,k);dy=lerp(dy,tgt.y,k);dr=lerp(dr,14,Math.min(1,u))*(1+.55*land+.12*beat);
+      $('slotLine').setAttribute('stroke-width',8+10*land)}
     hDot={x:dx,y:dy,r:dr};
   }
   if(s==='insert'){
@@ -609,7 +615,7 @@ function frame(now){
   if(ct){disp.corner=follow(disp.corner||{...ct,sw:0},ct,K_,dt)}disp.cdot=lerp(disp.cdot,corner?cDot:0,1-Math.exp(-K_*dt));
   const ht=hero?{x:hero.x,y:hero.y,r:hero.r,sw:hero.sw,a0:hero.a0??125,a1:hero.a1??235}:(disp.hero?{...disp.hero,sw:0}:null);
   if(ht){if(disp.hero&&Math.abs(disp.hero.a0-ht.a0)>400){disp.hero.a0=ht.a0;disp.hero.a1=ht.a1}disp.hero=follow(disp.hero||{...ht,sw:0},ht,K_,dt)}
-  const exact=s==='fail'||s==='insert'; // 길잡이 점은 실제 긁기 속도 그대로
+  const exact=s==='fail'||s==='insert'||(s==='prompt'&&t>1.3); // 길잡이 점은 실제 긁기 속도 그대로
   const dtg=hDot?{x:hDot.x,y:hDot.y,r:hDot.r}:(disp.dot?{...disp.dot,r:0}:null);
   if(dtg)disp.dot=exact?{...dtg}:follow(disp.dot||{...dtg,r:0},dtg,K_+4,dt);
   const C_=disp.corner;setArc('cornerArc',C_&&C_.sw>.3?C_:null);setDot('cornerDot',C_?C_.x:0,C_?C_.y:0,disp.cdot);
