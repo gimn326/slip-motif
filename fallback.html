@@ -339,6 +339,7 @@ const rad=a=>a*Math.PI/180;
 function arcD(cx,cy,r,a0=125,a1=235){const x0=cx+r*Math.cos(rad(a0)),y0=cy+r*Math.sin(rad(a0)),x1=cx+r*Math.cos(rad(a1)),y1=cy+r*Math.sin(rad(a1));return `M${x0},${y0} A${r},${r} 0 ${((a1-a0)%360)>180?1:0} 1 ${x1},${y1}`}
 function setArc(id,s){const p=$(id);if(!s){p.setAttribute('d','');return}p.setAttribute('d',arcD(s.x,s.y,s.r,s.a0??125,s.a1??235));p.setAttribute('stroke-width',s.sw)}
 function setDot(id,x,y,r){const c=$(id);c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',Math.max(0,r))}
+const F4=v=>Math.round(v*10)/10;
 const lerp=(a,b,t)=>a+(b-a)*t, ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 // 층 순서: 글자 · 버튼 아래 → 그래픽(호 · 점 · 선) 앞. 그래픽 둘레에 흰 후광을 흐리게 깔아 글자와 구분. 투명 카드는 맨 위
 (()=>{const scr=$('hdr').parentNode;
@@ -412,7 +413,8 @@ function go(step){
   if(step==='done'){show('amt',false);setText([],[]);show('doneT',true);
     const tt=$('doneTitle');tt.setAttribute('x',FX()-24);tt.setAttribute('y',FY()+12);
     // 글자 왼쪽에 호 → 호 + 문장 + 마침표 점 = 심볼이 문장을 감쌈(T6-5)
-    try{const bb=tt.getBBox(),r=bb.height*.34,cx=bb.x-r*.1,cy=bb.y+bb.height*.55;$('doneArc').setAttribute('d',arcD(cx,cy,r));$('doneArc').setAttribute('stroke-width',10)}catch(e){}
+    // 호의 열린 끝과 글자 사이 = 글자 크기의 절반(숨 쉴 자리), 굵기 = 반지름 ÷ 4 (T6-5 비율)
+    try{const bb=tt.getBBox(),r=bb.height*.34,gap=48,cx=bb.x-gap+r*.57,cy=bb.y+bb.height*.55;$('doneArc').setAttribute('d',arcD(cx,cy,r));$('doneArc').setAttribute('stroke-width',F4(r/4))}catch(e){}
     placeICcard(0);act.textContent='처음부터';hint.textContent='점이 화면 전체를 덮는 면으로 번지며 흑백이 뒤집히고, 가운데 남은 흰 점이 마침표가 됩니다.';placeMS(0,false)}
   if(step==='miss'){
     if(st.missKind==='ic'){setText(['칩을 읽지 못했어요'],['카드를 빼서 다시 넣어 주세요.'],560,72);{const q=P().tgt;disp.dot={x:q.x,y:q.y,r:10}}/* 점은 투입구 자리에서 시작해 위로 올라감 */hint.textContent='돌던 호가 멈춰 눈 자리로 물러나고, 점이 위로 올라가 눈 가운데서 한 번 깜빡이고 잠깐 쉰 뒤, 다시 투입구로 내려가 재결제를 안내합니다.'}
