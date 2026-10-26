@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<script>/* ?bare = 설정 없이 모션만 (소개 페이지 첫 화면에 끼워 넣는 용도) */if(/bare/.test(location.search+location.hash))document.documentElement.classList.add('bare')</script>
 <style>
 /* 레이아웃: 위 제목줄 · 가운데 무대(비율 고정 캔버스) · 오른쪽 조절 패널 · 아래 타임라인 + 단계 */
 :root{
@@ -65,6 +66,11 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;backg
   .steps button{position:static;transform:none}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+html.bare,html.bare body{height:100%;overflow:hidden;padding:0;background:var(--bg)}
+html.bare .app{display:block;height:100%;padding:0}
+html.bare header,html.bare aside,html.bare .bar,html.bare .steps{display:none}
+html.bare .stage{height:100%;aspect-ratio:auto;background:var(--bg)}
+html.bare canvas{box-shadow:none}
 </style>
 </head>
 <body>
@@ -128,8 +134,11 @@ const STEPS=[['입자',0,'흩어진 점'],['병합',T.g0,'다이를 지나 선 �
 const DEF={fmt:'16:9',bg:'light',speed:1,turns:'1',size:1,start:'grid',die:'on'};
 const P=Object.assign({},DEF);
 const KEY='slip-dot-line-arc-v2';
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)Object.assign(P,s)}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}};
+const BARE=document.documentElement.classList.contains('bare');
+if(!BARE){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)Object.assign(P,s)}catch(e){}}
+// 모션만 보일 때: 기본값 · 바탕은 보는 사람의 밝은/어두운 화면 설정을 따름, 설정 저장 안 함
+const dk=matchMedia('(prefers-color-scheme: dark)');if(BARE){P.bg=dk.matches?'dark':'light';dk.addEventListener('change',e=>{P.bg=e.matches?'dark':'light';paint()})}
+const save=()=>{if(BARE)return;try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}};
 
 /* 선(곡률 κ, 가운데 점 M, 진행 방향 θ) 위의 점 — κ=0이면 직선 */
 function curvePts(M,th,k,n=72){
@@ -205,7 +214,7 @@ function frame(c,w,h,t,col){
 
 const cv=$('#cv'),ctx=cv.getContext('2d');
 const FMT={'16:9':[1920,1080],'1:1':[1080,1080],'9:16':[1080,1920]};
-function fit(){const st=$('.stage'),pad=Math.min(32,st.clientWidth*0.03),aw=st.clientWidth-pad*2,ah=st.clientHeight-pad*2;if(aw<=0||ah<=0)return;
+function fit(){const st=$('.stage'),pad=BARE?0:Math.min(32,st.clientWidth*0.03),aw=st.clientWidth-pad*2,ah=st.clientHeight-pad*2;if(aw<=0||ah<=0)return;
   const k=Math.min(aw/cv.width,ah/cv.height);cv.style.width=Math.floor(cv.width*k)+'px';cv.style.height=Math.floor(cv.height*k)+'px'}
 new ResizeObserver(fit).observe($('.stage'));
 function setFmt(f){P.fmt=f;const[w,h]=FMT[f];cv.width=w;cv.height=h;document.querySelectorAll('.fmt button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===f));
