@@ -2,7 +2,6 @@
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SLIP 폴백 애니메이션 (실제 브랜드)</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
@@ -145,7 +144,7 @@ select{font:inherit;padding:6px 8px;border-radius:8px;border:1.5px solid var(--l
           <g id="collab"></g>
           <circle id="flood" fill="#111" r="0"/>
           <circle id="period" fill="#fff" r="0"/>
-          <g id="slotLabel"><line id="slotLine" x1="340" y1="1830" x2="740" y2="1830" stroke="#111" stroke-width="8"/><text id="slotText" x="540" y="1790" font-size="32" text-anchor="middle">카드 투입구</text></g>
+          <g id="slotLabel"><line id="slotLine" x1="340" y1="1830" x2="740" y2="1830" stroke="#111" stroke-width="8"/><text id="slotText" x="540" y="1886" font-size="32" text-anchor="middle">카드 투입구</text></g>
         </g>
       </g>
       <!-- 매장 브랜드 층: 화면 반전(B)과 승인 면 전환에 영향받지 않음, SLIP 그래픽보다 앞 = 매장 브랜드를 가리지 않음 -->
@@ -163,7 +162,7 @@ select{font:inherit;padding:6px 8px;border-radius:8px;border:1.5px solid var(--l
         <g id="podL" style="display:none"><rect x="-350" y="1540" width="340" height="560" rx="44" fill="var(--body)" stroke="var(--body-edge)" stroke-width="4"/>
         <text x="-180" y="1700" font-size="30" fill="#aab0b7" text-anchor="middle" font-family="IBM Plex Sans KR, sans-serif">IC 투입구</text>
         <rect x="-301" y="1791" width="242" height="18" rx="9" fill="var(--slot)"/></g>
-        <g id="msHg"><text x="620" y="2400" font-size="30" fill="#aab0b7" text-anchor="middle" font-family="IBM Plex Sans KR, sans-serif">MS 홈 — 카드를 잡고 오른쪽으로 끌어 긁기</text>
+        <g id="msHg"><text x="200" y="2540" font-size="24" fill="#8a9097" text-anchor="start" font-family="IBM Plex Sans KR, sans-serif">MS 홈 →</text>
         <rect x="200" y="2452" width="840" height="34" rx="12" fill="var(--slot)"/>
         <line x1="620" y1="2440" x2="620" y2="2500" stroke="#6d737a" stroke-width="6"/>
         <text x="620" y="2540" font-size="24" fill="#8a9097" text-anchor="middle" font-family="IBM Plex Mono, monospace">읽기 헤드</text></g>
@@ -229,7 +228,7 @@ const U=1080/268;                // 화면 단위 / mm
 const CARD_L=85.6*U, CARD_W=54*U; // 345 × 218
 const HEAD_X=620, GROOVE_X0=200, GROOVE_X1=1040, GROOVE_Y=2452;
 const AX=900, AY=1000, AR=340, ASW=56;     // 주연 호 (K6). 중심을 오른쪽에 둬서 긁기가 끝난 선이 늘 중심 앞에 있게
-const EYE={x:600,y:1060,r:200,sw:40,dr:40}; // 눈 상태
+const EYE={x:600,y:1160,r:200,sw:40,dr:40}; // 눈 상태 (안내 두 줄 아래로 띄움 — 글자와 호가 안 겹치게)
 // 읽는 중: C3 Macro처럼 크게 — 중심(점)은 화면 오른쪽 위 밖, 점은 가장자리에 아랫부분만. 호는 반지름 1100으로 화면 밖까지 크게 돌며 들어왔다 나감
 const MAC={x:1000,y:-200,r:1100,sw:260,dr:260};
 const CORNER={x:976,y:135,r:16,sw:4,dr:4};
@@ -253,9 +252,9 @@ function frontQuads(vx,vy,A,B,e){const tip=1+LZ*e,near=tip-LZ;if(near>=.999)retu
   const chip=c1>c0?projQuad(vx,vy,A,B,c0,c1,-.62,-.18):'';return {body,chip}}
 // 리더 위치별 기하 — 투입구는 늘 정면. slot = 실물 투입구 중심(키오스크 좌표), tgt = 화면 속 점이 짚는 자리, gh = 화면 속 투명 카드 투시(소실점 · 투입구 면)
 const POS={
-  down:{vb:'0 0 1240 2640',slot:{x:620,y:2149},look:[0,1],tgt:{x:540,y:1790},gh:{vx:540,vy:1500},line:[340,1830,740,1830],lt:{x:540,y:1790,a:'middle',s:'카드 투입구'}},
-  right:{vb:'0 0 1640 2640',slot:{x:1420,y:1800},look:[1,0],tgt:{x:920,y:1680},gh:{vx:920,vy:1390},line:[770,1720,1070,1720],lt:{x:1060,y:1640,a:'end',s:'카드 투입구 →'}},
-  left:{vb:'-400 0 1640 2640',slot:{x:-180,y:1800},look:[-1,0],tgt:{x:160,y:1680},gh:{vx:160,vy:1390},line:[10,1720,310,1720],lt:{x:20,y:1640,a:'start',s:'← 카드 투입구'}},
+  down:{vb:'0 0 1240 2640',slot:{x:620,y:2149},look:[0,1],tgt:{x:540,y:1790},gh:{vx:540,vy:1500},line:[340,1830,740,1830],lt:{x:540,y:1886,a:'middle',s:'카드 투입구'}},
+  right:{vb:'0 0 1640 2640',slot:{x:1420,y:1800},look:[1,0],tgt:{x:920,y:1680},gh:{vx:920,vy:1390},line:[770,1720,1070,1720],lt:{x:1060,y:1786,a:'end',s:'카드 투입구 →'}},
+  left:{vb:'-400 0 1640 2640',slot:{x:-180,y:1800},look:[-1,0],tgt:{x:160,y:1680},gh:{vx:160,vy:1390},line:[10,1720,310,1720],lt:{x:20,y:1786,a:'start',s:'← 카드 투입구'}},
 };
 const P=()=>POS[st.pos];
 // MS 세로: 긁는 위치는 한 축(가로 기준 x)으로 계산하고, 화면 그래픽은 점(AX,AY)을 중심으로 90° 돌려 그림 → 선이 위에서 아래로 지나감
@@ -323,7 +322,7 @@ const BRANDS={
 // BRANDS-END
 // 로고 대안 규칙 (검정/흰 바탕과 겹칠 때, 그래픽 대비 3:1 = WCAG 1.4.11 기준):
 // ① 원본 대비가 충분하면 그대로 → ② 안 보이는 부분만 브랜드 시그니처 색으로 → ③ 시그니처 색도 안 보이면 흰/검정 단색 반전 → ④ 변형이 안 되는 로고는 브랜드 색 배지 위에
-let brand=null,ver='A';
+let brand='mcd',ver='A'; // 첫 화면 기본 = 맥도날드 + 협업 켜기
 function drawBrandLogo(dk){
   const g=$('brandLogo');g.innerHTML='';$('logoSlot').style.display=brand?'none':'';$('rLogo').textContent='—';if(!brand)return;
   const b=BRANDS[brand],v=dk?b.dark:b.light,ink=dk?'#fff':'#111';$('rLogo').textContent=v.rule;
@@ -508,7 +507,7 @@ function autoSwipe(){
 // ---------- 브랜드 협업 모드 ----------
 // 끄면 원본 SLIP 모션 그대로. 켜면 '다시 긁는 순간'의 선이 브랜드 장면으로 바뀜. 지키는 규칙: 실제 긁기 속도 · 앞으로만 · 끝에 점 하나(승인 면 전환은 원본과 같음)
 // 색은 SLIP 흑백 반전(swapTree)에 안 걸리게 #121212 · #fefefe 등 근사값 사용
-let collabOn=false;
+let collabOn=true;
 const fmt=n=>Math.round(n*10)/10;
 function tear(x0,x1,yc,h,hx,gap){ // 띠(테이프 · 봉투 접힘 · 칼집)를 hx까지 찢음 → 위 · 아래 조각 + 아직 안 찢긴 부분
   const e=Math.min(hx,x1),xs=[];for(let x=x0;x<e;x+=14)xs.push(x);xs.push(e);
@@ -623,7 +622,7 @@ Object.assign(COLLAB,{
     draw:c=>cupScene(c,{sleeve:'#FDD22B',logo:'brand_logos/compose_light.svg',straw:'#1d1d1d',drink:'#3f2a1d'})},
   moms:{name:'맘스터치 — 버거 포장지 펼치기 / 빨대',idea:'공식 사진(2020-11 새 BI)의 흰 버거 포장지 · 흰 종이컵. 가로 긁기 = 포장지 양 날개가 차례로 펼쳐져 버거가 드러남 · 위→아래 = 흰 컵에 검은 빨대',
     draw:c=>{if(c.dir==='v')return cupScene(c,{cup:'#ece7dc',sleeve:'#fbfaf6',logo:'brand_logos/momstouch.svg',straw:'#1d1d1d',drink:'#2a1a12'});
-      const CX=AX-200,CY=AY+40,W=520,H=380,kl=E3(c.p*2),kr=E3(c.p*2-1),tl=12*c.bump;
+      const CX=540,CY=AY+40,W=520,H=380 /* 화면 가로 가운데 */,kl=E3(c.p*2),kr=E3(c.p*2-1),tl=12*c.bump;
       const burger=`<g transform="translate(${CX} ${CY})">
         <rect x="-200" y="70" width="400" height="56" rx="26" fill="#E3A33C"/>
         <rect x="-214" y="20" width="428" height="62" rx="20" fill="#9a5426"/><rect x="-206" y="14" width="412" height="20" rx="10" fill="#F2A900"/>
@@ -796,7 +795,7 @@ function frame(now){
 try{if(localStorage.getItem('slipVer')==='B')setVer('B');const sp_=localStorage.getItem('slipPos');if(POS[sp_]){st.pos=sp_;document.querySelectorAll('[data-pos]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pos===sp_))}}catch(e){}
 // 주소 뒤 #pos=right&ver=B&brand=navy&step=prompt 로 바로 열기 (비교 · 캡처용)
 try{const h=new URLSearchParams(location.hash.slice(1));if(POS[h.get('pos')]){st.pos=h.get('pos');document.querySelectorAll('[data-pos]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pos===st.pos))}
-  if(h.get('ver')==='B')setVer('B');if(BRANDS[h.get('brand')]){brand=h.get('brand');chips();refreshLogo(true)}if(h.get('collab')==='1')collabOn=true;if(h.get('kink')==='0'){st.kink=0;document.querySelectorAll('[data-kink]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.kink==='0'))}if(h.get('ms')==='v'){st.msV=true;document.querySelectorAll('[data-ms]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.ms==='v'))}var hStep=h.get('step'),hP=h}catch(e){}
+  if(h.get('ver')==='B')setVer('B');if(BRANDS[h.get('brand')]){brand=h.get('brand');chips();refreshLogo(true)}if(h.get('collab')==='1')collabOn=true;if(h.get('collab')==='0')collabOn=false;if(h.get('brand')==='none')brand=null;if(h.get('kink')==='0'){st.kink=0;document.querySelectorAll('[data-kink]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.kink==='0'))}if(h.get('ms')==='v'){st.msV=true;document.querySelectorAll('[data-ms]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.ms==='v'))}var hStep=h.get('step'),hP=h}catch(e){}
 syncCollabUI();
 layoutSlot();go('select');if(hStep&&hStep!=='select'){if(hStep==='insert'){go('prompt');st.insP=.5;st.manual=true;go('insert')}else go(hStep);if(hStep==='swipe'){placeMS(GROOVE_X0-CARD_L+30+(+hP.get('demo')||.6)*840);st.v=+sp.value*25.4*U}}requestAnimationFrame(frame);
 if(reduce)$('hint').textContent+=' (모션 줄이기 설정이 켜져 있어 자동 재생은 직접 눌러야 시작합니다.)';
