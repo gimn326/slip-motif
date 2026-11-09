@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SLiP 키오스크 체험</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+*{font-synthesis:none}
+/* 레이아웃: 왼쪽 = 실제 비율 키오스크(화면 + 리더), 오른쪽 = 단계 · 설정 · 측정. 키오스크 화면 안은 항상 흑백(제품 그 자체). */
+:root{
+  --bg:#eceef0; --panel:#ffffff; --ink:#121314; --muted:#5d636b; --line:#cdd2d8; --soft:#f5f6f7;
+  --body:#2b2e33; --body-edge:#3a3e44; --slot:#0b0c0d; --card:#d9dcdf; --card-edge:#9aa0a7;
+  --f-ui:"SLiP", "Apple SD Gothic Neo", sans-serif;
+  --f-mono:"SLiP", "Apple SD Gothic Neo", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111315; --panel:#1a1d21; --ink:#eef0f2; --muted:#9aa1a9; --line:#30353b; --soft:#202429;
+  --body:#2b2e33; --body-edge:#41464d; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#111315; --panel:#1a1d21; --ink:#eef0f2; --muted:#9aa1a9; --line:#30353b; --soft:#202429;
+  --body:#2b2e33; --body-edge:#41464d; color-scheme:dark }
+html,body{height:100%;margin:0}
+/* 한 화면 안에 다 들어가게: 위 막대(줄 수만큼) + 남은 높이 전부를 키오스크가 씀 → 페이지 스크롤 없음 */
+body{box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
+.top{flex:none}
+.wrap{flex:1 1 auto;min-height:0}
+.stage{height:100%}
+/* 입력할 글자가 없는 화면 — 더블클릭 · 드래그로 글자가 선택돼 파랗게 칠해지는 것 막기 */
+body{-webkit-user-select:none;user-select:none}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+.top{display:flex;flex-wrap:wrap;gap:8px 14px;opacity:.9;align-items:center;justify-content:center;margin:0 auto 10px;max-width:1100px}
+.top .lbl{font-size:11.5px;color:var(--muted);font-weight:400}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+/* 위 막대는 조작용이라 시선을 뺏지 않게: 가는 테두리 · 보통 굵기 · 선택은 옅은 면 */
+.top button{font-weight:400;font-size:12.5px;border:1px solid var(--line);color:var(--muted);background:transparent;padding:4px 10px;border-radius:999px}
+.top button[aria-pressed=true]{background:var(--soft);color:var(--ink);border-color:var(--muted)}
+.top .seg{border:1px solid var(--line);border-radius:999px}
+.top .seg button{border:0;border-radius:0;padding:4px 10px;font-size:12.5px}
+.top .seg button[aria-pressed=true]{background:var(--soft);color:var(--ink)}
+.wrap{position:relative}
+.pop{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:72px;width:clamp(200px,22vw,250px);max-height:calc(100vh - 90px);overflow:auto;font-size:13px;padding:12px;background:var(--panel);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);display:grid;gap:10px;opacity:.96}
+@media (max-width:760px){.pop{position:static;width:auto;max-height:none;margin-top:12px}}
+.pop details summary{cursor:pointer;font-weight:600;font-size:13px}
+h1{font-size:22px;line-height:1.3;margin:0 0 4px;font-weight:700;text-wrap:balance}
+.lede{color:var(--muted);margin:0 0 16px;max-width:62ch}
+.stage{display:flex;justify-content:center;min-width:0}
+#kiosk{height:100%;width:auto;max-width:100%;min-height:0;display:block;touch-action:none}
+@media (max-width:760px){body{display:block;overflow:auto;height:auto}.stage{height:auto}#kiosk{height:calc(100svh - 120px);min-height:420px}}
+/* 11-08: 오른쪽 글 패널 숨김 → 맨 위 가운데 단계 캡션 하나(글래스모피즘) */
+body{background:radial-gradient(40vw 50vh at 100% 10%,#cfe7ff 0%,rgba(207,231,255,0) 70%),radial-gradient(40vw 40vh at 85% 30%,#e9dcff 0%,rgba(233,220,255,0) 70%),var(--bg)}
+.pop{display:none!important}
+.cap{position:fixed;top:20px;right:max(16px,env(safe-area-inset-right,0px));z-index:5;display:flex;gap:12px;align-items:center;width:max-content;max-width:220px;
+  padding:10px 18px 10px 12px;border-radius:18px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.65);
+  -webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);box-shadow:0 8px 32px rgba(31,120,204,.16),inset 0 1px 0 rgba(255,255,255,.7);color:#121314;pointer-events:none}
+.cap b{font:600 13px/1 var(--f-ui);letter-spacing:.04em;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,.6);color:#1F78CC}
+.cap span{display:grid;gap:1px}#capT{font-size:16px;font-weight:600;line-height:1.3}#capR{font-size:12px;line-height:1.4;color:#4a5560}
+.cap.in{animation:capIn .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes capIn{from{opacity:0;transform:translateX(12px) scale(.97);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@media (prefers-reduced-motion:reduce){.cap.in{animation:none}}
+.top button.mine{border-style:dashed}.top button.up{font-size:11.5px;color:var(--muted)}
+/* 11-08: 위 선택 막대를 왼쪽 세로 칸으로 옮김(오른쪽 설명 패널과 대칭) → 키오스크가 화면 높이를 다 씀 = 더 크게 보임 */
+@media (min-width:761px){
+  .top{position:fixed;left:max(16px,env(safe-area-inset-left,0px));top:20px;width:210px;max-height:calc(100vh - 40px);overflow:auto;margin:0;
+    flex-direction:column;flex-wrap:nowrap;align-items:flex-start;justify-content:flex-start;gap:4px;z-index:2}
+  .top .lbl{margin-top:8px}
+  .top .chips{max-width:210px}
+  .top #collabWrap{flex-direction:column;align-items:flex-start!important;gap:4px!important}
+  .top #reset{margin-top:12px}
+  .pop{top:20px;max-height:calc(100vh - 40px)}
+  .wrap{padding:0 230px}
+}
+.panel{background:var(--panel);border-radius:14px;padding:18px;display:grid;gap:18px;min-width:0}
+.sec-h{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+ol.steps{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+ol.steps li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:6px;padding:4px 6px;font-size:12.5px;line-height:1.4;border-radius:8px;color:var(--muted)}
+ol.steps li b{font-family:var(--f-mono);font-weight:500;font-size:13px}
+ol.steps li .role{display:block;font-size:11px;opacity:.8}
+ol.steps li.on{background:var(--ink);color:var(--panel)}
+ol.steps li.done{color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-weight:600;border-radius:10px;padding:9px 14px;border:1.5px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);color:var(--panel)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--muted);outline-offset:2px}
+.hint{font-size:13px;color:var(--muted);margin:8px 0 0}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center}
+.grid2 label{font-size:14px}
+.grid2 output,.mono{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.grid2 input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--ink)}
+select{font:inherit;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 12px;font-size:13.5px}
+.grid2 .seg{grid-column:1/-1;justify-self:start;flex-wrap:wrap}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
+.read{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;background:var(--soft);border-radius:10px;padding:10px 12px}
+.read span:nth-child(odd){color:var(--muted);font-size:13px}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.note p{margin:0 0 6px}
+/* 친근 모션판: 예전 호 · 점 그래픽은 숨기고 새 로고(별 + 앞뒤 고리)가 직접 움직임 */
+#cornerArc,#cornerDot,#heroArc,#heroDot,#heroHalo,#dotHalo,#lineHalo,#guide,#period,#doneArc{display:none}
+#vA,#vB{display:none}
+/* SLiP 서체 = Avenir Next(영문·숫자) + Pretendard(한글), 굵기마다 획 두께 맞춘 짝. 서체체계_비교/결정.md */
+@font-face{font-family:"SLiP";font-weight:100;src:local("AvenirNext-UltraLight");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:100;src:local("Pretendard-Thin"),local("Pretendard Thin");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:400;src:local("AvenirNext-Regular");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:400;src:local("Pretendard-Light"),local("Pretendard Light");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:500;src:local("AvenirNext-Medium");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:500;src:local("Pretendard-Regular"),local("Pretendard Regular");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:600;src:local("AvenirNext-DemiBold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:600;src:local("Pretendard-SemiBold"),local("Pretendard SemiBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:700;src:local("AvenirNext-Bold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:700;src:local("Pretendard-ExtraBold"),local("Pretendard ExtraBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+/* 11-07 키오스크 세트 E (서체체계_비교/결정.md): 본문·캡션·금액 500 · 단계 제목·승인 문장·버튼·코치 600 · 제목 100은 브랜드 문구만(현재 화면엔 없음). 매장 브랜드 로고 · 협업 그림 글자는 제 굵기 유지 */
+/* 화면 = Pretendard 한 패밀리(한글·영문·숫자). 브랜드 세트만 SLiP(Avenir Next+Pretendard). 듀오링고식 이원 체계 — 서체체계_비교/결정.md */
+#kiosk text{font-family:"Pretendard","Apple SD Gothic Neo",sans-serif!important;font-synthesis:none}
+#kiosk #brandLogo text,#kiosk #collab text{font-family:"SLiP","Apple SD Gothic Neo",sans-serif!important}
+#kiosk text:where(:not(#brandLogo *):not(#collab *)){font-weight:400!important}
+#kiosk #txt text[font-weight],#kiosk #doneTitle,#kiosk #btns text,#kiosk #brandBtns text,#kiosk #coach{font-weight:600!important}
+html.shot body{padding:0!important;background:#2b2e33!important}html.shot .top,html.shot .cap,html.shot .pop{display:none!important}html.shot .wrap{padding:0!important}html.shot #kiosk{height:100vh!important}
+
+/* ===== 아이패드 · 태블릿 적응 (11-08) ===== */
+html,body{height:100dvh}
+#menuBtn,#fullBtn,#exitFull{display:none}
+.glassBtn{font:600 13px/1 var(--f-ui);padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.62);color:#121314;
+  -webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);box-shadow:0 6px 24px rgba(31,120,204,.16)}
+@media (min-width:761px){#fullBtn{display:block;margin-top:6px}}
+@media (min-width:761px) and (max-width:1200px), (min-width:761px) and (orientation:portrait){
+  #menuBtn{display:block;position:fixed;left:max(14px,env(safe-area-inset-left,0px));top:max(14px,env(safe-area-inset-top,0px));z-index:12}
+  .top{top:64px!important;z-index:11!important;padding:14px 14px 16px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.85);
+    -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);box-shadow:0 18px 60px rgba(31,120,204,.22);
+    max-height:calc(100dvh - 84px)!important;transform:translateX(calc(-100% - 40px));transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+  html.menu .top{transform:none}
+  .wrap{padding:0!important}
+  body{padding-block:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-bottom,0px))}
+  .cap{top:max(14px,env(safe-area-inset-top,0px))}
+  .top button,.top .seg button{padding:7px 12px;font-size:13.5px}
+}
+html.full body{padding:0!important}html.full .top,html.full .cap,html.full .pop,html.full #menuBtn{display:none!important}html.full .wrap{padding:0!important}
+html.full #kiosk{height:100dvh!important}
+html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:max(12px,env(safe-area-inset-top,0px));z-index:20;opacity:.55;transition:opacity .2s}html.full #exitFull:hover,html.full #exitFull:active{opacity:1}
+</style>
+
+<button id="menuBtn" class="glassBtn" aria-expanded="false" aria-controls="topMenu">설정</button><button id="exitFull" class="glassBtn">← 돌아가기</button>
+<div class="top" id="topMenu">
+  <span class="lbl">매장 브랜드</span><div class="chips" id="brandChips"></div>
+  <span class="lbl" style="display:none">화면 바탕</span><span class="seg" role="group" aria-label="화면 바탕"><button id="vA" aria-pressed="true">A 흰 → 완료 검정</button><button id="vB" aria-pressed="false">B 검정 → 완료 흰</button></span>
+  <span class="lbl">MS 방향</span><span class="seg" role="group" aria-label="MS 긁는 방향"><button data-ms="h" aria-pressed="true">가로</button><button data-ms="v" aria-pressed="false">위→아래</button></span>
+  <span class="lbl">리더 위치</span><span class="seg" role="group" aria-label="리더 위치"><button data-pos="down" aria-pressed="true">화면 아래</button><button data-pos="right" aria-pressed="false">오른쪽 옆</button><button data-pos="left" aria-pressed="false">왼쪽 옆</button></span>
+  <span id="collabWrap" style="display:none;align-items:center;gap:8px"><span class="lbl">브랜드 협업</span><span class="seg" role="group" aria-label="브랜드 협업"><button id="cOff" aria-pressed="true">끄기 (원본)</button><button id="cOn" aria-pressed="false">켜기</button></span></span>
+  <button id="fullBtn">화면만 보기 (아이패드 구동)</button><button id="reset" style="padding:6px 12px;font-size:13.5px">처음부터</button>
+</div>
+<div class="cap" id="cap" aria-live="polite"><b id="capN"></b><span><span id="capT"></span><small id="capR" hidden></small></span></div>
+<div class="wrap">
+  <div class="stage">
+    <svg id="kiosk" viewBox="0 0 1240 2640" role="img" aria-label="키오스크 화면과 카드 리더">
+      <defs>
+        <filter id="toWhite" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/></filter>
+        <clipPath id="screenClip"><rect x="0" y="0" width="1080" height="1920"/></clipPath>
+        <clipPath id="slotClipDown"><rect x="0" y="0" width="1240" height="2152"/></clipPath>
+        <clipPath id="grooveClip"><rect x="0" y="0" width="1240" height="2468"/></clipPath>
+        <!-- 글자 · 로고 뒤 흰 후광: 글자 모양을 넓혀 흐리게 번지게 → 검은 그래픽 위에서도 구분되지만 상자처럼 딱딱하지 않게 -->
+        <filter id="halo" x="-20%" y="-60%" width="140%" height="220%">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="7" result="d"/>
+          <feGaussianBlur in="d" stdDeviation="10" result="b"/>
+          <feFlood flood-color="#ffffff" flood-opacity=".9"/>
+          <feComposite in2="b" operator="in" result="h"/>
+          <feMerge><feMergeNode in="h"/><feMergeNode in="h"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter>
+        <!-- 버전 B: 화면 전체 흑백 반전 (#ffffff ↔ #111111 정확히 맞바꿈) -->
+        <filter id="inv" filterUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1920" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="-1 0 0 0 1.067  0 -1 0 0 1.067  0 0 -1 0 1.067  0 0 0 1 0"/>
+        </filter>
+        <clipPath id="revealClip"><rect id="revealRect" x="0" y="0" width="0" height="1920"/></clipPath>
+        <!-- 화면 전환 물들임: 로고 자리에서 로고 크기에 맞춰 번져 나가는 정원(正圓) 그라데이션(화면 비율에 안 눌림). 전환 순간에만 나타났다 사라짐(색 · 반지름 · 세기는 스크립트) -->
+        <radialGradient id="washGrad" gradientUnits="userSpaceOnUse" cx="540" cy="960" r="100"><stop id="washS0" offset="0" stop-color="#A9D8FF" stop-opacity="1"/><stop id="washS1" offset=".5" stop-color="#A9D8FF" stop-opacity="1"/><stop id="washS2" offset="1" stop-color="#A9D8FF" stop-opacity="0"/></radialGradient>
+      </defs>
+      <!-- 본체 -->
+      <rect x="0" y="0" width="1240" height="2640" rx="64" fill="var(--body)"/>
+      <rect x="6" y="6" width="1228" height="2628" rx="60" fill="none" stroke="var(--body-edge)" stroke-width="4"/>
+      <!-- 화면 (항상 흰 바탕 · 검정) -->
+      <g id="screen" transform="translate(80 80)">
+        <rect width="1080" height="1920" fill="#FFFFFF"/>
+        <rect id="wash" width="1080" height="1920" fill="url(#washGrad)" opacity="0"/>
+        <g clip-path="url(#screenClip)" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif" fill="#111111">
+          <!-- 머리: 매장 로고 자리 + 금액 -->
+          <g id="hdr">
+            <g id="logoSlot"><rect x="80" y="80" width="300" height="110" fill="none" stroke="#111" stroke-width="3" stroke-dasharray="12 10"/>
+            <text x="230" y="148" font-size="32" text-anchor="middle">매장 로고</text></g>
+            <g id="amt"><text x="80" y="384" font-size="32">결제 금액</text><text x="1000" y="384" font-size="44" font-weight="700" text-anchor="end">12,500원</text></g>
+          </g>
+          <g id="txt"></g>
+          <g id="doneT" clip-path="url(#revealClip)" style="display:none">
+            <text id="doneTitle" x="672" y="1012" font-size="96" font-weight="700" text-anchor="end" fill="#fff">승인되었습니다</text>
+            <path id="doneArc" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
+            <text x="80" y="1180" font-size="40" fill="#fff">주문번호 128</text>
+            <text x="80" y="1244" font-size="40" fill="#fff">카드를 가져가세요.</text>
+          </g>
+          <g id="btns"></g>
+          <!-- 그래픽 -->
+          <path id="cornerArc" fill="none" stroke="#111" stroke-linecap="round"/>
+          <circle id="cornerDot" fill="#111"/>
+          <path id="heroArc" fill="none" stroke="#111" stroke-linecap="round"/>
+          <circle id="heroDot" fill="#111"/>
+          <line id="swipeLine" stroke="#111" stroke-linecap="round"/>
+          <g id="guide"><circle id="gDot" r="12" fill="#111"/><line id="gLine" stroke="#111" stroke-width="6"/></g>
+          <g id="cardGhost" opacity="0">
+            <rect id="cgBody" rx="28" fill="rgba(17,17,17,.06)" stroke="#111" stroke-width="6"/>
+            <rect id="cgChip" rx="10" fill="none" stroke="#111" stroke-width="5"/>
+            <polygon id="cgPoly" fill="rgba(17,17,17,.06)" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+            <polygon id="cgChipPoly" fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+          </g>
+          <g id="collab"></g>
+          <circle id="flood" fill="#000000" r="0"/>
+          <circle id="period" fill="#fff" r="0"/>
+          <g id="slotLabel"><line id="slotLine" x1="340" y1="1830" x2="740" y2="1830" stroke="#111" stroke-width="8"/><text id="slotText" x="540" y="1886" font-size="32" text-anchor="middle">카드 투입구</text></g>
+        </g>
+      </g>
+      <!-- 매장 브랜드 층: 화면 반전(B)과 승인 면 전환에 영향받지 않음, SLIP 그래픽보다 앞 = 매장 브랜드를 가리지 않음 -->
+      <g id="brandLayer" transform="translate(80 80)" clip-path="url(#screenClip)" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">
+        <g id="brandLogo"></g><g id="brandBtns"></g>
+      </g>
+      <!-- 리더: IC 투입구 + MS 홈 (화면과 같은 축척: 1 mm = 4.03) -->
+      <g id="reader">
+        <!-- IC 투입구: 화면 아래 / 옆 모듈. 어느 위치든 투입구는 정면(보는 사람 쪽)으로 뚫려 있고, 카드는 내 쪽에서 안쪽으로 들어감 -->
+        <g id="slotDown"><text x="620" y="2090" font-size="30" fill="#aab0b7" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">IC 투입구</text>
+        <rect x="499" y="2140" width="242" height="18" rx="9" fill="var(--slot)"/></g>
+        <g id="podR" style="display:none"><rect x="1250" y="1540" width="340" height="560" rx="44" fill="var(--body)" stroke="var(--body-edge)" stroke-width="4"/>
+        <text x="1420" y="1870" font-size="30" fill="#aab0b7" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">IC 투입구</text>
+        <rect x="1299" y="1791" width="242" height="18" rx="9" fill="var(--slot)"/></g>
+        <g id="podL" style="display:none"><rect x="-350" y="1540" width="340" height="560" rx="44" fill="var(--body)" stroke="var(--body-edge)" stroke-width="4"/>
+        <text x="-180" y="1870" font-size="30" fill="#aab0b7" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">IC 투입구</text>
+        <rect x="-301" y="1791" width="242" height="18" rx="9" fill="var(--slot)"/></g>
+        <g id="msHg"><text x="200" y="2540" font-size="24" fill="#8a9097" text-anchor="start" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">MS 홈 →</text>
+        <rect x="200" y="2452" width="840" height="34" rx="12" fill="var(--slot)"/>
+        <line x1="620" y1="2440" x2="620" y2="2500" stroke="#6d737a" stroke-width="6"/>
+        <text x="620" y="2540" font-size="24" fill="#8a9097" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">읽기 헤드</text></g>
+        <!-- 세로 MS 모듈(오른쪽): 위에서 아래로 긁음 -->
+        <g id="msVg" style="display:none"><rect x="1250" y="290" width="340" height="1090" rx="44" fill="var(--body)" stroke="var(--body-edge)" stroke-width="4"/>
+        <text x="1420" y="350" font-size="30" fill="#aab0b7" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">MS 홈 ↓</text>
+        <rect x="1403" y="390" width="34" height="860" rx="12" fill="var(--slot)"/>
+        <line x1="1388" y1="820" x2="1452" y2="820" stroke="#6d737a" stroke-width="6"/>
+        <text x="1300" y="828" font-size="22" fill="#8a9097" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">헤드</text></g>
+        <!-- 실물 카드 -->
+        <g id="pcardMS" clip-path="url(#grooveClip)" style="cursor:grab"><g id="pcardMSg">
+          <rect x="0" y="0" width="345" height="218" rx="22" fill="var(--card)" stroke="var(--card-edge)" stroke-width="4"/>
+          <rect x="0" y="150" width="345" height="40" fill="#3b3f45"/>
+        </g></g>
+        <!-- 정면 투입구: 보는 사람 쪽으로 튀어나온 카드(원근) -->
+        <g id="pcardFront" style="cursor:grab">
+          <polygon id="pfPoly" fill="var(--card)" stroke="var(--card-edge)" stroke-width="4" stroke-linejoin="round"/>
+          <polygon id="pfChip" fill="#c7a64a"/>
+        </g>
+        <!-- 긁기 손잡이: 홈 주변 어디를 잡아도 카드가 손을 따라감 -->
+        <text id="coach" x="620" y="2612" font-size="34" font-weight="600" fill="#ffffff" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif"></text>
+        <rect id="msHit" x="0" y="2270" width="1240" height="370" fill="transparent" style="cursor:grab;display:none"/>
+      </g>
+    </svg>
+  </div>
+
+  <aside class="pop" aria-label="단계">
+    <ol class="steps" id="steps"></ol>
+    <p class="hint" id="hint" style="margin:0"></p>
+    <div class="read" aria-live="polite">
+      <span>IC 시도</span><span id="rTry" class="mono">0</span>
+      <span>긁기 속도</span><span id="rSpeed" class="mono">—</span>
+      <span>더한 결제 시간</span><span class="mono">0초</span>
+      <span hidden>지금</span><span hidden id="rNow"></span>
+    </div>
+    <p class="note"><b>친근 모션 규칙</b> · 그대로 두는 것 = 별 곡률 R 60.7(카드 모서리) · 고리 반지름 · 고리 끊김 20.25. 움직이는 것 = 팔 길이(방향마다) · 카드 모서리 간격(막대 굵기, 0이면 별만 = 눈 깜빡) · 고리 회전 · 시선 · 기울기 · 같은 비율 크기. 한쪽만 늘리기(비균등 크기)는 곡률이 깨져서 안 씀. 브랜드 협업을 켜면 팔을 뻗는 대신 장면 위에 작게 올라타 따라갑니다.</p>
+    <p class="note"><b>로고 처리</b> · <span id="rLogo">—</span></p>
+    <p class="note"><b>브랜드 협업</b> · <span id="rCollab">—</span></p>
+    <details><summary>설정</summary>
+      <div class="grid2" style="margin-top:8px">
+        <label for="sp">자동 긁기 속도</label><output id="spO" class="mono"></output>
+        <input id="sp" type="range" min="3" max="60" step="1" value="20">
+        <label for="icT">IC 읽기 시간</label><output id="icTO" class="mono"></output>
+        <input id="icT" type="range" min="0.5" max="4" step="0.1" value="2">
+        <label for="apT">승인 대기 시간</label><output id="apTO" class="mono"></output>
+        <input id="apT" type="range" min="0.3" max="4" step="0.1" value="1.5">
+        <label for="tries">폴백 전 IC 시도</label><output id="triesO" class="mono"></output>
+        <input id="tries" type="range" min="1" max="3" step="1" value="2">
+        <label>실패 화면</label>
+        <span class="seg" role="group" aria-label="실패 화면"><button id="fNew" aria-pressed="true">새 안</button><button id="fOld" aria-pressed="false">원안 (그래픽 없음)</button></span>
+        <label>결과</label>
+        <span class="seg" role="group" aria-label="결과"><button id="okB" aria-pressed="true">승인</button><button id="noB" aria-pressed="false">거절</button></span>
+      </div>
+      <p class="note" style="margin-top:8px">긁기 속도 3–60 in/s = MS 리더 데이터시트 범위. 기본 20 in/s · 화면 폭 268 mm는 추정.</p>
+    </details>
+  </aside>
+</div>
+
+<script>/* 캡처용: 주소에 seek=초 → 그 시간까지 가상으로 돌린 뒤 그 순간에 멈춤(A3 판 화면 캡처) */
+(()=>{const m=location.hash.match(/seek=([\d.]+)/);if(!m)return;const T=+m[1]*1000;let vt=performance.now();const q=[],tq=[];const st0=window.setTimeout.bind(window);
+performance.now=()=>vt;window.requestAnimationFrame=cb=>{q.push(cb);return q.length};window.setTimeout=(f,d)=>{tq.push({f,at:vt+(d||0)});return 0};
+window.addEventListener('load',()=>st0(()=>{const end=vt+T;while(vt<end){vt+=1000/60;q.splice(0).forEach(c=>c(vt));for(let i=tq.length-1;i>=0;i--)if(tq[i].at<=vt){const t=tq.splice(i,1)[0];t.f()}}q.splice(0).forEach(c=>c(vt));document.title='SEEKED'},300))})();</script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const U=1080/268;                // 화면 단위 / mm
+const CARD_L=85.6*U, CARD_W=54*U; // 345 × 218
+const HEAD_X=620, GROOVE_X0=200, GROOVE_X1=1040, GROOVE_Y=2452;
+const AX=900, AY=1000, AR=340, ASW=56;     // 주연 호 (K6). 중심을 오른쪽에 둬서 긁기가 끝난 선이 늘 중심 앞에 있게
+const EYE={x:600,y:1160,r:200,sw:40,dr:40}; // 눈 상태 (안내 두 줄 아래로 띄움 — 글자와 호가 안 겹치게)
+// 읽는 중: C3 Macro처럼 크게 — 중심(점)은 화면 오른쪽 위 밖, 점은 가장자리에 아랫부분만. 호는 반지름 1100으로 화면 밖까지 크게 돌며 들어왔다 나감
+const MAC={x:1000,y:-200,r:1100,sw:260,dr:260};
+const CORNER={x:976,y:135,r:16,sw:4,dr:4};
+const STEPS=[
+ ['select','결제 방법 선택','흰색 · 모서리에서 작게 숨 쉼'],
+ ['prompt','카드 넣기 안내','흰색 · 로고가 작아지며 투입구 바로 위로 내려가 콕콕 짚음, 고리(눈)가 그쪽을 봄'],
+ ['insert','카드 넣는 순간','흰색 · 투입구 위의 로고가 쏙 다가가며 꿀꺽'],
+ ['read','IC 읽는 중','흰색 · 고리가 별 둘레를 돌고, 별은 빠르게 숨 쉼'],
+ ['fail','IC 실패 · 폴백 안내','#D4ECFF · 기울기 그대로, 팔을 실제 긁기 속도로 뻗어 보여 줌'],
+ ['swipe','다시 긁는 순간 ★','#A9D8FF · 팔 끝 = 카드 앞끝, 늘어난 만큼 몸은 날씬해짐'],
+ ['auth','승인 중','몸이 팔 끝으로 미끄러져(SLiP) 따라가고 고리가 늦게 흔들림'],
+ ['done','승인 완료','검정 면 · 흰 로고가 문장 끝 마침표로 폴짝'],
+ ['miss','인식 실패','#F2F9FF · 도리도리 "괜찮아요", 시작점에서 통통'],
+ ['reject','결제 실패 (거절)','빨강 없이 팔을 거두고 모서리로 물러남'],
+];
+// 정면 투입: 카드가 보는 사람 쪽에서 기계 안쪽(깊이 z)으로 들어감. 투시: x = vx + u·B/z, y = vy + A/z (z=1 = 투입구 면)
+const LZ=0.4755; // 카드 길이 / 폭 비율(85.6/54)을 깊이로 환산
+function projQuad(vx,vy,A,B,zNear,zFar,u0=-1,u1=1){return [[u0,zNear],[u1,zNear],[u1,zFar],[u0,zFar]].map(([u,z])=>`${vx+u*B/z},${vy+A/z}`).join(' ')}
+function frontQuads(vx,vy,A,B,e){const tip=1+LZ*e,near=tip-LZ;if(near>=.999)return null;
+  const body=projQuad(vx,vy,A,B,near,1);const c0=Math.max(near,tip-LZ*.32),c1=Math.min(1,tip-LZ*.14);
+  const chip=c1>c0?projQuad(vx,vy,A,B,c0,c1,-.62,-.18):'';return {body,chip}}
+// 리더 위치별 기하 — 투입구는 늘 정면. slot = 실물 투입구 중심(키오스크 좌표), tgt = 화면 속 점이 짚는 자리, gh = 화면 속 투명 카드 투시(소실점 · 투입구 면)
+const POS={
+  down:{vb:'0 0 1240 2640',slot:{x:620,y:2149},look:[0,1],tgt:{x:540,y:1790},gh:{vx:540,vy:1500},line:[340,1830,740,1830],lt:{x:540,y:1886,a:'middle',s:'카드 투입구'}},
+  right:{vb:'0 0 1640 2640',slot:{x:1420,y:1800},look:[1,0],tgt:{x:920,y:1680},gh:{vx:920,vy:1390},line:[770,1720,1070,1720],lt:{x:1060,y:1786,a:'end',s:'카드 투입구 →'}},
+  left:{vb:'-400 0 1640 2640',slot:{x:-180,y:1800},look:[-1,0],tgt:{x:160,y:1680},gh:{vx:160,vy:1390},line:[10,1720,310,1720],lt:{x:20,y:1786,a:'start',s:'← 카드 투입구'}},
+};
+const P=()=>POS[st.pos];
+// MS 세로: 긁는 위치는 한 축(가로 기준 x)으로 계산하고, 화면 그래픽은 점(AX,AY)을 중심으로 90° 돌려 그림 → 선이 위에서 아래로 지나감
+const MSV_OFF=200, MSV_X=1590; // 세로 홈: 화면 y = 가로 x + 200, 카드 회전 후 띠가 홈(x 1420)에 오도록
+const CV={x:760,y:1060}; // 세로일 때 점 자리: 호(반지름 340)가 화면 안에 들어오도록 왼쪽으로
+const MSVX=900; // 세로 긁기 안내는 오른쪽 가장자리(글씨와 안 겹침, 세로 홈도 오른쪽)
+const FX=()=>st.msV?CV.x:AX, FY=()=>st.msV?CV.y:AY;
+const VP=(x,y)=>st.msV?{x:CV.x-(y-AY),y:CV.y+(x-AX)}:{x,y};
+const VL=l=>{const a=VP(l.x1,l.y1),b=VP(l.x2,l.y2);return {x1:a.x,y1:a.y,x2:b.x,y2:b.y}};
+const VA=h=>h&&st.msV?{...h,...VP(h.x,h.y),a0:(h.a0??125)+90,a1:(h.a1??235)+90}:h;
+const st={step:'select',t0:performance.now(),tries:0,ok:true,dir:'front',pos:'down',msV:false,kink:0, /* 11-08: 12° 어긋남 끔으로 고정(선택 항목 삭제) */auto:false,failNew:true,missKind:'ms',missWhy:'',
+  card:{x:GROOVE_X0-CARD_L+30},drag:null,headIn:null,lineHead:-CARD_L,crossBump:0,authStart:0,shrinkFrom:null,retry:false,msErr:false};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- 패널 ----------
+const stepsEl=$('steps');
+STEPS.forEach(([k,n,r],i)=>{const li=document.createElement('li');li.dataset.k=k;li.innerHTML=`<b>${i+1}</b><span>${n}<span class="role">${r}</span></span>`;stepsEl.appendChild(li)});
+function bind(id,fmt){const el=$(id),o=$(id+'O');const f=()=>o.textContent=fmt(+el.value);el.addEventListener('input',f);f();return el}
+const sp=bind('sp',v=>`${v} in/s · ${Math.round(v*25.4)} mm/s`);
+const icT=bind('icT',v=>`${v.toFixed(1)}초`), apT=bind('apT',v=>`${v.toFixed(1)}초`), tries=bind('tries',v=>`${v}회`);
+let colorMode='screen'; // 단계 색: screen = 키오스크 화면 바탕 전체 / logo = 바탕은 흰색 그대로, 로고 색 자체가 단계 색
+document.querySelectorAll('[data-cmode]').forEach(b=>b.onclick=()=>{colorMode=b.dataset.cmode;document.querySelectorAll('[data-cmode]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+let ringMode='keep'; // IC 읽는 중 고리: keep = 원래 자리(어긋난 두 반원)에서 돎 / center = 두 반원이 별 가운데로 스윽 모여 한 원(틈 두 개)이 되어 돎
+document.querySelectorAll('[data-ring]').forEach(b=>b.onclick=()=>{ringMode=b.dataset.ring;document.querySelectorAll('[data-ring]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+document.querySelectorAll('[data-kink]').forEach(b=>b.onclick=()=>{st.kink=+b.dataset.kink;document.querySelectorAll('[data-kink]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+document.querySelectorAll('[data-ms]').forEach(b=>b.onclick=()=>{st.msV=b.dataset.ms==='v';document.querySelectorAll('[data-ms]').forEach(x=>x.setAttribute('aria-pressed',x===b));layoutSlot();if(['fail','miss'].includes(st.step))go(st.step);else placeMS(st.card.x,$('pcardMS').style.display!=='none')});
+document.querySelectorAll('[data-pos]').forEach(b=>b.onclick=()=>{st.pos=b.dataset.pos;document.querySelectorAll('[data-pos]').forEach(x=>x.setAttribute('aria-pressed',x===b));layoutSlot();if(['select','prompt'].includes(st.step))placeICcard(0);try{localStorage.setItem('slipPos',st.pos)}catch(e){}});
+$('okB').onclick=()=>{st.ok=true;$('okB').setAttribute('aria-pressed','true');$('noB').setAttribute('aria-pressed','false')};
+// 버전 B: 필터로 화면 전체를 뒤집으면 매 프레임 비싸서 끊김 → 화면 요소의 검정/흰 값을 직접 맞바꿈 (가벼움)
+const SWAP={'#111':'#fff','#111111':'#ffffff','#fff':'#111','#ffffff':'#111111','rgba(17,17,17,.06)':'rgba(255,255,255,.1)','rgba(255,255,255,.1)':'rgba(17,17,17,.06)'};
+function swapTree(){$('screen').querySelectorAll('*').forEach(el=>{for(const a of ['fill','stroke']){const v=el.getAttribute(a);if(v&&SWAP[v.toLowerCase()])el.setAttribute(a,SWAP[v.toLowerCase()])}})}
+const INK=()=>ver==='B'?'#fff':'#111', PAPER=()=>ver==='B'?'#111':'#fff';
+function setVer(v){v='A';if(v!==ver){swapTree();ver=v}refreshLogo(true);if(st.step==='select'||st.step==='reject')go(st.step);$('vA').setAttribute('aria-pressed',v==='A');$('vB').setAttribute('aria-pressed',v==='B');
+  try{localStorage.setItem('slipVer',v)}catch(e){}}
+$('vA').onclick=()=>setVer('A');$('vB').onclick=()=>setVer('B');
+$('fNew').onclick=()=>{st.failNew=true;$('fNew').setAttribute('aria-pressed','true');$('fOld').setAttribute('aria-pressed','false')};
+$('fOld').onclick=()=>{st.failNew=false;$('fNew').setAttribute('aria-pressed','false');$('fOld').setAttribute('aria-pressed','true')};
+$('noB').onclick=()=>{st.ok=false;$('okB').setAttribute('aria-pressed','false');$('noB').setAttribute('aria-pressed','true')};
+
+// ---------- 화면 글 · 버튼 ----------
+function setText(lines,sub,ty=560,size=72){
+  const g=$('txt');g.innerHTML='';
+  lines.forEach((l,i)=>{const t=document.createElementNS(NS,'text');t.setAttribute('x',80);t.setAttribute('y',ty+i*size*1.35);t.setAttribute('font-size',size);t.setAttribute('font-weight',700);t.textContent=l;g.appendChild(t)});
+  (sub||[]).forEach((l,i)=>{const t=document.createElementNS(NS,'text');t.setAttribute('x',80);t.setAttribute('y',ty+lines.length*size*1.35+80+i*64);t.setAttribute('font-size',40);t.textContent=l;g.appendChild(t)});
+  return g;
+}
+// BRANDS-START
+// 실제 매장 브랜드 (로컬 확인용 — 로고: 위키미디어 공용 파일 · 직접 그린 근사 도형, 상표는 각 회사 소유)
+// light = 흰 바탕, dark = 검정 바탕(B 바탕 · A의 승인 면). 대비는 WCAG 1.4.11 그래픽 3:1 기준
+const BRANDS={
+  mcd:{opt:1,name:'맥도날드',color:'#DB0007',btnInk:'#fff',
+    light:{file:'brand_logos/mcdonalds.svg',w:126,badge:'#DB0007',rule:'④ 배지 — 노랑 아치가 흰 위 1.5:1 → 맥도날드 공식 레드 박스 위에'},
+    dark:{file:'brand_logos/mcdonalds.svg',w:126,rule:'① 원본 — 노랑 아치 · 검정 위 12.5:1'}},
+  mega:{opt:0.8,name:'메가MGC커피',color:'#FFD400',btnInk:'#111',
+    light:{file:'brand_logos/megacoffee.png',w:300,rule:'① 원본 — 검정 글자 · 흰 위 18.9:1'},
+    dark:{file:'brand_logos/megacoffee_dark.png',w:300,rule:'② 시그니처 색 — 검정 글자가 사라짐 → 메가 노랑 #FFD400 (13.2:1)'}},
+  moms:{opt:1,name:'맘스터치',color:'#F0A500',btnInk:'#111',
+    light:{file:'brand_logos/momstouch.svg',w:300,rule:'① 원본 — 갈색 8.7:1 · 노랑 2.0:1 (공식 조합 유지)'},
+    dark:{file:'brand_logos/momstouch_dark.svg',w:300,rule:'③ 반전 — 갈색이 검정 위 2.2:1 → 흰색, 노랑 TOUCH는 그대로 (9.4:1)'}},
+  compose:{opt:0.85,name:'컴포즈커피',color:'#FDD22B',btnInk:'#111',
+    light:{file:'brand_logos/compose_light.svg',w:300,rule:'③ 단색 — 노랑이 흰 위 1.5:1 → 검정 단색'},
+    dark:{file:'brand_logos/compose.svg',w:300,rule:'① 원본 — 노랑 · 검정 위 13.0:1'}},
+  musinsa:{opt:0.78,name:'무신사',color:'#121212',btnInk:'#fff',colorDark:'#ffffff',btnInkDark:'#111',
+    light:{file:'brand_logos/musinsa.svg',w:300,rule:'① 원본 — 검정 워드마크 · 흰 위 21:1 (무신사 공식 사이트 파비콘 벡터)'},
+    dark:{file:'brand_logos/musinsa_dark.svg',w:300,rule:'③ 반전 — 시그니처 색이 검정뿐 → 흰 워드마크 (무신사 OG 이미지와 같은 조합)'}},
+  nike:{opt:0.9,name:'나이키',color:'#121212',btnInk:'#fff',colorDark:'#ffffff',btnInkDark:'#111',
+    light:{file:'brand_logos/nike.svg',w:190,rule:'① 원본 — 검정 스우시 (위키미디어 공용 Logo_NIKE.svg)'},
+    dark:{file:'brand_logos/nike_dark.svg',w:190,rule:'③ 반전 — 흰 스우시 (검정 위)'}},
+};
+// BRANDS-END
+// 로고 대안 규칙 (검정/흰 바탕과 겹칠 때, 그래픽 대비 3:1 = WCAG 1.4.11 기준):
+// ① 원본 대비가 충분하면 그대로 → ② 안 보이는 부분만 브랜드 시그니처 색으로 → ③ 시그니처 색도 안 보이면 흰/검정 단색 반전 → ④ 변형이 안 되는 로고는 브랜드 색 배지 위에
+let brand='mcd',ver='A'; // 첫 화면 기본 = 맥도날드 + 협업 켜기
+// 매장 로고 + SLiP 락업 (브랜드 가이드 18 Co-marketing 규칙)
+// 상대 로고가 앞(왼쪽), SLiP 심볼이 뒤. 협업 켜짐 = ×, 꺼짐(매장 · 공동) = 가는 세로선
+// 크기: 상대 로고 높이 = SLiP 대문자 높이 7.3x × 시각 보정(opt, 굵고 꽉 찬 로고일수록 작게). 선 · × 양쪽 간격 = 클리어 스페이스 5.55x
+function drawBrandLogo(dk){
+  const root=$('brandLogo');root.innerHTML='';$('logoSlot').style.display=brand?'none':'';$('rLogo').textContent='—';if(!brand)return;
+  const pg=document.createElementNS(NS,'g');root.appendChild(pg);drawPartner(pg,dk);lockup(root,pg,dk);
+}
+function lockup(root,pg,dk){
+  // 11-08 개정: 흰 화면 · 검정 화면 락업 똑같이(크기 · 위치). 심볼 = 미니멈 사이즈(가로 180px → 반원 띠 1px, 호가 보이는 최소)
+  // x = 심볼 높이 / 11.1. 선 · × 양쪽 간격 = 클리어 스페이스 5.55x(= 심볼 높이의 절반). 락업 둘레도 5.55x 비움(화면 위 · 왼쪽 끝, 아래 금액 줄)
+  let col=false;try{col=collabActive()}catch(e){}
+  const SW=LK.symW,H=SW*500/535.8,x=H/11.1,cap=7.3*x,gap=5.55*x,L=LK.clear(),cy=L+H/2,ink=dk?'#fff':'#111';
+  // 이미지 로고는 상자(110)가 아닌 실제 비율로 줄여서 잰다 (빈 여백이 높이에 들어가지 않게) · 원래 상자 가운데 기준(맥도날드 배지 안 가운데)
+  const AR={'compose.svg':28.8/253,'compose_light.svg':28.8/253,'mcdonalds.svg':238.5/272.7,'momstouch.svg':212/580,'momstouch_dark.svg':212/580,'musinsa.svg':4.99/26.29,'musinsa_dark.svg':4.99/26.29,'nike.svg':356.39/1000,'nike_dark.svg':356.39/1000,'megacoffee.png':97/472,'megacoffee_dark.png':97/472};
+  pg.querySelectorAll('image').forEach(im=>{const f=(im.getAttribute('href')||'').split('/').pop(),r=AR[f]||+im.getAttribute('data-ar');if(!r)return;const w=+im.getAttribute('width'),cyI=+im.getAttribute('y')+(+im.getAttribute('height'))/2,h=Math.min(+im.getAttribute('height'),w*r);im.setAttribute('height',h);im.setAttribute('y',cyI-h/2)});
+  let bb;try{bb=pg.getBBox()}catch(e){return}if(!bb.height)return;
+  // 상대 로고 높이 = 7.3x × opt(굵고 꽉 찬 로고는 약 80%) — 가이드 18쪽 비율 그대로. 가로로 긴 워드마크는 심볼 가로의 2.3배까지만
+  const opt=(BRANDS[brand]&&BRANDS[brand].opt)||1,s=Math.min(cap*opt/bb.height,LK.maxW*SW/bb.width);
+  pg.setAttribute('transform',`translate(${f1(L-bb.x*s)} ${f1(cy-(bb.y+bb.height/2)*s)}) scale(${s})`);
+  const mk=(tag,at)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);root.appendChild(e);return e};
+  // 11-08: 화면에서는 락업(선 · ×)을 쓰지 않음 — 매장 로고 왼쪽 위, SLiP 심볼 오른쪽 위에 따로(락업은 협업 제작물용). 크기 비율 · 세로 가운데는 락업과 같음
+  const xx=1080-L-SW;
+  // 협업 락업에는 시그니처 대신 심볼만 (워드마크 없이)
+  const sym=mk('image',{href:dk?'brand_logos/slip_sym_w.svg':'brand_logos/slip_sym_k.svg',x:xx,y:cy-H/2,width:SW,height:H,id:'slipSym'});sym.style.transition='opacity .35s';sym.style.opacity=symHidden()?0:1;
+  root.removeAttribute('transform');
+}
+const f1=v=>Math.round(v*10)/10;
+// 오른쪽 위 SLiP 심볼 자리 = 결제 방법 선택 · 거절 화면에서 움직이는 로고가 앉는 자리(같은 크기). 그 두 화면에서는 고정 심볼을 숨김
+const SLOT=()=>{const W=LK.symW,H=W*500/535.8,L=LK.clear();return {x:1080-L-W/2,y:L+H/2,s:W/535.8}};
+const symHidden=()=>!!brand; // 11-08: 고정 심볼 안 씀 — 움직이는 로고가 오른쪽 위 자리의 로고 그 자체(내려와서 안내하고 제자리로 돌아감)
+function syncSym(){const e=document.getElementById('slipSym');if(e)e.style.opacity=symHidden()?0:1}
+// 락업 설정: 심볼 가로(미니멈 180) · 상대 로고 배율 · 클리어 스페이스(심볼 높이 절반). brandLayer는 화면과 같은 좌표(0,0 = 화면 왼쪽 위)
+const LK={symW:180,maxW:2.3,clear(){return f1(this.symW*500/535.8/2)}, bottom(){return 2*this.clear()+this.symW*500/535.8}};
+function drawPartner(g,dk){
+  const b=BRANDS[brand],v=dk?b.dark:b.light,ink=dk?'#fff':'#111';$('rLogo').textContent=v.rule;
+  const mk=(tag,at)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);g.appendChild(e);return e};
+  if(v.badge){const bh=(v.bh||110)+20;mk('rect',{x:64,y:135-bh/2,width:v.w+32,height:bh,rx:Math.min(24,bh*.2),fill:v.badge})}
+  if(v.word){mk('text',{x:80,y:160,'font-size':64,'font-weight':800,'letter-spacing':6,fill:v.ink}).textContent=v.word;return}
+  if(v.swoosh){mk('path',{d:SWOOSH,transform:'translate(80 92) scale(.95)',fill:v.swoosh});return}
+  if(v.file){const im=mk('image',{href:v.file,x:80,y:80,width:v.w,height:110,preserveAspectRatio:'xMinYMid meet'});if(v.ar)im.setAttribute('data-ar',v.ar);if(v.white)im.setAttribute('filter','url(#toWhite)');return}
+  const mf=v.markFill||b.color;
+  if(b.mark==='circle')mk('circle',{cx:135,cy:135,r:55,fill:mf});else mk('rect',{x:80,y:80,width:110,height:110,rx:b.mark==='leaf'?40:14,fill:mf});
+  mk('text',{x:135,y:152,'font-size':50,'font-weight':700,fill:v.chFill||'#fff','text-anchor':'middle'}).textContent=b.ch;
+  mk('text',{x:214,y:140,'font-size':46,'font-weight':700,fill:ink,id:'bName'}).textContent=b.name;
+  mk('text',{x:216,y:180,'font-size':22,'letter-spacing':3,fill:v.subFill||b.color}).textContent=b.sub;
+}
+function refreshLogo(force){const flooded=st.step==='done'&&(performance.now()-st.t0)/1000>.25,dk=(ver==='B')!==flooded;if(force||dk!==st.lastDk){st.lastDk=dk;drawBrandLogo(dk)}}
+function chips(){const c=$('brandChips');c.innerHTML='';[['','없음'],...Object.entries(BRANDS).filter(([k])=>k!=='custom').map(([k,b])=>[k,b.name]),['custom','당신의 브랜드']].forEach(([k,n])=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',(brand||'')===k);b.onclick=()=>{if(k==='custom'&&!BRANDS.custom){openBrandPop();return}brand=k||null;refreshLogo(true);chips();syncCollabUI();refreshLogo(true);go(st.step)};if(k==='custom'){b.classList.add('mine');if(BRANDS.custom){b.textContent=BRANDS.custom.name;const w=document.createElement('span');w.className='mineWrap';const x=document.createElement('button');x.className='x';x.textContent='×';x.setAttribute('aria-label',BRANDS.custom.name+' 지우기');x.onclick=removeCustom;w.append(b,x);c.appendChild(w);return}b.textContent='당신의 브랜드 +'}c.appendChild(b)});
+  if(BRANDS.custom){const u=document.createElement('button');u.textContent='로고 · 이름 고치기';u.className='up';u.onclick=openBrandPop;c.appendChild(u)}}
+chips();
+function setButtons(list){
+  const g=$('btns');g.innerHTML='';const bg=$('brandBtns');bg.innerHTML='';
+  list.forEach(([label,filled,y,fn])=>{
+    if(filled&&brand){ // 주 버튼은 매장 색 (반전 · 면 전환 영향 없음)
+      const b=document.createElementNS(NS,'g');b.style.cursor='pointer';
+      const r=document.createElementNS(NS,'rect');r.setAttribute('x',80);r.setAttribute('y',y);r.setAttribute('width',920);r.setAttribute('height',170);r.setAttribute('rx',36);const bk=BRANDS[brand],dkB=ver==='B';r.setAttribute('fill',dkB&&bk.colorDark?bk.colorDark:bk.color); // 검정 브랜드 색은 검정 바탕에서 흰 버튼으로
+      const t=document.createElementNS(NS,'text');t.setAttribute('x',540);t.setAttribute('y',y+101);t.setAttribute('font-size',46);t.setAttribute('font-weight',700);t.setAttribute('text-anchor','middle');t.setAttribute('fill',dkB&&bk.btnInkDark?bk.btnInkDark:bk.btnInk);t.textContent=label;
+      b.append(r,t);if(fn)b.addEventListener('click',fn);bg.appendChild(b);return}
+    const b=document.createElementNS(NS,'g');b.style.cursor='pointer';
+    const r=document.createElementNS(NS,'rect');r.setAttribute('x',80);r.setAttribute('y',y);r.setAttribute('width',920);r.setAttribute('height',170);r.setAttribute('rx',36);
+    r.setAttribute('fill',filled?INK():PAPER());r.setAttribute('stroke',INK());r.setAttribute('stroke-width',4);
+    const t=document.createElementNS(NS,'text');t.setAttribute('x',540);t.setAttribute('y',y+101);t.setAttribute('font-size',46);t.setAttribute('font-weight',700);t.setAttribute('text-anchor','middle');t.setAttribute('fill',filled?PAPER():INK());t.textContent=label;
+    b.append(r,t);if(fn)b.addEventListener('click',fn);g.appendChild(b)});
+}
+function show(id,on){$(id).style.display=on?'':'none'}
+
+// ---------- 기하 ----------
+const rad=a=>a*Math.PI/180;
+function arcD(cx,cy,r,a0=125,a1=235){const x0=cx+r*Math.cos(rad(a0)),y0=cy+r*Math.sin(rad(a0)),x1=cx+r*Math.cos(rad(a1)),y1=cy+r*Math.sin(rad(a1));return `M${x0},${y0} A${r},${r} 0 ${((a1-a0)%360)>180?1:0} 1 ${x1},${y1}`}
+function setArc(id,s){const p=$(id);if(!s){p.setAttribute('d','');return}p.setAttribute('d',arcD(s.x,s.y,s.r,s.a0??125,s.a1??235));p.setAttribute('stroke-width',s.sw)}
+function setDot(id,x,y,r){const c=$(id);c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',Math.max(0,r))}
+const F4=v=>Math.round(v*10)/10;
+const lerp=(a,b,t)=>a+(b-a)*t, ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+// 층 순서: 글자 · 버튼 아래 → 그래픽(호 · 점 · 선) 앞. 그래픽 둘레에 흰 후광을 흐리게 깔아 글자와 구분. 투명 카드는 맨 위
+(()=>{const scr=$('hdr').parentNode;
+  const hh=document.createElementNS(NS,'path');hh.id='heroHalo';hh.setAttribute('fill','none');hh.setAttribute('stroke','#fff');hh.setAttribute('stroke-linecap','round');hh.setAttribute('opacity','.85');
+  const dh=document.createElementNS(NS,'circle');dh.id='dotHalo';dh.setAttribute('fill','#fff');dh.setAttribute('opacity','.85');
+  const lh=document.createElementNS(NS,'line');lh.id='lineHalo';lh.setAttribute('stroke','#fff');lh.setAttribute('stroke-linecap','round');lh.setAttribute('opacity','.85');
+  scr.append(hh,dh,lh);
+  ['hdr','txt','doneT','btns','slotLabel','collab','heroHalo','dotHalo','lineHalo','cornerArc','cornerDot','heroArc','heroDot','swipeLine','guide','flood','doneT','period','cardGhost'].forEach(id=>scr.appendChild($(id)))})();
+// 부드럽게: 그리는 값이 목표값을 지수적으로 따라감 (단계가 바뀌어도 튀지 않음). 긁는 선은 실제 속도라 제외.
+const disp={hero:null,dot:null,corner:null,cdot:0};
+function follow(cur,tgt,k,dt){if(!cur)return {...tgt};const a=1-Math.exp(-k*dt),o={};for(const key in tgt)o[key]=cur[key]+(tgt[key]-cur[key])*a;return o}
+function mix(A,B,t){const o={};for(const k in A)o[k]=lerp(A[k],B[k],t);return o}
+// C 크롭 4상태 (320×200 틀 → 화면 0..1080 × 600..1275, 3.375배)
+const K=3.375,OY=600;
+const crop=[
+ {x:44,y:44,r:16,sw:4,a0:125,a1:235,dx:44,dy:44,dr:4},
+ {x:250,y:100,r:210,sw:40,a0:152,a1:208,dx:250,dy:100,dr:40},
+ {x:214,y:10,r:192,sw:48,a0:125,a1:160,dx:214,dy:10,dr:48},
+ {x:300,y:180,r:260,sw:24,a0:182,a1:262,dx:268,dy:150,dr:20},
+].map(c=>({x:c.x*K,y:OY+c.y*K,r:c.r*K,sw:c.sw*K,a0:c.a0,a1:c.a1,dx:c.dx*K,dy:OY+c.dy*K,dr:c.dr*K}));
+
+// ---------- 실물 카드 ----------
+function layoutSlot(){
+  const q=P();const x0=st.pos==='left'?-400:0,x1=(st.pos==='right'||st.msV)?1640:1240;$('kiosk').setAttribute('viewBox',`${x0} 0 ${x1-x0} 2640`);
+  $('msHg').style.display=st.msV?'none':'';$('msVg').style.display=st.msV?'':'none';
+  const H=$('msHit');if(st.msV){H.setAttribute('x',1250);H.setAttribute('y',290);H.setAttribute('width',340);H.setAttribute('height',1090)}else{H.setAttribute('x',0);H.setAttribute('y',2270);H.setAttribute('width',1240);H.setAttribute('height',370)}
+  $('slotDown').style.display=st.pos==='down'?'':'none';$('podR').style.display=st.pos==='right'?'':'none';$('podL').style.display=st.pos==='left'?'':'none';
+  const L=$('slotLine');[['x1',0],['y1',1],['x2',2],['y2',3]].forEach(([k,i])=>L.setAttribute(k,q.line[i]));
+  const T=$('slotText');T.setAttribute('x',q.lt.x);T.setAttribute('y',q.lt.y);T.setAttribute('text-anchor',q.lt.a);T.textContent=q.lt.s;
+}
+function placeICcard(p,visible=true){ // p: 0 = 투입구 앞(내 쪽으로 튀어나옴), 1 = 완전히 들어감 — 리더 위치와 상관없이 정면 투입
+  const S=P().slot,fq=visible?frontQuads(S.x,S.y-200,200,109,p):null;$('pcardFront').style.display=fq?'':'none';
+  if(fq){$('pfPoly').setAttribute('points',fq.body);$('pfChip').setAttribute('points',fq.chip||'0,0')}
+}
+function placeMS(x,visible=true){st.card.x=x;const g=$('pcardMSg');
+  if(st.msV){$('pcardMS').removeAttribute('clip-path');g.setAttribute('transform',`translate(${MSV_X} ${x+MSV_OFF}) rotate(90)`)}
+  else{$('pcardMS').setAttribute('clip-path','url(#grooveClip)');g.setAttribute('transform',`translate(${x} ${GROOVE_Y-150})`)}
+  $('pcardMS').style.display=visible?'':'none'}
+
+// ---------- 단계 전환 ----------
+let lastRead=null;
+function go(step){
+  st.step=step;st.t0=performance.now();showCap(step);syncSym();
+  document.querySelectorAll('#steps li').forEach(li=>{const i=STEPS.findIndex(s=>s[0]===li.dataset.k),j=STEPS.findIndex(s=>s[0]===step);li.classList.toggle('on',i===j);li.classList.toggle('done',i<j)});
+  $('rNow').textContent=(STEPS.find(s=>s[0]===step)||[0,step==='reject'?'거절':step])[1];
+  $('rTry').textContent=st.tries;
+  const act={},hint=$('hint');
+  show('btns',false);show('guide',false);show('amt',true);show('slotLabel',false);show('hdr',true);show('doneT',false);$('brandBtns').innerHTML='';
+  $('msHit').style.display=(step==='fail'||step==='swipe'||(step==='miss'&&st.missKind==='ms'))?'':'none';
+  $('coach').textContent=(step==='select'||step==='prompt')?(st.pos==='down'?'카드를 눌러 보세요 · 위로 밀면 직접 넣을 수 있어요':'옆 투입구의 카드를 눌러 보세요 · 위로 밀면 직접 넣어요'):(step==='fail'||(step==='miss'&&st.missKind==='ms'))?(st.msV?'오른쪽 세로 홈의 카드를 잡고 아래로 긁어 보세요':'카드를 잡고 오른쪽으로 긁어 보세요'):(step==='done'||step==='reject')?'카드를 눌러 처음부터':'';
+  if(step!=='miss'&&step!=='reject')$('swipeLine').setAttribute('stroke-width',0);$('cardGhost').setAttribute('opacity',0);setDot('period',0,0,0);setDot('flood',FX(),FY(),0);
+  if(step==='select'){
+    setText(['결제 방법을','선택해 주세요']);show('btns',true);
+    setButtons([['카드 결제',true,1000,()=>start()],['간편 결제 (QR · 앱)',false,1210,null]]);
+    act.textContent='카드 결제';hint.textContent='리더 위의 카드를 잡고 투입구 쪽으로 끌어 넣어 보세요. 바로 결제 중으로 바뀝니다. 화면의 ‘카드 결제’를 눌러도 됩니다.';
+    placeICcard(0);placeMS(GROOVE_X0-CARD_L+30,false);
+  }
+  if(step==='prompt'){
+    setText(st.retry?['한 번 더','넣어 주세요']:['카드를','넣어 주세요'],st.retry?['칩을 읽지 못했어요.','카드를 다시 넣어 주세요.']:['IC칩이 위를 보게,','투입구에 넣어 주세요.']);show('slotLabel',true);
+    act.textContent='카드 넣기';hint.textContent='리더 위의 카드를 투입구 쪽으로 끌어 넣으세요. 화면 속 카드가 손을 따라 들어갑니다.';placeICcard(0);
+  }
+  if(step==='insert'){setText(['카드를','넣어 주세요']);show('slotLabel',true);act.disabled=true;hint.textContent='넣는 동작과 같은 방향 · 같은 위치로 화면에 카드가 들어갑니다. 덜 넣고 놓으면 되돌아가요.'}
+  if(step==='read'){show('amt',false);setText(['카드를 읽고 있어요'],['카드를 빼지 마세요.'],1560,64);act.disabled=true;hint.textContent='화면이 C3 Macro처럼 확 당겨지고, 점을 축으로 호가 돕니다. 읽는 동안 계속.'}
+  if(step==='fail'){
+    setText(['카드를 빼고','긁어 주세요'],[st.msErr?'제대로 읽지 못했어요. 한 번 더 긁어 주세요.':'칩 대신 마그네틱으로 결제해요.',st.msV?'오른쪽 홈에 위에서 아래로 긁어 주세요.':'아래 홈에 한 번 긁어 주세요.']);show('guide',true);
+    placeICcard(0,false);placeMS(GROOVE_X0-CARD_L+30,true);act.textContent='자동으로 긁기';
+    hint.textContent='리더 아래 카드를 잡고 홈을 따라 오른쪽으로 끌어 보세요. 끄는 속도 그대로 화면 속 로고의 팔이 따라 뻗습니다.';
+  }
+  if(step==='swipe'){setText([],[]);act.disabled=true;hint.textContent='긁는 중'}
+  if(step==='auth'){setText([],[]);act.disabled=true;hint.textContent='승인 신호가 오면 바로 다음 화면으로 넘어갑니다.'}
+  if(step==='done'){show('amt',false);setText([],[]);show('doneT',true);
+    // 호는 마침표 점 옆에 — 점을 중심으로 한 '(' = 주연 호 + 가운데 점과 같은 심볼 짜임(K6). 문장은 호 바깥으로 비켜남
+    // 반지름 42 · 굵기 = 반지름 ÷ 4 (T6-5 비율), 호 바깥 끝과 글자 사이 40
+    const tt=$('doneTitle'),dr=42,dgap=40,tx=FX()-dr-F4(dr/8)-dgap;tt.setAttribute('x',tx);tt.setAttribute('y',FY()+12);tt.setAttribute('font-size',96);
+    // 세로 카드(점 자리가 왼쪽)일 때 문장이 왼쪽 여백 80을 넘으면 글자 크기를 줄여 맞춤
+    try{const w=tt.getBBox().width;if(tx-w<80)tt.setAttribute('font-size',Math.floor(96*(tx-80)/w))}catch(e){}
+    $('doneArc').setAttribute('d',arcD(FX(),FY(),dr));$('doneArc').setAttribute('stroke-width',F4(dr/4));
+    placeICcard(0);act.textContent='처음부터';hint.textContent='점이 화면 전체를 덮는 면으로 번지며 흑백이 뒤집히고, 가운데 남은 흰 점이 마침표가 됩니다.';placeMS(0,false)}
+  if(step==='miss'){
+    if(st.missKind==='ic'){setText(['칩을 읽지 못했어요'],['카드를 빼서 다시 넣어 주세요.'],560,72);{const q=P().tgt;disp.dot={x:q.x,y:q.y,r:10}}/* 점은 투입구 자리에서 시작해 위로 올라감 */hint.textContent='돌던 호가 멈춰 눈 자리로 물러나고, 점이 위로 올라가 눈 가운데서 한 번 깜빡이고 잠깐 쉰 뒤, 다시 투입구로 내려가 재결제를 안내합니다.'}
+    else{setText(['한 번 더','긁어 주세요'],[st.missWhy||'끝까지 한 번에 긁어 주세요.'],560,72);placeICcard(0,false);placeMS(GROOVE_X0-CARD_L+30,true);
+      hint.textContent='긁은 선은 지우지 않고 가는 흔적으로 남기고(앞으로만), 점이 선의 시작점에 와서 "여기서 다시"를 짚습니다. 바로 다시 긁을 수 있어요.'}
+  }
+  if(step==='reject'){setText(['결제가 승인되지','않았어요'],['다른 카드로 결제하거나','직원에게 문의해 주세요.']);show('btns',true);setButtons([['다른 카드로 결제',true,1150,null],['다른 결제 방법',false,1360,null]]);placeICcard(0);act.textContent='처음부터';
+    hint.textContent=st.failNew?'새 안: 반전(면 전환) 없이, 점(확인)을 거두고 큰 호는 모서리 조연으로 물러납니다. 마침표가 없다 = 끝나지 않았다.':'원안: 거절 화면에는 그래픽을 쓰지 않습니다(신뢰).';placeMS(0,false)}
+}
+function showCap(step){const c=$('cap');if(!c)return;const i=STEPS.findIndex(s=>s[0]===step),S=STEPS[i];if(!S)return;
+  $('capN').textContent=String(i+1).padStart(2,'0');$('capT').textContent=S[1].replace(' ★','');$('capR').textContent=S[2].replace(/^#[0-9A-F]{6}\s*·\s*/i,'').replace(/^(흰색|검정)\s*·\s*/,'');
+  c.classList.remove('in');void c.offsetWidth;c.classList.add('in')}
+function start(){st.tries=0;st.retry=false;st.msErr=false;go('prompt')}
+function insert(){if(st.step!=='prompt')return;st.insP=0;st.manual=false;go('insert')}
+
+// 손으로 카드 넣기: 결제 방법 선택 · 넣기 안내 화면에서 리더의 카드를 투입구 쪽으로 끌면 바로 결제 중으로
+['pcardFront'].forEach(id=>{const el=$(id);
+el.addEventListener('pointerdown',e=>{
+  if(st.step==='done'||st.step==='reject'){reset();return}if(!['select','prompt'].includes(st.step))return;e.preventDefault();el.setPointerCapture(e.pointerId);
+  const p=svgPt(e);st.icDrag={x:p.x,y:p.y,moved:false,from:st.step};
+});
+el.addEventListener('pointermove',e=>{
+  if(!st.icDrag)return;const p=svgPt(e);
+  const d=st.icDrag.y-p.y; // 정면: 위로(안쪽으로) 밀기
+  if(!st.icDrag.moved&&d>12){st.icDrag.moved=true;if(st.step==='select'){st.tries=0;st.retry=false;st.msErr=false}st.insP=0;st.manual=true;go('insert')}
+  if(st.icDrag.moved)st.insP=clamp(d/182,0,1);
+});
+el.addEventListener('pointerup',()=>{
+  const d=st.icDrag;st.icDrag=null;if(!d)return;
+  if(!d.moved){if(d.from==='select')start();insert();return} // 그냥 누르면 자동으로 넣기
+  st.manual=false;if(st.insP<.3){st.insP=0;go(d.from==='select'?'select':'prompt')} // 덜 넣고 놓으면 되돌아감
+});});
+$('reset').onclick=reset;
+function reset(){st.auto=false;st.drag=null;go('select')}
+
+// ---------- 긁기 ----------
+function svgPt(e){const s=$('kiosk'),p=s.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(s.getScreenCTM().inverse())}
+// 직접 긁기: 홈 주변 어디를 잡아도 됨. 잡은 지점이 카드 위 같은 자리가 되도록 손 위치를 그대로 따라감
+['pcardMS','msHit'].forEach(id=>{const el=$(id);
+el.addEventListener('pointerdown',e=>{if(!(st.step==='fail'||(st.step==='miss'&&st.missKind==='ms')))return;e.preventDefault();el.setPointerCapture(e.pointerId);
+  const px=st.msV?svgPt(e).y-MSV_OFF:svgPt(e).x;const inCard=px>=st.card.x&&px<=st.card.x+CARD_L;st.drag={ox:inCard?px-st.card.x:CARD_L*.5,el};
+  if(!inCard)placeMS(Math.min(px-CARD_L*.5,HEAD_X-CARD_L-10)); // 카드 밖을 잡으면 카드가 손 아래로 옴(아직 헤드 전)
+  beginSwipe()});
+el.addEventListener('pointermove',e=>{if(!st.drag||st.drag.el!==el)return;const x=Math.max(st.card.x,(st.msV?svgPt(e).y-MSV_OFF:svgPt(e).x)-st.drag.ox);moveCard(x,performance.now())});
+el.addEventListener('pointerup',()=>{if(!st.drag||st.drag.el!==el)return;st.drag=null;if(st.step==='swipe'&&!st.headOut)failSwipe()});});
+function beginSwipe(){go('swipe');st.headIn=null;st.headOut=null;st.lineHead=st.card.x+CARD_L-GROOVE_X0;st.crossBump=0}
+function moveCard(x,now){
+  placeMS(x);const lead=x+CARD_L,tail=x;
+  if(st.headIn===null&&lead>=HEAD_X)st.headIn=now;
+  if(st.headIn!==null&&st.headOut===null&&tail>=HEAD_X){st.headOut=now;finishSwipe()}
+}
+function finishSwipe(){
+  const dt=(st.headOut-st.headIn)/1000;const mmps=dt>0?(CARD_L/U)/dt:Infinity;const ips=mmps/25.4;st.v=mmps*U; // 화면 단위/초
+  $('rSpeed').textContent=isFinite(ips)?`${ips.toFixed(1)} in/s · ${Math.round(mmps)} mm/s`:'—';
+  if(!(ips>=3&&ips<=60)){failSwipe(ips<3?`조금 더 빠르게 긁어 주세요. (${ips.toFixed(1)} in/s)`:`조금 더 천천히 긁어 주세요. (${ips.toFixed(0)} in/s)`);return}
+  st.drag=null;st.msErr=false;st.authStart=performance.now();st.shrinkFrom=null;go('auth');
+  setTimeout(()=>{if(st.step==='auth')go(st.ok?'done':'reject')},Math.max(+apT.value,collabActive()?1.05:0)*1000); // 협업: 별빛이 좌→우로 쏵 지나가 도착할 시간(최소 1.05초)
+}
+// 인식 실패: 헤드를 지나간 긁기만 '실패'로 봄. 헤드 전에 손을 떼면 조용히 안내로 돌아감
+function failSwipe(why){st.drag=null;const swiped=st.headIn!==null;
+  if(!swiped){go('fail');return}
+  st.msErr=true;if(st.failNew){st.missKind='ms';st.missWhy=why||'끝까지 한 번에 긁어 주세요.';st.missLine=st.line?{...st.line}:null;go('miss')}else go('fail')}
+function autoSwipe(){
+  if(!(st.step==='fail'||st.step==='miss'))return;beginSwipe();const v=+sp.value*25.4*U/1000; // 단위/ms
+  const x0=st.card.x,t0=performance.now();
+  const tick=now=>{if(st.step!=='swipe')return;moveCard(x0+(now-t0)*v,now);if(st.step==='swipe')requestAnimationFrame(tick)};requestAnimationFrame(tick);
+}
+
+// ---------- 브랜드 협업 모드 ----------
+// 끄면 원본 SLIP 모션 그대로. 켜면 '다시 긁는 순간'의 선이 브랜드 장면으로 바뀜. 지키는 규칙: 실제 긁기 속도 · 앞으로만 · 끝에 점 하나(승인 면 전환은 원본과 같음)
+// 색은 SLIP 흑백 반전(swapTree)에 안 걸리게 #121212 · #fefefe 등 근사값 사용
+let collabOn=true;
+const fmt=n=>Math.round(n*10)/10;
+function tear(x0,x1,yc,h,hx,gap){ // 띠(테이프 · 봉투 접힘 · 칼집)를 hx까지 찢음 → 위 · 아래 조각 + 아직 안 찢긴 부분
+  const e=Math.min(hx,x1),xs=[];for(let x=x0;x<e;x+=14)xs.push(x);xs.push(e);
+  const g=x=>gap*Math.min(1,Math.max(0,(hx-x)/90)),z=i=>(i%2?6:-6);
+  let up='',lo='';
+  if(e>x0+4){
+    const top=xs.map(x=>`${fmt(x)},${fmt(yc-h/2-g(x))}`),bot=xs.map((x,i)=>`${fmt(x)},${fmt(yc-g(x)+z(i))}`).reverse();
+    const ltop=xs.map((x,i)=>`${fmt(x)},${fmt(yc+g(x)+z(i))}`),lbot=xs.map(x=>`${fmt(x)},${fmt(yc+h/2+g(x))}`).reverse();
+    up=top.concat(bot).join(' ');lo=ltop.concat(lbot).join(' ');}
+  return {up,lo,ix:Math.max(x0,e),iw:Math.max(0,x1-Math.max(x0,e))};
+}
+function runner(x,y,ph,c){ // 달리는 사람: 위상 ph는 '간 거리'에서 나옴 → 긁는 속도가 빠르면 다리도 빨라짐
+  const L=(a,l,ox,oy)=>[ox+l*Math.sin(a),oy+l*Math.cos(a)];
+  const hip=[x,y-120],sh=[x+34,y-235],hd=[x+52,y-282];
+  const s1=Math.sin(ph),s2=Math.sin(ph+Math.PI);
+  const k1=L(.7*s1,70,hip[0],hip[1]),f1=L(.7*s1-(.9+.6*Math.max(0,-s1)),70,k1[0],k1[1]);
+  const k2=L(.7*s2,70,hip[0],hip[1]),f2=L(.7*s2-(.9+.6*Math.max(0,-s2)),70,k2[0],k2[1]);
+  const e1=L(-.9*s1+.3,55,sh[0],sh[1]),h1=L(-.9*s1+1.6,50,e1[0],e1[1]);
+  const e2=L(-.9*s2+.3,55,sh[0],sh[1]),h2=L(-.9*s2+1.6,50,e2[0],e2[1]);
+  const P_=a=>a.map(fmt).join(',');
+  return `<g fill="none" stroke="${c}" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="${P_(hip)} ${P_(sh)}"/><polyline points="${P_(hip)} ${P_(k1)} ${P_(f1)}"/><polyline points="${P_(hip)} ${P_(k2)} ${P_(f2)}"/>
+    <polyline points="${P_(sh)} ${P_(e1)} ${P_(h1)}"/><polyline points="${P_(sh)} ${P_(e2)} ${P_(h2)}"/></g><circle cx="${fmt(hd[0])}" cy="${fmt(hd[1])}" r="30" fill="${c}"/>`;
+}
+const SWOOSH='M0,58 C2,78 20,86 44,78 L230,10 L50,62 C30,69 14,69 8,58 Z';
+const COLLAB={
+  bake:{name:'반죽상점 — 빵에 칼집(쿠프)',idea:'긁는 선 = 제빵사가 반죽에 내는 칼집. 칼집이 벌어지며 속살이 보임',
+    draw:c=>{const T=tear(150,930,AY,70,c.hx,16);
+      return `<ellipse cx="540" cy="${AY}" rx="430" ry="230" fill="#C98A3E"/><ellipse cx="540" cy="${AY-30}" rx="390" ry="170" fill="#D9A35B"/>
+      <rect x="150" y="${AY-12}" width="780" height="24" rx="12" fill="#F3E2C0"/>
+      ${T.up?`<polygon points="${T.up}" fill="#D9A35B"/><polygon points="${T.lo}" fill="#C98A3E"/>`:''}
+      <rect x="${fmt(T.ix)}" y="${AY-35}" width="${fmt(T.iw)}" height="70" fill="#D9A35B"/>
+      <text x="540" y="${AY+300}" font-size="34" text-anchor="middle" fill="#7a4a1a" font-weight="700">갓 구운 빵처럼, 한 번에</text>`}},
+};
+// COLLAB-REAL-START
+delete COLLAB.bake;
+// 협업 장면 공통 무드(맥도날드 봉투 장면 기준): 납작한 색면 · 단순한 도형 · 열면 안에 든 것이 드러남. 선은 거의 쓰지 않음.
+// p = 긁은 진행(0 → 1), dir = 'h' 가로 / 'v' 위→아래, bump = 경계(호)를 지날 때의 한 번(12°)
+const E3=t=>1-Math.pow(1-Math.min(1,Math.max(0,t)),3);
+const F=n=>Math.round(n*10)/10;
+// 테이크아웃 컵: 화면 가운데 구도(뚜껑 구멍 = 빨대 자리, 가로 = 컵홀더 끼우기)
+function cupScene(c,o){
+  const CX=540,R=AY+30,HX=CX+80,TW=190,BW=140,HT=470,sh=o.sleeve;
+  const cup=`<ellipse cx="${CX}" cy="${R+HT}" rx="${BW}" ry="10" fill="#000" opacity=".08"/>
+    <path d="M${CX-TW},${R} L${CX+TW},${R} L${CX+BW},${R+HT} L${CX-BW},${R+HT} Z" fill="${o.cup||'#f1f1f1'}"/>`;
+  // 컵홀더(슬리브) = 제자리(R+150~300) 기준 dy만큼 내려가 있고 rot만큼 기울어짐
+  const sleeve=(dy,rot)=>`<g transform="translate(0 ${F(dy)}) rotate(${F(rot)} ${CX} ${R+225})">
+    <path d="M${CX-TW+14},${R+150} L${CX+TW-14},${R+150} L${CX+TW-34},${R+300} L${CX-TW+34},${R+300} Z" fill="${sh}"/>
+    ${o.logo?`<image href="${o.logo}" x="${CX-120}" y="${R+188}" width="240" height="72" preserveAspectRatio="xMidYMid meet"/>`:''}</g>`;
+  const lid=(dy,rot)=>`<g transform="translate(0 ${F(dy)}) rotate(${F(rot)} ${CX} ${R})">
+    <rect x="${CX-TW-14}" y="${R-22}" width="${2*TW+28}" height="30" rx="12" fill="#ffffff"/>
+    <rect x="${CX-TW-14}" y="${R-2}" width="${2*TW+28}" height="10" rx="5" fill="#d9d9d9"/>
+    <path d="M${CX-150},${R-22} L${CX+150},${R-22} L${CX+122},${R-64} L${CX-122},${R-64} Z" fill="#f4f4f4"/>
+    <rect x="${CX+50}" y="${R-38}" width="60" height="16" rx="8" fill="#2b2b2b"/></g>`;
+  if(c.dir==='v'){ // 위→아래 긁기 = 빨대 꽂기: 뚜껑은 닫혀 있고, 빨대가 내려와 구멍(점 자리)으로 들어감
+    const HY=R-30,tip=HY-700+700*E3(c.p),len=560,tilt=12*c.bump;
+    return `${cup}${sleeve(0,0)}${lid(0,0)}<clipPath id="strawClip"><rect x="0" y="0" width="1080" height="${HY}"/></clipPath>
+      <g clip-path="url(#strawClip)" transform="rotate(${F(tilt)} ${HX} ${F(tip)})"><rect x="${HX-15}" y="${F(tip-len)}" width="30" height="${len}" rx="6" fill="${o.straw||'#2b2b2b'}"/>
+      ${o.stripe?[0,1,2,3,4,5].map(i=>`<rect x="${HX-15}" y="${F(tip-len+40+i*80)}" width="30" height="26" fill="${o.stripe}"/>`).join(''):''}</g>`;
+  }
+  // 가로 긁기 = 컵홀더 끼우기: 뚜껑 닫힌 컵 아래에서 홀더가 기울어진 채 밀려 올라와, 경계에서 한 번 12° 흔들리고, 끝에 '쏙' 걸림
+  const k=E3(c.p),dy=400*(1-k)+(c.p>.97?-4:0),rot=10*(1-k)+12*c.bump;
+  return `${cup}${sleeve(dy,rot)}${lid(0,0)}`;
+}
+Object.assign(COLLAB,{
+  musinsa:{name:'무신사 — 택배 박스 테이프',idea:'긁는 선 = 박스 위 테이프를 떼는 손. 카드가 지나간 만큼 테이프가 말려 올라가고 그 밑 이음새가 드러남',
+    draw:c=>{
+      // 3/4 박스(납작한 세 면) — 윗면 이음새를 따라 테이프가 붙어 있음
+      const L0=230,L1=950,SY=810,xa=L0+(L1-L0)*E3(c.p),peel=xa-L0;
+      const top=`<path d="M180,860 L900,860 L1000,760 L280,760 Z" fill="#2a2a2a"/>`;
+      const front=`<rect x="180" y="860" width="720" height="400" fill="#141414"/><path d="M900,860 L1000,760 L1000,1160 L900,1260 Z" fill="#0b0b0b"/>
+        <image href="brand_logos/musinsa_dark.svg" x="330" y="1010" width="420" height="80"/>`;
+      const gap=Math.min(8,2+peel/90);
+      const seam=`<rect x="${L0}" y="${SY-gap/2}" width="${F(peel)}" height="${F(gap)}" fill="#000"/>`;
+      const tapeTop=`<path d="M${F(xa)},${SY-28} L${L1+20},${SY-28} L${L1-2},${SY+28} L${F(xa-22)},${SY+28} Z" fill="#cfcfcf"/>
+        <rect x="${F(xa)}" y="${SY-28}" width="${F(Math.max(0,L1+20-xa))}" height="6" fill="#e8e8e8"/>
+        <path d="M${L1-2},${SY+28} L${L1+20},${SY-28} L${L1+20},${SY+110} L${L1-2},${SY+160} Z" fill="#bdbdbd"/>
+        ${L1-xa>260?`<text x="${F(xa+40)}" y="${SY+8}" font-size="22" font-weight="800" letter-spacing="8" fill="#7a7a7a">MUSINSA</text>`:''}`;
+      // 떼어 낸 테이프: 붙은 자리에서 둥글게 말려 올라가 뒤로 젖혀진 넓은 리본. 위로 향한 면 = 접착면(한 톤 어둡게), 가장자리 빛, 박스 위 그림자
+      let free='';
+      if(peel>6){const Lf=Math.min(400,peel),rot=12*c.bump*Math.PI/180,P0=[xa,SY-4],P1=[xa+36,SY-170],P2=[xa-.55*Lf,SY-130-.45*Lf];
+        const pts=[];for(let i=0;i<=14;i++){const u=i/14,x=(1-u)*(1-u)*P0[0]+2*u*(1-u)*P1[0]+u*u*P2[0],y=(1-u)*(1-u)*P0[1]+2*u*(1-u)*P1[1]+u*u*P2[1];
+          const dx=x-P0[0],dy=y-P0[1];pts.push([P0[0]+dx*Math.cos(rot)-dy*Math.sin(rot),P0[1]+dx*Math.sin(rot)+dy*Math.cos(rot)])}
+        const W2=27,side=[],side2=[];for(let i=0;i<pts.length;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],tx=b[0]-a[0],ty=b[1]-a[1],l=Math.hypot(tx,ty)||1,nx=-ty/l*W2,ny=tx/l*W2;side.push([pts[i][0]+nx,pts[i][1]+ny]);side2.push([pts[i][0]-nx,pts[i][1]-ny])}
+        const P=a=>a.map(q=>F(q[0])+','+F(q[1])).join(' ');
+        free=`<path d="M${F(xa-20)},${SY+26} Q${F(xa-Lf*.25)},${SY+40} ${F(xa-Lf*.5)},${SY+26} L${F(xa-Lf*.5)},${SY+6} Z" fill="#000" opacity=".28"/>
+          <polygon points="${P(side)} ${P(side2.slice().reverse())}" fill="#c2c2c2"/>
+          <polyline points="${P(side)}" fill="none" stroke="#eeeeee" stroke-width="5" stroke-linecap="round"/>
+          <polyline points="${P(side2)}" fill="none" stroke="#a8a8a8" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="${F(xa+8)}" cy="${SY-16}" rx="22" ry="26" fill="#d9d9d9"/><ellipse cx="${F(xa+12)}" cy="${SY-20}" rx="10" ry="14" fill="#a3a3a3"/>`}
+      return `${top}${front}${seam}${tapeTop}${free}`}},
+  nike:{name:'나이키 — 함께 달리기',idea:'긁는 속도 = 달리는 속도. 다리 박자가 실제 긁기 속도에서 나오고, 호(경계) 자리에서 허들을 넘고, 결승 테이프가 끊기는 자리가 점이 됨',
+    draw:c=>{const x=Math.min(c.hx,AX)-40,jump=-70*c.bump,ph=c.hx/38,sl=Math.min(260,c.v*.12),brk=c.done||c.hx>=AX;
+      return `<rect x="0" y="${AY+16}" width="1080" height="150" fill="#d8573a"/>
+      <rect x="0" y="${AY+16}" width="1080" height="8" fill="#ffffff"/><rect x="0" y="${AY+88}" width="1080" height="5" fill="#ffffff" opacity=".7"/>
+      <rect x="${AX-AR-6}" y="${AY-70}" width="12" height="86" fill="#f2f2f2"/><rect x="${AX-AR+34}" y="${AY-70}" width="12" height="86" fill="#f2f2f2"/><rect x="${AX-AR-14}" y="${AY-86}" width="68" height="20" fill="#ffffff"/>
+      ${brk?`<path d="M${AX},${AY-150} q-60,30 -110,110" stroke="#FA5400" stroke-width="10" fill="none"/><path d="M${AX},${AY-150} q60,30 110,110" stroke="#FA5400" stroke-width="10" fill="none"/>`:`<line x1="${AX-160}" y1="${AY-150}" x2="${AX+160}" y2="${AY-150}" stroke="#FA5400" stroke-width="10"/>`}
+      ${[0,1,2].map(i=>`<rect x="${F(x-60-sl*(1-i*.25))}" y="${F(AY-160-i*46+jump)}" width="${F(sl*(1-i*.25))}" height="8" rx="4" fill="${c.ink}" opacity="${.25+i*.2}"/>`).join('')}
+      ${c.done?'':runner(x,AY+10+jump,ph,c.ink)}
+      <image href="brand_logos/${c.ink==='#fefefe'?'nike_dark':'nike'}.svg" x="70" y="${AY+220}" width="300" height="108"/>`}},
+  mcd:{name:'맥도날드 — 봉투 뜯기 / 빨대',idea:'가로 긁기 = 종이봉투 윗단을 뜯어 감자튀김이 올라옴 · 위→아래 긁기 = 컵에 빨대를 꽂음',
+    draw:c=>{if(c.dir==='v')return cupScene(c,{sleeve:'#DB0007',logo:'brand_logos/mcdonalds.svg',straw:'#ffffff',stripe:'#DB0007',drink:'#3b1f12'});
+      const T=tear(200,880,AY,80,c.hx,26);
+      const fries=[0,1,2,3,4,5,6,7,8].map(i=>{const fx=240+i*72,open=Math.max(0,Math.min(1,(c.hx-fx)/160));return `<rect x="${fx}" y="${fmt(AY-20-open*(150+(i%3)*40))}" width="34" height="260" rx="6" fill="#FFC72C"/>`}).join('');
+      return `${fries}<rect x="200" y="${AY+40}" width="680" height="440" fill="#B98B56"/>
+      <rect x="200" y="${AY+380}" width="680" height="100" fill="#DB0007"/><image href="brand_logos/mcdonalds.svg" x="490" y="${AY+395}" width="100" height="70"/>
+      ${T.up?`<polygon points="${T.up}" fill="#A47645"/><polygon points="${T.lo}" fill="#B98B56"/>`:''}
+      <rect x="${fmt(T.ix)}" y="${AY-40}" width="${fmt(T.iw)}" height="80" fill="#A47645"/>`}},
+  mega:{name:'메가MGC커피 — 컵홀더 끼우기 / 빨대',idea:'가로 긁기 = 컵 아래에서 컵홀더가 밀려 올라와 끼워짐(경계에서 한 번 12° 흔들림) · 위→아래 긁기 = 빨대가 구멍(점 자리)으로',
+    draw:c=>cupScene(c,{sleeve:'#FFD400',logo:'brand_logos/megacoffee.png',straw:'#1d1d1d',drink:'#3f2a1d'})},
+  compose:{name:'컴포즈커피 — 컵홀더 끼우기 / 빨대',idea:'가로 = 컵홀더 끼우기 · 위→아래 = 빨대 꽂기, 컴포즈 노랑 슬리브',
+    draw:c=>cupScene(c,{sleeve:'#FDD22B',logo:'brand_logos/compose_light.svg',straw:'#1d1d1d',drink:'#3f2a1d'})},
+  moms:{name:'맘스터치 — 버거 포장지 펼치기 / 빨대',idea:'공식 사진(2020-11 새 BI)의 흰 버거 포장지 · 흰 종이컵. 가로 긁기 = 포장지 양 날개가 차례로 펼쳐져 버거가 드러남 · 위→아래 = 흰 컵에 검은 빨대',
+    draw:c=>{if(c.dir==='v')return cupScene(c,{cup:'#ece7dc',sleeve:'#fbfaf6',logo:'brand_logos/momstouch.svg',straw:'#1d1d1d',drink:'#2a1a12'});
+      const CX=540,CY=AY+40,W=520,H=380 /* 화면 가로 가운데 */,kl=E3(c.p*2),kr=E3(c.p*2-1),tl=12*c.bump;
+      const burger=`<g transform="translate(${CX} ${CY})">
+        <rect x="-200" y="70" width="400" height="56" rx="26" fill="#E3A33C"/>
+        <rect x="-214" y="20" width="428" height="62" rx="20" fill="#9a5426"/><rect x="-206" y="14" width="412" height="20" rx="10" fill="#F2A900"/>
+        <path d="M-220,8 q27,-22 55,0 t55,0 t55,0 t55,0 t55,0 t55,0 t55,0 t55,0 L220,24 L-220,24 Z" fill="#7BC043"/>
+        <path d="M-200,6 C-200,-140 200,-140 200,6 Z" fill="#E8A640"/>
+        ${[[-110,-60],[-40,-90],[40,-80],[110,-50],[-70,-30],[10,-40],[80,-20]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="9" ry="5" fill="#fff6dc"/>`).join('')}</g>`;
+      const paper=`<rect x="${CX-W/2}" y="${CY-H/2}" width="${W}" height="${H}" rx="6" fill="#f6f3ec"/>`;
+      const flap=(side,k)=>{const sx=side<0?CX-W/2:CX+W/2,w=W/2*(1-2*k),col=k<.5?'#fbfaf6':'#e7e2d6';
+        return `<g transform="rotate(${F(side<0?-tl:0)} ${sx} ${CY})"><path d="M${sx},${CY-H/2} L${F(sx-side*w)},${CY-H/2+20} L${F(sx-side*w)},${CY+H/2-20} L${sx},${CY+H/2} Z" fill="${col}"/></g>`};
+      return `${paper}${burger}${flap(-1,kl)}${flap(1,kr)}
+        <image href="brand_logos/momstouch.svg" x="${CX-110}" y="${CY+H/2+40}" width="220" height="80"/>`}},
+});
+// COLLAB-REAL-END
+// ===================== 당신의 브랜드 (11-08) =====================
+// 로고 파일(SVG · PNG · JPG · WebP)을 올리면: ① 락업(× SLiP 심볼, 가이드 18쪽 비율) ② 버튼 색 = 로고에서 뽑은 대표 색 ③ 협업 장면 = 로고 스티커의 보호 필름 떼기
+// 로고 밝기에 맞춰 바탕 대비 처리: 흰(밝은) 로고는 흰 바탕에서 검정 배지 위, 어두운 로고는 검정 바탕에서 흰 배지 위. 이 브라우저에 저장돼 다시 열어도 남음.
+// ---------- 당신의 브랜드: 올리기 팝업 (11-08) ----------
+// 이름 직접 입력 · 로고 크기 안내(최소 · 최대) · 투명 배경 권장 · 흰/검정 바탕 한 파일 또는 따로 두 파일
+const CUSTOM_KEY='slipCustomBrand',OLD_KEY='slipCustomLogo';
+const LOGO_RULE={minH:220,minW:400,maxSide:4000,maxMB:2,arMin:1,arMax:6};
+(()=>{const css=document.createElement('style');css.textContent=`
+.bp-back{position:fixed;inset:0;z-index:20;background:rgba(17,19,21,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}
+.bp-back.on{display:flex}
+.bp{width:min(520px,100%);max-height:calc(100vh - 32px);overflow:auto;border-radius:20px;padding:20px 22px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.8);
+  -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);box-shadow:0 18px 60px rgba(31,120,204,.22);color:#121314;font-size:13.5px;display:grid;gap:14px;user-select:text;-webkit-user-select:text}
+.bp h2{margin:0;font-size:18px;font-weight:600}
+.bp label.f{display:grid;gap:6px;font-weight:600;font-size:12.5px;color:#4a5560}
+.bp input[type=text]{font:inherit;font-size:15px;padding:9px 12px;border-radius:10px;border:1px solid #cdd2d8;background:#fff;color:#121314}
+.bp .seg2{display:flex;border:1px solid #cdd2d8;border-radius:999px;overflow:hidden;width:max-content}
+.bp .seg2 button{border:0;background:transparent;padding:6px 12px;font-size:12.5px;color:#5d636b}
+.bp .seg2 button[aria-pressed=true]{background:#121314;color:#fff}
+.bp .slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.bp .slot{display:grid;gap:6px}
+.bp .slot b{font-size:12.5px;color:#4a5560;font-weight:600}
+.bp .drop{height:110px;border-radius:12px;border:1.5px dashed #aab0b7;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
+  background-color:#fff;background-image:linear-gradient(45deg,#eceef0 25%,transparent 25%,transparent 75%,#eceef0 75%),linear-gradient(45deg,#eceef0 25%,transparent 25%,transparent 75%,#eceef0 75%);background-size:16px 16px;background-position:0 0,8px 8px}
+.bp .drop.dark{background-color:#111;background-image:none;border-color:#5d636b;color:#9aa1a9}
+.bp .drop img{max-width:86%;max-height:78%}
+.bp .drop span{font-size:12.5px;color:#5d636b}
+.bp .st{font-size:11.5px;line-height:1.5;color:#4a5560;min-height:17px}
+.bp .st .no{color:#b4232a}
+.bp .rule{background:rgba(212,236,255,.55);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.6;color:#2b3640}
+.bp .rule ul{margin:4px 0 0;padding-left:18px}
+.bp .act{display:flex;justify-content:flex-end;gap:8px}
+.bp .act button{font:inherit;padding:8px 16px;border-radius:999px;border:1px solid #cdd2d8;background:#fff;color:#121314}
+.bp .act button.go{background:#121314;color:#fff;border-color:#121314}
+.bp .act button:disabled{opacity:.35}
+.top .mineWrap{display:inline-flex;align-items:center;gap:0}
+.top .mineWrap .x{padding:4px 8px;margin-left:-1px;border-radius:0 999px 999px 0}
+.top .mineWrap .mine{border-radius:999px 0 0 999px}`;document.head.appendChild(css);
+  const back=document.createElement('div');back.className='bp-back';back.id='bpBack';
+  back.innerHTML=`<div class="bp" role="dialog" aria-modal="true" aria-labelledby="bpT">
+    <h2 id="bpT">당신의 브랜드</h2>
+    <label class="f">브랜드 이름<input type="text" id="bpName" maxlength="20" placeholder="예: 우리 동네 카페"></label>
+    <div class="f" style="display:grid;gap:6px;font-weight:600;font-size:12.5px;color:#4a5560">로고 바탕
+      <span class="seg2" role="group" aria-label="로고 바탕"><button data-bm="one" aria-pressed="true">한 파일로 흰 · 검정 모두</button><button data-bm="two" aria-pressed="false">흰 바탕용 · 검정 바탕용 따로</button></span></div>
+    <div class="slots">
+      <div class="slot"><b id="bpL1">로고</b><div class="drop" id="bpD1" tabindex="0"><span>눌러서 파일 고르기</span></div><div class="st" id="bpS1"></div></div>
+      <div class="slot" id="bpSlot2" style="display:none"><b>검정 바탕용 로고</b><div class="drop dark" id="bpD2" tabindex="0"><span>눌러서 파일 고르기</span></div><div class="st" id="bpS2"></div></div>
+    </div>
+    <div class="rule"><b>이런 로고를 올려 주세요</b><ul>
+      <li>배경이 <b>투명한</b> PNG 또는 SVG (JPG는 네모난 바탕이 같이 보여요)</li>
+      <li>로고 가장자리에 맞춰 여백 없이 자른 파일</li>
+      <li><b>최소</b> 세로 ${LOGO_RULE.minH}px 이상, 가로로 긴 로고는 가로 ${LOGO_RULE.minW}px 이상 — 화면에서 높이 약 110px로 쓰여서 2배 크기여야 선명해요 (SVG는 크기 상관없음)</li>
+      <li><b>최대</b> 긴 쪽 ${LOGO_RULE.maxSide}px · 파일 ${LOGO_RULE.maxMB}MB 이하</li>
+      <li>가로 ÷ 세로 비율 ${LOGO_RULE.arMin} ~ ${LOGO_RULE.arMax} — 더 긴 워드마크는 작게 줄어들어요</li>
+      <li>따로 올릴 때: 흰 바탕용은 진한 색 로고, 검정 바탕용은 밝은 색 로고</li>
+      <li><b>참고</b> 한 파일만 올리고 그 로고가 <b>검정 단색</b>이면, 검정 바탕(승인 화면)에서는 <b>자동으로 흰색</b>으로 바뀌어요. 색이 있는 로고는 그대로 써요. 흰 바탕에서만 쓰는 로고라 자동 흰색이 싫다면 '따로'를 골라 검정 바탕용을 올려 주세요.</li></ul></div>
+    <div class="act"><button id="bpCancel">취소</button><button class="go" id="bpOk" disabled>적용</button></div></div>`;
+  document.body.appendChild(back);
+})();
+const BP={mode:'one',light:null,dark:null};
+const fileIn=document.createElement('input');fileIn.type='file';fileIn.accept='image/svg+xml,image/png,image/webp,image/jpeg';fileIn.style.display='none';document.body.appendChild(fileIn);
+let bpTarget=1;
+function bpSync(){$('bpSlot2').style.display=BP.mode==='two'?'':'none';$('bpL1').textContent=BP.mode==='two'?'흰 바탕용 로고':'로고';
+  document.querySelectorAll('[data-bm]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.bm===BP.mode));
+  $('bpOk').disabled=!(BP.light&&(BP.mode==='one'||BP.dark));
+  [[1,BP.light],[2,BP.dark]].forEach(([i,u])=>{$('bpD'+i).innerHTML=u?`<img alt="" src="${u}">`:'<span>눌러서 파일 고르기</span>'})}
+function openBrandPop(){const c=BRANDS.custom&&BRANDS.custom.cfg;BP.mode=c?c.mode:'one';BP.light=c?c.light:null;BP.dark=c?c.dark:null;
+  $('bpName').value=c?c.name:'';$('bpS1').innerHTML=$('bpS2').innerHTML='';bpSync();$('bpBack').classList.add('on');setTimeout(()=>$('bpName').focus(),50)}
+function pickLogo(){openBrandPop()}
+function closeBrandPop(){$('bpBack').classList.remove('on')}
+document.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{BP.mode=b.dataset.bm;if(BP.mode==='one')BP.dark=null;bpSync()});
+[1,2].forEach(i=>{const d=$('bpD'+i);d.onclick=()=>{bpTarget=i;fileIn.value='';fileIn.click()};d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();d.click()}}});
+$('bpCancel').onclick=closeBrandPop;$('bpBack').addEventListener('pointerdown',e=>{if(e.target.id==='bpBack')closeBrandPop()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('bpBack').classList.contains('on'))closeBrandPop()});
+fileIn.onchange=()=>{const f=fileIn.files[0];if(!f)return;const i=bpTarget,svg=/svg/.test(f.type);const r=new FileReader();
+  r.onload=()=>{const url=r.result,img=new Image();img.onload=()=>{
+    const w=img.naturalWidth,h=img.naturalHeight,A=analyzeLogo(img),ar=w&&h?w/h:0,notes=[],bad=[];
+    notes.push(svg?'SVG':(w+' × '+h+'px'));
+    if(!svg&&(h<LOGO_RULE.minH&&w<LOGO_RULE.minW))bad.push('너무 작아요(흐릿하게 보일 수 있어요)');
+    if(!svg&&Math.max(w,h)>LOGO_RULE.maxSide)bad.push('긴 쪽 '+LOGO_RULE.maxSide+'px 넘음');
+    if(f.size>LOGO_RULE.maxMB*1048576)bad.push('파일 '+LOGO_RULE.maxMB+'MB 넘음');
+    if(ar&&(ar<LOGO_RULE.arMin*.8||ar>LOGO_RULE.arMax))bad.push('비율 '+ar.toFixed(1)+' (권장 '+LOGO_RULE.arMin+'~'+LOGO_RULE.arMax+')');
+    notes.push(A.trans?'투명 배경 ✓':'배경 있음');if(!A.trans)bad.push('투명 배경이 아니에요');
+    $('bpS'+i).innerHTML=notes.join(' · ')+(bad.length?'<br><span class="no">'+bad.join(' · ')+'</span>':' · 좋아요');
+    if(i===1)BP.light=url;else BP.dark=url;bpSync()};img.src=url};r.readAsDataURL(f)};
+$('bpOk').onclick=()=>{setCustom({name:($('bpName').value||'').trim()||'당신의 브랜드',mode:BP.mode,light:BP.light,dark:BP.mode==='two'?BP.dark:null},true);closeBrandPop()};
+function removeCustom(){delete BRANDS.custom;delete COLLAB.custom;try{localStorage.removeItem(CUSTOM_KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
+  if(brand==='custom')brand=null;chips();syncCollabUI();refreshLogo(true);go(st.step)}
+function analyzeLogo(img){
+  const w=img.naturalWidth||300,h=img.naturalHeight||100,S=140/Math.max(w,h),cw=Math.max(1,Math.round(w*S)),ch=Math.max(1,Math.round(h*S));
+  const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;const x=cv.getContext('2d');x.drawImage(img,0,0,cw,ch);
+  let d;try{d=x.getImageData(0,0,cw,ch).data}catch(e){return {ar:h/w,color:'#121212',lum:.1,trans:true,heavy:false}}
+  const bg=[d[0],d[1],d[2],d[3]],bins={};let n=0,ls=0,tr=0,x0=cw,y0=ch,x1=0,y1=0;
+  for(let i=0;i<cw*ch;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2],a=d[i*4+3];
+    if(a<40){tr++;continue}
+    if(bg[3]>200&&Math.abs(r-bg[0])+Math.abs(g-bg[1])+Math.abs(b-bg[2])<36)continue; // 불투명 이미지의 바탕(모서리 색)은 빼고 잼
+    n++;ls+=(.2126*r+.7152*g+.0722*b)/255;const px=i%cw,py=(i/cw)|0;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py);
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx>60&&(mx-mn)/mx>.35){const k=(r>>5)+','+(g>>5)+','+(b>>5),B=bins[k]||(bins[k]={c:0,r:0,g:0,b:0});B.c++;B.r+=r;B.g+=g;B.b+=b}}
+  const lum=n?ls/n:0,trans=tr>cw*ch*.05,top=Object.values(bins).sort((a,b)=>b.c-a.c)[0];
+  const color=top&&top.c>n*.03?rgbS([top.r/top.c,top.g/top.c,top.b/top.c]):'#121212';
+  const fill=n/Math.max(1,(x1-x0+1)*(y1-y0+1)); // 꽉 찬 정도 → 굵고 꽉 찬 로고는 약 80%(가이드 18쪽)
+  return {ar:h/w,color,lum,trans,heavy:fill>.45};
+}
+const lumOf=hex=>{const c=hx2(hex).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+function setCustom(cfg,select){
+  if(typeof cfg==='string')cfg={name:'당신의 브랜드',mode:'one',light:cfg,dark:null}; // 이전 저장 형식
+  const load=u=>new Promise(res=>{if(!u)return res(null);const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=u});
+  Promise.all([load(cfg.light),load(cfg.dark)]).then(([img,imgD])=>{if(!img)return;
+    const A=analyzeLogo(img),w=Math.round(Math.min(300,110/A.ar)),bh=Math.round(w*A.ar);
+    const light={file:cfg.light,w,ar:A.ar,bh,rule:'① 원본 — 올린 로고 그대로'};let dark={file:cfg.light,w,ar:A.ar,bh,rule:'① 원본 — 올린 로고 그대로'};
+    if(imgD){const D=analyzeLogo(imgD),wd=Math.round(Math.min(300,110/D.ar));dark={file:cfg.dark,w:wd,ar:D.ar,bh:Math.round(wd*D.ar),rule:'② 따로 — 검정 바탕용 로고'}}
+    else if(A.trans&&A.lum<.35&&A.color==='#121212'){dark.white=1;dark.rule='③ 반전 — 검정 단색 로고 → 검정 바탕에서는 자동으로 흰색'} // 11-08: 검정뿐인 로고만 흰색으로, 색 있는 로고는 그대로
+    if(A.trans&&A.lum>.8){light.badge='#121212';light.rule='④ 배지 — 밝은 로고가 흰 위에서 사라짐 → 검정 배지 위에'}
+    let color=A.color;if(lumOf(color)>.8)color='#121212';
+    BRANDS.custom={opt:A.heavy?.8:1,name:cfg.name,color,btnInk:lumOf(color)>.4?'#111':'#fff',light,dark,cardDark:A.trans&&A.lum>.8,cfg};
+    COLLAB.custom={name:cfg.name+' — 로고 스티커',idea:'긁는 선 = 보호 필름을 떼는 손. 필름이 떼어진 만큼 로고 스티커가 또렷해지고, 아래 띠는 로고에서 뽑은 대표 색',draw:stickerScene,spark:stickerSpark};
+    try{localStorage.setItem(CUSTOM_KEY,JSON.stringify(cfg));localStorage.removeItem(OLD_KEY)}catch(e){}
+    if(select)brand='custom';chips();syncCollabUI();refreshLogo(true);go(st.step);
+  });
+}
+const STK={CX:540,CY:AY+20,W:620,H:400,R:44};
+function stickerScene(c){
+  const B=BRANDS.custom;if(!B)return '';const v=B.light,{CX,CY,W,H,R}=STK,x0=CX-W/2,y0=CY-H/2,k=E3(c.p);
+  const lw=Math.min(440,190/v.ar),lh=lw*v.ar,card=B.cardDark?'#1a1a1a':'#ffffff';
+  const band=`M${x0},${y0+H-60}H${x0+W}V${y0+H-R}A${R},${R} 0 0 1 ${x0+W-R},${y0+H}H${x0+R}A${R},${R} 0 0 1 ${x0},${y0+H-R}Z`;
+  const base=`<rect x="${x0+10}" y="${y0+18}" width="${W}" height="${H}" rx="${R}" fill="#000" opacity=".1"/><rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="${R}" fill="${card}"/>
+    <path d="${band}" fill="${B.color}"/><image href="${v.file}" x="${F(CX-lw/2)}" y="${F(CY-30-lh/2)}" width="${F(lw)}" height="${F(lh)}" preserveAspectRatio="xMidYMid meet"/>
+    <clipPath id="stkC"><rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="${R}"/></clipPath>`;
+  const sheen=(a,b)=>`<path d="M${a},${y0-20} l90,0 l-260,${H+40} l-90,0 Z" fill="#fff" opacity=".35"/><path d="M${b},${y0-20} l36,0 l-260,${H+40} l-36,0 Z" fill="#fff" opacity=".28"/>`;
+  let film,flap='';
+  if(c.dir==='v'){const ye=y0+H*k,f=Math.min(150,H*k);
+    film=`<g clip-path="url(#stkC)"><rect x="${x0}" y="${F(ye)}" width="${W}" height="${F(y0+H-ye)}" fill="#e9f1f9" opacity=".92"/><g clip-path="url(#stkF)">${sheen(x0+260,x0+420)}</g></g><clipPath id="stkF"><rect x="${x0}" y="${F(ye)}" width="${W}" height="${F(y0+H-ye)}"/></clipPath>`;
+    if(k>.01)flap=`<path d="M${x0},${F(ye)}L${x0+W},${F(ye)}Q${x0+W+40},${F(ye-f*.6)} ${x0+W-12},${F(ye-f)}L${x0+12},${F(ye-f)}Q${x0-40},${F(ye-f*.6)} ${x0},${F(ye)}Z" fill="#dfe8f1"/><line x1="${x0}" y1="${F(ye)}" x2="${x0+W}" y2="${F(ye)}" stroke="#fff" stroke-width="4"/>`;
+  }else{const xe=x0+W*k,f=Math.min(170,W*k);
+    film=`<g clip-path="url(#stkC)"><rect x="${F(xe)}" y="${y0}" width="${F(x0+W-xe)}" height="${H}" fill="#e9f1f9" opacity=".92"/><g clip-path="url(#stkF)">${sheen(x0+380,x0+540)}</g></g><clipPath id="stkF"><rect x="${F(xe)}" y="${y0}" width="${F(x0+W-xe)}" height="${H}"/></clipPath>`;
+    if(k>.01)flap=`<path d="M${F(xe)},${y0}L${F(xe)},${y0+H}Q${F(xe-f*.6)},${y0+H+40} ${F(xe-f)},${y0+H-12}L${F(xe-f)},${y0+12}Q${F(xe-f*.6)},${y0-40} ${F(xe)},${y0}Z" fill="#dfe8f1"/><line x1="${F(xe)}" y1="${y0}" x2="${F(xe)}" y2="${y0+H}" stroke="#fff" stroke-width="4"/>`;
+  }
+  return base+film+flap;
+}
+function stickerSpark(c){const {CX,CY,W,H}=STK,x0=CX-W/2,y0=CY-H/2,k=E3(c.p);
+  return c.dir==='v'?{x:CX,y:y0+H*k,x0:CX,y0:y0}:{x:x0+W*k,y:CY,x0:x0,y0:CY}}
+let lastCollab=null;
+function collabActive(){return collabOn&&brand&&COLLAB[brand]}
+function collabHead(s,t){
+  if(s==='swipe')return st.card.x+CARD_L-GROOVE_X0;
+  if(s==='auth'&&st.shrinkFrom)return st.shrinkFrom.head+(st.v||2000)*t;
+  if(s==='miss'&&st.missLine)return Math.max(st.missLine.x1,st.missLine.x2);
+  return null;
+}
+function drawCollab(s,t){
+  const g=$('collab');const on=collabActive()&&['swipe','auth','miss'].includes(s)&&!(s==='miss'&&st.missKind==='ic');
+  if(!on){if(g.innerHTML)g.innerHTML='';return false}
+  const hx=collabHead(s,t);if(hx==null){g.innerHTML='';return false}
+  const cross=AX-AR,bump=st.kink*Math.exp(-Math.pow((hx-cross-60)/110,2));
+  const p=clamp((hx-380)/(AX-380),0,1); // 0 = 선이 화면에 들어옴, 1 = 중심(점 자리)에 닿음
+  const c={hx,p,t,s,dir:st.msV?'v':'h',v:st.v||(+sp.value*25.4*U),bump,done:s==='auth'&&hx>=AX,miss:s==='miss',ink:ver==='B'?'#fefefe':'#121212',paper:ver==='B'?'#121212':'#fefefe'};lastCollab=c;
+  g.innerHTML=COLLAB[brand].draw(c);
+  return true;
+}
+function syncCollabUI(){const has=!!(brand&&COLLAB[brand]);$('collabWrap').style.display='none';collabOn=true; // 11-08: 브랜드 협업 항상 켬(끄기 없음)
+  $('cOff').setAttribute('aria-pressed',!collabOn);$('cOn').setAttribute('aria-pressed',collabOn);
+  $('rCollab').textContent=has?(collabOn?COLLAB[brand].name+' — '+COLLAB[brand].idea+' · 로고 대신 별(고리 없음)이 빛줄기를 그으며 긁는 앞끝을 따라가고, 승인 때 좌→우로 쏵 지나가 별 프레임으로 번쩍 → 승인 완료':'끔 (친근 모션만)'):'이 브랜드는 협업 장면 없음'}
+$('cOff').onclick=()=>{collabOn=false;syncCollabUI();refreshLogo(true)};$('cOn').onclick=()=>{collabOn=true;syncCollabUI();refreshLogo(true)};
+
+// ===================== SLiP 친근 모션 (P2 물빛 하늘보라) =====================
+// 바뀌지 않는 것: 별 곡률 R 60.7 (카드 모서리), 고리 반지름 112.42 · 굵기 3, 고리 끊김 20.25 — 전부 로고 단위(높이 500).
+// 바뀌어도 되는 것: 팔 길이(방향마다 따로), 카드 모서리 간격(= 막대 굵기, 0이면 별만), 고리 회전 · 시선 이동 · 펼침, 전체 위치 · 기울기 · 같은 비율 크기.
+// 비균등 늘리기(scaleX만)는 곡률이 깨져서 쓰지 않음 → 늘어남 · 눌림은 팔 길이와 간격으로만 표현.
+const MR=60.7, RING=112.42, RSW=3, KO=20.25, HW0=4.5, ARM0={u:250,r:267.9,d:250,l:267.9};
+// 로고 포인트 모드의 로고 색: P2 원색(#D4ECFF·#A9D8FF·#F2F9FF)은 흰 바탕 위 1.06~1.5:1이라 로고가 사라짐 → 같은 색상(물빛 207°)을 진하게, 그래픽 대비 3:1 이상
+// 폴백 안내 #3A93DB(3.3:1) · 긁는 중/승인 중 #1F78CC(4.6:1, 가장 진함) · 인식 실패 #3F8FD4(3.5:1). 흰 단계는 검정
+const LPAL={fail:'#3A93DB',swipe:'#1F78CC',auth:'#1F78CC',miss:'#3F8FD4'};
+const PAL={select:'#FFFFFF',prompt:'#FFFFFF',insert:'#FFFFFF',read:'#FFFFFF',fail:'#D4ECFF',swipe:'#A9D8FF',auth:'#A9D8FF',done:'#FFFFFF',miss:'#F2F9FF',reject:'#FFFFFF'};
+const hx2=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const rgbS=c=>'#'+c.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+const f2=v=>Math.round(v*100)/100;
+function crossD(hw,a){const q=hw+MR;const u=Math.max(a.u,q),r=Math.max(a.r,q),d=Math.max(a.d,q),l=Math.max(a.l,q);
+  return `M${f2(-hw)},${f2(-u)}H${f2(hw)}V${f2(-q)}A${MR},${MR} 0 0 0 ${f2(q)},${f2(-hw)}H${f2(r)}V${f2(hw)}H${f2(q)}A${MR},${MR} 0 0 0 ${f2(hw)},${f2(q)}V${f2(d)}H${f2(-hw)}V${f2(q)}A${MR},${MR} 0 0 0 ${f2(-q)},${f2(hw)}H${f2(-l)}V${f2(-hw)}H${f2(-q)}A${MR},${MR} 0 0 0 ${f2(-hw)},${f2(-q)}Z`}
+function ringD(cx,cy,a0,a1){const R_=RING,x0=cx+R_*Math.cos(rad(a0)),y0=cy+R_*Math.sin(rad(a0)),x1=cx+R_*Math.cos(rad(a1)),y1=cy+R_*Math.sin(rad(a1));
+  if(Math.abs(a1-a0)<.5)return '';return `M${f2(x0)},${f2(y0)}A${R_},${R_} 0 ${(a1-a0)>180?1:0} 1 ${f2(x1)},${f2(y1)}`}
+const MG=document.createElementNS(NS,'g');MG.id='mascot';
+MG.innerHTML='<clipPath id="mPlateClip"><circle r="200"/></clipPath><clipPath id="mKoClip"><circle r="220"/></clipPath><circle id="mPlate" r="200" fill="none"/><path id="mUp" fill="none" stroke-linecap="butt"/><path id="mKoX" fill="none" stroke-linejoin="round" clip-path="url(#mKoClip)"/><path id="mKoX2" fill="none" stroke-linejoin="round" clip-path="url(#mPlateClip)"/><path id="mX"/><path id="mKoL" fill="none" clip-path="url(#mKoClip)"/><path id="mKoL2" fill="none" clip-path="url(#mPlateClip)"/><path id="mLo" fill="none" stroke-linecap="butt"/>';
+$('hdr').parentNode.appendChild(MG);
+// 결제 실패 전환용 '별 프레임': 화면을 덮는 면 + 별 모양 창(evenodd). 창의 오목 모서리 반지름은 늘 60.7(곡률 고정), 직선 변만 늘어남
+const RF=document.createElementNS(NS,'path');RF.id='rejFrame';RF.setAttribute('fill','#111111');RF.setAttribute('fill-rule','evenodd');RF.setAttribute('d','');
+{const g=document.createElementNS(NS,'g');g.setAttribute('transform','translate(80 80)');g.setAttribute('clip-path','url(#screenClip)');g.appendChild(RF);$('kiosk').appendChild(g)} // 버튼 · 매장 로고까지 덮도록 화면 맨 위 층
+// 오목 모서리 패널(별 = hx=hy=막대 반폭일 때): 윗변 폭 2hx, 옆변 높이 2hy, 네 모서리는 반지름 r로 안쪽으로 파임
+function panelD(cx,cy,hx,hy,r){const X=v=>f2(cx+v),Y=v=>f2(cy+v);
+  return `M${X(-hx)},${Y(-hy-r)}H${X(hx)}A${r},${r} 0 0 0 ${X(hx+r)},${Y(-hy)}V${Y(hy)}A${r},${r} 0 0 0 ${X(hx)},${Y(hy+r)}H${X(-hx)}A${r},${r} 0 0 0 ${X(-hx-r)},${Y(hy)}V${Y(-hy)}A${r},${r} 0 0 0 ${X(-hx)},${Y(-hy-r)}Z`}
+let rejFrom=null,mOp=1;
+const scrRect=$('screen').firstElementChild;
+let plC=[17,17,17]; // 로고 포인트 모드의 로고 색(현재 사용 안 함)
+let washC=hx2('#A9D8FF'),washA=0,washR=100,washX=540,washY=960,washStep=null,washFire=null; // 배경 물들임 색 · 세기
+const M={x:960,y:150,s:.2,rot:0,hw:HW0,u:250,r:267.9,d:250,l:267.9,rr:0,lx:0,ly:0,g:0,ink:0,sw:180};
+let bgC=hx2('#FFFFFF'),doneFrom=null,authFrom=null;
+function base(x,y,s,o={}){return {x,y,s,rot:0,hw:HW0,...ARM0,rr:0,lx:0,ly:0,g:0,ink:0,sw:180,...o}}
+const springOut=u=>u>=1?1:1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2); // 살짝 지나쳤다 돌아옴
+const wob=(t,f,dec)=>Math.sin(t*f)*Math.exp(-t*dec);
+// 화면 밖(옆 IC 모듈 위)까지 나갈 수 있는 층: 옆 투입구 안내 · 넣는 순간 · 읽기 시작 동안만 화면 자르기 없이 그림
+const MGU=document.createElementNS(NS,'g');MGU.setAttribute('transform','translate(80 80)');$('kiosk').appendChild(MGU);const MGH=MG.parentNode;
+function mascotFrame(now,t,s,dt){
+  if(MG.parentNode!==MGH)MGH.appendChild(MG); // 11-08: 로고는 늘 화면 안에서만 움직임
+  // 사용자 행동을 기다리는 단계(선택 · 카드 넣기 안내 · 폴백 안내 · 다시 긁기)만 느리고 부드럽게(0.6배) → 재촉하지 않음.
+  // 시스템이 일하는 단계(넣는 순간 · 읽는 중 · 긁는 중 · 승인 중 · 완료)는 원래 속도 그대로 빠르게
+  const WAIT=s==='select'||s==='fail'||s==='reject'; // 카드 넣기 안내(prompt)도 원래 속도(사용자 지시) // '인식하지 못했어요'(miss)는 변경 전 속도 그대로(사용자 지시)
+  if(WAIT&&s!=='fail')t*=.6;
+  const calm=reduce?0:1, v=st.v||(+sp.value*25.4*U);
+  let T, exact={};
+  const look=P().look, armK=look[1]>0?'d':look[0]>0?'r':'l';
+  const CS=brand?SLOT():{x:960,y:150,s:.2}; // 매장 로고가 있으면 오른쪽 위 SLiP 심볼 자리 · 크기에 앉음
+  if(s==='select'){T=base(CS.x,CS.y,CS.s,{hw:HW0+.8*Math.sin(t*2.2)*calm})}
+  else if(s==='prompt'||s==='insert'){
+    // 크기는 같은 비율로만 줄임(곡률 · 고리 · 끊김 비율 그대로). 팔 길이 · 간격은 손대지 않음
+    const side=st.pos!=='down',sl=P().slot,S=.35;let tg,dx,dy,D;
+    if(side){const R=st.pos==='right';D={x:R?1080-130:130,y:sl.y-80-150};const vx=(sl.x-80)-D.x,vy=(sl.y-80)-D.y,vl=Math.hypot(vx,vy);dx=vx/vl;dy=vy/vl;tg={x:D.x+dx*130,y:D.y+dy*130}} // 11-08: 옆 모듈이면 화면 안 투입구 쪽 가장자리, 투입구보다 위에서 투입구를 향해 콕
+    else{tg=P().tgt;dx=look[0];dy=look[1];D={x:tg.x-dx*130,y:tg.y-dy*130}}
+    const tp=st.retry?t+1.0:t;
+    if(s==='prompt'){
+      // ① 가운데에서 투입구 바로 위까지 '딱' 내려감(0.9초, 작아지면서) ② 그 자리에서 투입구 쪽으로 콕 — 콕 (1.4초마다, '여기에 넣어요')
+      const C=brand?CS:{x:540,y:1250,s:.7},m=ease(clamp(tp/.9,0,1)); // 오른쪽 위 제자리에서 투입구 쪽으로 내려옴
+      const my=ease(clamp(tp/.75,0,1)),mx=brand?ease(clamp((tp-.45)/.45,0,1)):m; // 세로 먼저(오른쪽 가장자리 따라) → 글자 아래에서 투입구 쪽으로 가로
+      T=base(lerp(C.x,D.x,mx),lerp(C.y,D.y,my),lerp(C.s,S,m));
+      const ph=Math.max(0,tp-1.0)%1.4,poke=tp>1.0?Math.pow(Math.sin(Math.PI*clamp(ph/.45,0,1)),2)*calm:0;
+      T.x+=dx*42*poke;T.y+=dy*42*poke;
+      // 11-08: 고리(호)는 움직이지 않음 — 심볼 모양 그대로
+      exact.x=exact.y=exact.s=1;
+    }else{
+      // 카드를 받음: 투입구 쪽으로 쏙 들어가듯 다가가며 작아졌다가, 꿀꺽 한 번 부풀며 제자리로
+      const e=st.manual?st.insP:st.insP*st.insP,g=Math.sin(Math.PI*e);
+      T=base(D.x+dx*60*g,D.y+dy*60*g,S*(1-.1*g),{hw:lerp(HW0,2.2,g)});
+    }
+  }
+  else if(s==='read'){
+    // 흰 화면 = 켜짐. 고리 두 개가 별 둘레를 돌고(빨라졌다 느려졌다), 몸은 빠르게 숨 쉼(간격이 열렸다 닫힘)
+    const zz=1-Math.pow(1-clamp(t/.6,0,1),4);
+    T=base(540,lerp(1640,820,zz),lerp(.35,1,zz));
+    if(ringMode==='center')T.g=1; // 고리 중심이 별 가운데로 모임(반지름 · 굵기 그대로 = 곡률 그대로)
+    const REV=1.4,u=Math.max(0,t-.3)/REV;T.rr=360*(u+.11*Math.sin(2*Math.PI*u))*calm;
+    T.hw=HW0*(1+.55*Math.sin(t*6.5)*calm);
+    const w=.05*Math.sin(t*6.5)*calm;T.u=ARM0.u*(1+w);T.d=ARM0.d*(1+w);T.l=ARM0.l*(1-w);T.r=ARM0.r*(1-w);
+    exact.rr=1;
+  }
+  else if(s==='miss'&&st.missKind==='ic'){
+    // 칩 실패: 눈 깜빡 = 카드 모서리 간격이 닫혀(막대 0) 별만 남았다가 다시 열림
+    T=base(540,1150,.7);const b=t>.35&&t<1.15?Math.pow(Math.sin(Math.PI*(t-.35)/.8),2):0;
+    T.hw=HW0*(1-b);['u','r','d','l'].forEach(k=>T[k]=lerp(ARM0[k],MR,b));T.rot=-8*b;
+  }
+  else if(s==='fail'){
+    // 폴백 안내: 고개를 갸웃(기울기) 하고, 긁는 길의 시작점에 앉아 팔을 실제 긁기 속도로 뻗어 '이렇게!' 보여 줌(반복)
+    const V=st.msV, gs=V?{x:MSVX,y:720}:{x:200,y:1400}, len=680, S=.4;
+    T=base(gs.x,gs.y,S,{rot:(V?90:0)});
+    // 부드럽게(탕탕 튀지 않게): 쉼 → 오른팔이 긁는 길을 따라 천천히 뻗음(가속 · 감속, 튀어 나가거나 되튀지 않음) → 잠깐 머묾 → 천천히 거둠 → 반복
+    // 뻗는 시간 = 실제 긁기 시간(길이 ÷ 속도)을 바탕으로 하되 최소 1.1초. 예비 동작(움츠림)과 되튐(스프링)은 뺌
+    const run=Math.max(1.1,len/v),rest=1.0,hold=.5,back=1.0,cyc=rest+run+hold+back,c=t%cyc;
+    const sm=k=>k*k*(3-2*k); // 부드러운 가속 · 감속
+    let e=0;
+    if(c<rest)e=0;
+    else if(c<rest+run)e=sm((c-rest)/run);
+    else if(c<rest+run+hold)e=1;
+    else e=1-sm((c-rest-run-hold)/back);
+    T.r=ARM0.r+e*len/S;exact.r=1;T.u=T.d=ARM0.u*(1-.12*e);
+  }
+  else if(collabActive()&&(s==='swipe'||s==='auth')){ // 인식 실패(miss)는 협업 여부와 상관없이 기본 도리도리 모션
+    // 협업 장면이 있을 때: 팔을 뻗는 대신 작게 장면 위에 올라타 긁는 앞끝(테이프 끝 · 러너 · 빨대)을 따라감. 고리는 뒤로 날리고, 승인 때는 점 자리로 미끄러져 내려앉음
+    const hx=collabHead(s,t),V=st.msV,S=.28,p=clamp(((hx==null?380:hx)-380)/(AX-380),0,1);
+    const x=V?620:clamp(hx==null?200:hx,140,AX), y=V?lerp(260,AY-120,p):AY-420;
+    if(s==='miss'){T=base(V?620:160,V?260:AY-250,S);T.rot=14*wob(t,11,2.6)*calm}
+    else if(s==='auth'&&hx>=AX){const ta=Math.max(0,t-(AX-(st.shrinkFrom?st.shrinkFrom.head:AX))/(st.v||2000));
+      T=base(FX(),lerp(y,FY()-8,ease(clamp(ta/.35,0,1))),S);T.rr=-22*wob(ta,14,4)*calm}
+    else{const k=s==='swipe'?clamp(p*1.4,0,1):1;T=base(x,y-14*Math.abs(Math.sin(t*9))*calm,S); // 긁는 동안 몸 · 고리 기울기 없음(사용자 지시)
+      T.r=ARM0.r*(1+.35*k);T.l=ARM0.l*(1-.2*k);T.lx=-24*k;T.hw=HW0*(1-.3*k)}
+    authFrom=null;
+  }
+  else if(s==='swipe'){
+    // 긁는 중: 오른팔 끝 = 카드 앞끝(같은 축척, 실제 속도). 늘어난 만큼 다른 팔은 짧아지고 간격은 좁아짐(부피 유지 느낌), 고리는 뒤로 날림
+    const V=st.msV,B=V?{x:MSVX,y:700}:{x:200,y:1100},S=.5,head=st.card.x+CARD_L-GROOVE_X0;
+    T=base(B.x,B.y,S,{rot:V?90:0});const ext=Math.max(0,head-B.x);T.r=Math.max(ARM0.r,ext/S);exact.r=1;
+    const k=clamp((T.r-ARM0.r)/1400,0,1);T.u=T.d=ARM0.u*(1-.3*k);T.l=ARM0.l*(1-.2*k);T.hw=HW0*(1-.35*k);T.lx=-24*k; // 고리 회전(기울어 보임) 없이 뒤로만 밀림
+    authFrom={bx:B.x,by:B.y,tip:B.x+T.r*S,S,V};
+  }
+  else if(s==='auth'){
+    // SLiP: 팔 끝은 그 자리, 몸이 긁은 속도 그대로 팔 끝 쪽으로 '미끄러져' 따라감(앞으로만). 도착하면 팔이 제 길이로 돌아오며 고리가 늦게 따라와 흔들림
+    const A=authFrom||{bx:200,by:1100,tip:880,S:.5,V:st.msV},dest=540;
+    const bx=Math.min(dest,A.bx+v*t),arrive=(dest-A.bx)/v,ta=Math.max(0,t-arrive);
+    const tip=Math.max(A.tip,dest+ARM0.r*A.S);
+    T=base(A.V?MSVX:bx,A.V?A.by+(bx-A.bx):A.by,A.S,{rot:A.V?90:0});
+    T.r=ta>0?lerp((tip-dest)/A.S,ARM0.r,springOut(clamp(ta/.45,0,1))):(tip-bx)/A.S;exact.r=1;
+    T.rr=ta>0?-22*wob(ta,14,4)*calm:0;T.lx=ta>0?0:-24;
+  }
+  else if(s==='done'){
+    // 승인: 몸이 검은 면을 터뜨리고(점 → 면), 흰색으로 바뀌어 문장 끝 마침표 자리로 폴짝. 도착할 때 한 번 통통.
+    if(!doneFrom)doneFrom={x:M.x,y:M.y};
+    const k=ease(clamp((t-.25)/.6,0,1)),pop=t>.85?wob(t-.85,16,6)*calm:0;
+    T=base(lerp(doneFrom.x,FX()+(st.msV?0:-6),k),lerp(doneFrom.y,FY()-8,k)-90*Math.sin(Math.PI*k)*calm,lerp(.5,.2,k)*(1+.12*pop),{ink:t>.2?1:0});
+    T.rr=360*k*calm;T.hw=HW0*(1+.6*pop);
+    if(brand&&t>1.9){const b=ease(clamp((t-1.9)/.8,0,1));T=base(lerp(T.x,CS.x,b),lerp(T.y,CS.y,b)-50*Math.sin(Math.PI*b)*calm,lerp(T.s,CS.s,b),{ink:1})} // 제자리로 돌아감(마침표는 흰 점으로 남음)
+    $('flood').setAttribute('cx',doneFrom.x);$('flood').setAttribute('cy',doneFrom.y);
+  }
+  else if(s==='miss'){
+    // 긁기 인식 실패: "괜찮아요" — 고개를 도리도리(점점 잦아듦) 하고, 긁는 길 시작점에서 작게 통통
+    T=base(200,1250,.45);T.rot=14*wob(t,11,2.6)*calm;const beat=t>1?Math.pow(Math.max(0,Math.sin((t-1)*Math.PI/1.2)),6):0;
+    T.hw=HW0*(1+.6*beat*calm);T.d=ARM0.d*(1-.12*beat*calm);T.u=ARM0.u*(1+.12*beat*calm);
+  }
+  else if(s==='reject'){
+    // 거절: 빨강 없이, 팔을 거두고 고리를 살짝 내린 채 모서리로 물러남(끝나지 않았다)
+    T=base(CS.x,CS.y,CS.s,{u:170,r:170,d:170,l:170,hw:3,ly:18});
+  }
+  else T=base(960,150,.2);
+  if(s!=='done')doneFrom=null;
+  // 따라가기
+  const k=1-Math.exp(-(WAIT?6.5:11)*dt),kr=1-Math.exp(-(WAIT?4:7)*dt); // 기다리는 단계만 느긋하게 따라감
+  for(const key in T){if(key==='ink'){M.ink=lerp(M.ink,T.ink,1-Math.exp(-14*dt));continue}
+    if(exact[key])M[key]=T[key];else if(key==='rr'&&Math.abs(M.rr-T.rr)>200&&s!=='done'&&s!=='read'){M.rr=T.rr}else M[key]=lerp(M[key],T[key],key==='rr'||key==='lx'||key==='ly'?kr:k)}
+  // 바탕색
+  // 단계 색은 배경에만. 평소 바탕은 흰색이고, 파란 단계로 화면이 바뀌는 순간에만 가운데에서 원형 그라데이션이 번져 나가며(0.35초) 은은하게 사라짐(1.1초)
+  const stepC=PAL[s]||'#FFFFFF',logoMode=false,blue=s!=='done'&&stepC!=='#FFFFFF';
+  const tgt=hx2(s==='done'?'#000000':stepC); // 결제 단계 색(연한 파랑)을 바탕에 그대로 깔기
+  if(blue){const wc=hx2(stepC);washC=washC.map((c,i)=>lerp(c,wc[i],1-Math.exp(-6*dt)))}
+  const wt=t/(WAIT?.6:1); // 실제 지난 시간
+  // 로고 자리를 중심으로, 로고 크기에 비례해 번짐(로고 반지름 ×1 → ×4.5) → '여기를 보세요' 위치 단서. 모양은 늘 같은 정원.
+  // 끊김 없게: 목표값(차오름 0.6초 · 머묾 0.2초 · 사라짐 1.4초)을 바로 쓰지 않고 표시값이 부드럽게 따라감
+  // '탕!' — 파란 단계로 바뀐 뒤 로고가 자기 자리에 도착하는 순간(또는 늦어도 1.2초), 별(가운데 틈) 크기의 빛이 0.1초 만에 켜졌다가 0.7초에 걸쳐 꺼짐.
+  // 진한 면 = 별 크기(반지름 70 로고 단위), 페더 = 그 2배까지. 빛 중심 = 로고 중심
+  if(s!==washStep){washStep=s;washFire=blue?-1:null}
+  if(washFire===-1&&(Math.hypot(M.x-T.x,M.y-T.y)<6||wt>1.2))washFire=0;
+  if(washFire!=null&&washFire>=0)washFire+=dt;
+  const ft=washFire!=null&&washFire>=0?washFire:null;
+  const coreR=(MR+HW0+4.8)*M.s; // 별 몸통 반지름 ≈ 70
+  const envA=ft==null?0:(ft<.1?1-Math.pow(1-ft/.1,2):Math.exp(-(ft-.1)/.25));
+  const envR=coreR*2*(ft==null?1:ft<.1?lerp(.8,1.05,ft/.1):lerp(1.05,1,clamp((ft-.1)/.3,0,1)));
+  washA=lerp(washA,envA,1-Math.exp(-(envA>washA?40:14)*dt));washR=lerp(washR,envR,1-Math.exp(-30*dt));
+  washX=M.x;washY=M.y;
+  {const g=$('washGrad');g.setAttribute('cx',washX.toFixed(1));g.setAttribute('cy',washY.toFixed(1));g.setAttribute('r',Math.max(1,washR).toFixed(1))}
+  {const wcs=rgbS(washC);['washS0','washS1','washS2'].forEach(id=>$(id).setAttribute('stop-color',wcs));$('wash').setAttribute('opacity',(s==='done'?0:washA).toFixed(3))}
+  const lc=LPAL[s]||'#111111',pt=hx2(logoMode&&s!=='done'?lc:'#111111'); // 로고 포인트: 로고 색 자체가 단계 색(흰 단계는 검정 그대로)
+  plC=plC.map((c,i)=>lerp(c,pt[i],1-Math.exp(-8*dt)));bgC=bgC.map((c,i)=>lerp(c,tgt[i],1-Math.exp(-8*dt)));
+  scrRect.setAttribute('fill',rgbS(bgC));
+  // 고리 끊김(넉아웃)은 바탕색으로 칠함 → 로고 자리(높이)의 그라데이션 색을 계산해 맞춤
+  let bgNow=s==='done'&&t>.05?'#000000':rgbS(bgC);
+  if(s!=='done'&&washA>.002){const u=clamp((Math.hypot(M.x-washX,M.y-washY)+RING*M.s)/Math.max(1,washR),0,1), /* 고리가 지나는 거리에서의 색 */op=washA*(u<.5?1:lerp(1,0,(u-.5)/.5));bgNow=rgbS(bgC.map((c,i)=>lerp(c,washC[i],op)))}
+  // 그리기
+  const ink=M.ink>.5?'#ffffff':(logoMode?rgbS(plC):'#111111');
+  MG.setAttribute('transform',`translate(${f2(M.x)} ${f2(M.y)}) rotate(${f2(M.rot)}) scale(${f2(M.s*1000)/1000})`);
+  const ca=Math.cos(rad(M.rr)),sa=Math.sin(rad(M.rr)),rot2=(x,y)=>[x*ca-y*sa,x*sa+y*ca];
+  const G=M.g||0,gp=34*G; // 모일수록 두 반원 끝을 17°씩 덜 그려 틈 두 개 → 돌아가는 게 보임
+  const [ux,uy]=rot2(-24*(1-G)+M.lx,-49.5*(1-G)+M.ly),[lx_,ly_]=rot2(24*(1-G)+M.lx,49.5*(1-G)+M.ly);
+  const up=ringD(ux,uy,180+gp/2+M.rr,360-gp/2+M.rr),lo=ringD(lx_,ly_,0+gp/2+M.rr,180-gp/2+M.rr);
+  const X=crossD(Math.max(0,M.hw),M);
+  const set=(id,a)=>{const e=$(id);for(const k_ in a)e.setAttribute(k_,a[k_])};
+  set('mUp',{d:up,stroke:ink,'stroke-width':RSW});
+  const plate=null; // (원판 방식은 사용 안 함 — 로고 색 자체를 바꿈)
+  set('mPlate',{fill:plate||'none'});
+  set('mKoX',{d:X,stroke:bgNow,'stroke-width':KO*2});set('mKoX2',{d:plate?X:'',stroke:plate||'none','stroke-width':KO*2});           // 위 고리는 막대 뒤 → 막대 둘레 20.25 비움
+  set('mX',{d:X,fill:ink});
+  set('mKoL',{d:lo,stroke:bgNow,'stroke-width':RSW+KO*2});set('mKoL2',{d:plate?lo:'',stroke:plate||'none','stroke-width':RSW+KO*2});       // 아래 고리는 막대 앞 → 고리 둘레 20.25 비움
+  set('mLo',{d:lo,stroke:ink,'stroke-width':RSW});
+  // 결제 실패 순간: 화면이 어둡게 덮여(이전 화면 안 보임) → 로고가 별만 남아 화면 가운데로 오며 실제 크기로 → 별이 정방형 비율 그대로 한 번에 '확' 늘어나 창(프레임)이 되며 새 화면이 그 안으로 드러남
+  if(s==='reject'){
+    const rt=t/(WAIT?.6:1);
+    if(!rejFrom)rejFrom={x:M.x,y:M.y,s:Math.max(.15,M.s)};
+    if(rt<1.05){
+      // 덮기 0.18초 → 로고 모양 창(별 + 십자, 반지름 60.7 고정)이 로고 자리에서 나타나 가운데로(0.25초) → 십자 팔이 화면 끝까지 뻗음(0.3초) → 막대 틈이 벌어지며 곡률 면 네 개가 바깥으로 물러남(0.42초)
+      const cov=ease(clamp(rt/.18,0,1)),ea=ease(clamp((rt-.08)/.25,0,1));
+      const r=MR,cx=lerp(rejFrom.x,540,ea),cy=lerp(rejFrom.y,960,ea);
+      let hw=HW0*ea;const av=ARM0.u,ah=ARM0.r; // 팔은 처음부터 로고 길이, 막대 틈만 열리며 나타남
+      // 멈칫 없이 한 번에 쭉: 진행값 sp(계속 빨라짐) — 팔은 앞쪽에서 끝까지, 틈은 팔이 뻗는 중부터 벌어짐
+      const uu=clamp((rt-.2)/.83,0,1),sp=uu*uu,eb=clamp(sp/.5,0,1); // 팔은 감속 없이 화면 밖으로
+      let U=lerp(av,cy+40,eb),D=lerp(av,1920-cy+40,eb),L=lerp(ah,cx+40,eb),Rt=lerp(ah,1080-cx+40,eb);
+      const c=clamp((sp-.3)/.7,0,1),ec=c*c;
+      hw=lerp(hw,540+r+40,ec);
+      if(c>0){U=Math.max(U,hw+r+cy);D=Math.max(D,hw+r+1920-cy);L=Math.max(L,hw+r+cx);Rt=Math.max(Rt,hw+r+1080-cx)}
+      const q=hw+r,X=v=>f2(cx+v),Y=v=>f2(cy+v);
+      const hole=`M${X(-hw)},${Y(-U)}H${X(hw)}V${Y(-q)}A${r},${r} 0 0 0 ${X(q)},${Y(-hw)}H${X(Rt)}V${Y(hw)}H${X(q)}A${r},${r} 0 0 0 ${X(hw)},${Y(q)}V${Y(D)}H${X(-hw)}V${Y(q)}A${r},${r} 0 0 0 ${X(-q)},${Y(hw)}H${X(-L)}V${Y(-hw)}H${X(-q)}A${r},${r} 0 0 0 ${X(-hw)},${Y(-q)}Z`;
+      RF.setAttribute('d',`M-10,-10H1090V1930H-10Z`+hole);RF.setAttribute('opacity',cov.toFixed(3));
+      MG.setAttribute('opacity',rt<.06?1:0);
+    }else{RF.setAttribute('d','');MG.setAttribute('opacity',clamp((rt-1.05)/.4,0,1).toFixed(3))}
+  }else{rejFrom=null;if(RF.getAttribute('d'))RF.setAttribute('d','');
+    const co=collabActive(),mt=co&&(s==='swipe'||s==='auth')?0:co&&s==='done'?clamp((t-.62)/.3,0,1):1;mOp=mt<mOp?mt:lerp(mOp,mt,1-Math.exp(-10*dt));MG.setAttribute('opacity',mOp.toFixed(3))}
+  if(s==='swipe'||s==='auth'){$('swipeLine').setAttribute('stroke-width',0)}
+}
+
+// ===================== 별빛 긁기 (브랜드 협업, 11-08) =====================
+// 협업 장면에서는 로고(고리 포함) 대신 '별'만 나옴 = 로고 막대 굵기 0 상태(눈 깜빡 때 남는 별). 오목 곡선 반지름 60.7 그대로, 크기는 같은 비율로만.
+// 긁는 동안: 별이 장면의 앞끝(테이프 떼는 자리 · 찢는 자리 · 빨대 끝 …)을 따라가고, 뒤로 가는 빛줄기(선 하나) + 은은한 물빛 후광.
+// 승인 중: 장면이 끝나면 별이 반짝 사라졌다가 화면 왼쪽에서 다시 나타나 점 자리까지 좌→우로 '쏵' → 도착해 숨을 모음(빛이 커짐).
+// 승인 완료: 그 별에서 별 프레임 전환(십자 빛줄기가 먼저 화면 끝까지 → 막대 틈이 벌어져 화면이 하얗게) → 흰 빛이 걷히며 검은 승인 화면 + 작은 별 조각이 퍼짐.
+const STAR_D=crossD(0,{u:0,r:0,d:0,l:0});
+function cupSpark(c){const CX=540,R=AY+30,HX=CX+80,TW=190;
+  if(c.dir==='v'){const HY=R-30,tip=Math.min(HY,HY-700+700*E3(c.p));return {x:HX,y:tip,x0:HX,y0:140,stay:true}} // 11-08: 빨대는 꽂힌 자리 그대로 → 그 자리에서 전환
+  const k=E3(c.p),y=R+150+400*(1-k);return {x:lerp(CX-TW+14,CX+TW-14,c.p),y,x0:CX-TW+14,y0:y}}
+// 세로(위→아래) 긁기: 박스 앞면을 세로로 지나는 테이프를 위에서 아래로 뗌 — 테이프 줄 x = 세로일 때 점 자리(CV.x 760)와 같아 승인 때 별빛이 그 줄을 따라 그대로 내려옴
+const MUS_V={X:CV.x,Y0:770,Y1:1262,W:56};
+{const h0=COLLAB.musinsa.draw;COLLAB.musinsa.draw=c=>{if(c.dir!=='v')return h0(c);
+  const {X,Y0,Y1,W}=MUS_V,ya=Y0+(Y1-Y0)*E3(c.p),peel=ya-Y0,hw=W/2;
+  const top=`<path d="M180,860 L900,860 L1000,760 L280,760 Z" fill="#2a2a2a"/>`;
+  const front=`<rect x="180" y="860" width="720" height="400" fill="#141414"/><path d="M900,860 L1000,760 L1000,1160 L900,1260 Z" fill="#0b0b0b"/>
+    <image href="brand_logos/musinsa_dark.svg" x="230" y="1010" width="420" height="80"/>`;
+  const gap=Math.min(8,2+peel/90),seam=`<rect x="${F(X-gap/2)}" y="${Y0}" width="${F(gap)}" height="${F(peel)}" fill="#000"/>`;
+  // 아직 붙은 테이프(윗면 구간은 원근으로 살짝 기울어짐)
+  const tape=ya<Y1?`<rect x="${X-hw}" y="${F(Math.max(ya,860))}" width="${W}" height="${F(Y1-Math.max(ya,860))}" fill="#cfcfcf"/><rect x="${X-hw}" y="${F(Math.max(ya,860))}" width="6" height="${F(Y1-Math.max(ya,860))}" fill="#e8e8e8"/>
+    ${ya<860?`<path d="M${X-hw},860 L${X+hw},860 L${F(X+hw+(860-ya)*.9)},${F(ya)} L${F(X-hw+(860-ya)*.9)},${F(ya)} Z" fill="#c4c4c4"/>`:''}
+    ${Y1-ya>260?`<text x="${X+8}" y="${F(Math.max(ya,860)+40)}" font-size="22" font-weight="800" letter-spacing="8" fill="#7a7a7a" transform="rotate(90 ${X+8} ${F(Math.max(ya,860)+40)})">MUSINSA</text>`:''}`:'';
+  // 떼어 낸 테이프: 떼는 자리에서 오른쪽 위로 말려 올라간 리본
+  let free='';
+  if(peel>6){const Lf=Math.min(380,peel),b=12*c.bump,P0=[X,ya],P1=[X+170+b,ya+30],P2=[X+.55*Lf+60,ya-.5*Lf-40];
+    const d=`M${F(P0[0])},${F(P0[1])} Q${F(P1[0])},${F(P1[1])} ${F(P2[0])},${F(P2[1])}`;
+    free=`<path d="${d}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="${W}" transform="translate(-10 18)"/>
+      <path d="${d}" fill="none" stroke="#c2c2c2" stroke-width="${W}"/><path d="${d}" fill="none" stroke="#eeeeee" stroke-width="5" transform="translate(-${hw-3} 0)"/>
+      <ellipse cx="${X}" cy="${F(ya+6)}" rx="${hw}" ry="20" fill="#d9d9d9"/>`}
+  return `${top}${front}${seam}${tape}${free}`}}
+COLLAB.musinsa.spark=c=>{if(c.dir==='v'){const {X,Y0,Y1}=MUS_V,ya=Y0+(Y1-Y0)*E3(c.p);return {x:X,y:ya,x0:X,y0:Y0}}
+  const L0=230,L1=950,SY=810,xa=L0+(L1-L0)*E3(c.p);return {x:xa,y:SY-2,x0:L0,y0:SY-2}}; // 테이프가 떼어지는 자리 = 이음새를 따라 빛줄기
+COLLAB.mcd.spark=c=>c.dir==='v'?cupSpark(c):{x:clamp(c.hx,200,880),y:AY,x0:200,y0:AY};            // 봉투 찢는 자리
+COLLAB.mega.spark=COLLAB.compose.spark=cupSpark;                                                    // 컵홀더 윗단을 훑음 / 빨대 끝
+COLLAB.moms.spark=c=>{if(c.dir==='v')return cupSpark(c);const CX=540,CY=AY+40,W=520;return {x:CX-W/2+W*c.p,y:CY,x0:CX-W/2,y0:CY}}; // 포장지가 펼쳐지는 자리
+COLLAB.nike.spark=c=>{const x=Math.min(c.hx,AX)-40,y=AY-215-70*c.bump;return {x:x+50,y,x0:60,y0:y}}; // 러너 앞 = 바람
+function sparkAnchor(c){const b=COLLAB[brand];return (b&&b.spark&&b.spark(c))||{x:clamp(c.hx,200,AX),y:AY,x0:200,y0:AY}}
+(()=>{
+  $('kiosk').querySelector('defs').insertAdjacentHTML('beforeend',`
+    <radialGradient id="spkGlowG"><stop offset="0" stop-color="#F4FBFF" stop-opacity=".95"/><stop offset=".22" stop-color="#C9E8FF" stop-opacity=".75"/><stop offset=".42" stop-color="#9AD3FF" stop-opacity=".5"/><stop offset=".66" stop-color="#6FC0FF" stop-opacity=".3"/><stop offset="1" stop-color="#6FC0FF" stop-opacity="0"/></radialGradient>
+    <radialGradient id="spkFlareG"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#ffffff" stop-opacity=".75"/><stop offset="1" stop-color="#BFE5FF" stop-opacity="0"/></radialGradient>
+    <linearGradient id="spkTrailG" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset=".55" stop-color="#F2FAFF" stop-opacity=".5"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+    <linearGradient id="spkTrailGlowG" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5FB8FF" stop-opacity="0"/><stop offset=".7" stop-color="#86CBFF" stop-opacity=".38"/><stop offset="1" stop-color="#D4ECFF" stop-opacity=".85"/></linearGradient>`);
+  const g=document.createElementNS(NS,'g');g.id='spark';g.setAttribute('opacity',0);
+  g.innerHTML=`<line id="spkTG1" stroke="url(#spkTrailGlowG)" stroke-linecap="round"/><line id="spkTG2" stroke="url(#spkTrailGlowG)" stroke-linecap="round"/><line id="spkT" stroke="url(#spkTrailG)" stroke-linecap="round"/>
+    <circle id="spkGlow" fill="url(#spkGlowG)" r="0"/><ellipse id="spkFlH" fill="url(#spkFlareG)"/><ellipse id="spkFlV" fill="url(#spkFlareG)"/><path id="spkStar" fill="#ffffff" transform="scale(0)" d="${STAR_D}"/>`;
+  $('collab').after(g);
+  // 완료 번쩍: 버튼 · 매장 로고까지 덮도록 화면 맨 위 층(별 프레임과 같은 층)
+  const f=document.createElementNS(NS,'g');f.setAttribute('transform','translate(80 80)');f.setAttribute('clip-path','url(#screenClip)');f.id='flash';
+  f.innerHTML=`<circle id="flBloom" fill="url(#spkGlowG)" r="0"/><path id="flStar" fill="#ffffff" d=""/><g id="flBits">${Array.from({length:10},()=>`<path fill="#ffffff" opacity="0" d="${STAR_D}"/>`).join('')}</g>`;
+  $('kiosk').appendChild(f);
+})();
+const SP={a:0,end:null};
+const setA=(id,o)=>{const e=$(id);for(const k in o)e.setAttribute(k,typeof o[k]==='number'?f2(o[k]):o[k])};
+function sparkFrame(s,t,c,dt){
+  const on=collabActive()&&(s==='swipe'||s==='auth')&&c,tw=reduce?0:1;
+  let x=0,y=0,x0=0,y0=0,sc=.85,a=0,glow=1,trail=1;
+  if(on){
+    const an=sparkAnchor(c);({x,y,x0,y0}=an);a=1;if(!an.stay)SP.end=null;
+    if(s==='auth'){
+      const v=st.v||2000,f=st.shrinkFrom,tA=f?Math.max(0,(AX-f.head)/v):0,ts=t-tA;
+      const RUN=.45; // 11-08: 다시 긁지 않음 — 장면이 끝난 그 자리에서 점 자리까지 한 번에 쭉 이어 가서 끝
+      if(an.stay){SP.end={x:an.x,y:an.y};if(ts>=0){const u=clamp(ts/.35,0,1);x0=lerp(an.x0,an.x,u*u);y0=lerp(an.y0,an.y,u*u); // 빨대 끝에 머물며 빛줄기만 별 속으로 모임
+        const hold=ts;sc*=1+.35*clamp(hold/.5,0,1)+.1*Math.sin(hold*16)*tw;glow=1+.7*clamp(hold/.5,0,1)}}
+      else if(ts>=0){const E={x:FX(),y:FY()},u=clamp(ts/RUN,0,1),head=1-Math.pow(1-u,3),tail=Math.pow(clamp((u-.2)/.8,0,1),1.6);
+        const S0={x:an.x,y:an.y};x=lerp(S0.x,E.x,head);y=lerp(S0.y,E.y,head);x0=lerp(an.x0,E.x,Math.max(tail,head*.0));y0=lerp(an.y0,E.y,Math.max(tail,0));
+        const hold=Math.max(0,ts-RUN);sc*=1+.35*clamp(hold/.5,0,1)+.1*Math.sin(hold*16)*tw;glow=1+.7*clamp(hold/.5,0,1);
+      }
+    }
+  }
+  SP.a=a<SP.a?a:lerp(SP.a,a,1-Math.exp(-16*dt));$('spark').setAttribute('opacity',SP.a.toFixed(3));
+  if(SP.a<.005)return;
+  const len=Math.hypot(x-x0,y-y0),tOn=len>6?trail:0;
+  for(const id of ['spkTrailG','spkTrailGlowG'])setA(id,{x1:x0,y1:y0,x2:x,y2:y});
+  for(const [id,w] of [['spkTG1',54],['spkTG2',20],['spkT',6]])setA(id,{x1:x0,y1:y0,x2:x,y2:y,'stroke-width':w*tOn,opacity:id==='spkT'?1:id==='spkTG1'?.55:.8});
+  const ph=t*(s==='swipe'?13:9),flick=1+.12*Math.sin(ph)*tw;
+  setA('spkGlow',{cx:x,cy:y,r:150*sc/.85*glow*(1+.06*Math.sin(ph*.7)*tw)});
+  setA('spkFlH',{cx:x,cy:y,rx:170*sc/.85*flick,ry:5*Math.min(1,sc/.85)});setA('spkFlV',{cx:x,cy:y,rx:4*Math.min(1,sc/.85),ry:80*sc/.85*(2-flick)});
+  $('spkStar').setAttribute('transform',`translate(${f2(x)} ${f2(y)}) scale(${f2(Math.max(0,sc)*(1+.06*Math.sin(ph*1.3)*tw))})`);
+}
+const BITS=Array.from({length:10},(_,i)=>({a:rad(i*36+18+(i%2?9:-6)),d:240+90*((i*7)%3),s:.16+.06*((i*5)%3)}));
+function flashFrame(s,t){
+  const fs=$('flStar'),fb=$('flBloom'),bits=$('flBits').children;
+  if(!(s==='done'&&collabActive())||t>1.6){if(fs.getAttribute('d')){fs.setAttribute('d','');fb.setAttribute('r',0);for(const b of bits)b.setAttribute('opacity',0)}return}
+  const cx=SP.end?SP.end.x:FX(),cy=SP.end?SP.end.y:FY(); // 빨대(세로)는 꽂힌 자리에서 전환
+  // ① 별이 확 커지며(0.62 → 1) 십자 빛줄기가 화면 끝까지(0.2초) ② 막대 틈이 벌어져 화면 전체가 하얗게(0.12~0.42초) ③ 흰 빛이 걷힘(0.5~0.95초)
+  const ea=clamp(t/.2,0,1),arm=lerp(MR,2600,ea*ea);
+  const c=clamp((t-.12)/.3,0,1),hw=lerp(7*clamp(t/.05,0,1),1250,c*c*(3-2*c));
+  fs.setAttribute('d',crossD(hw,{u:arm,r:arm,d:arm,l:arm}));
+  fs.setAttribute('transform',`translate(${f2(cx)} ${f2(cy)})`); // 11-08: 배율 없음 — 오목 모서리 반지름 60.7(카드 곡률) 고정, 막대 · 팔 길이만 늘어남
+  const fo=1-ease(clamp((t-.5)/.45,0,1));fs.setAttribute('opacity',fo.toFixed(3));
+  setA('flBloom',{cx,cy,r:lerp(170,1600,ease(clamp(t/.45,0,1))),opacity:fo});
+  // 별 조각: 흰 빛이 걷힐 즈음 마침표 자리에서 바깥으로 퍼지며 반짝이다 사라짐
+  const bt=clamp((t-.42)/.9,0,1),be=1-Math.pow(1-bt,3),bo=clamp((t-.42)/.1,0,1)*(1-clamp((t-.9)/.55,0,1));
+  BITS.forEach((B,i)=>{const d=lerp(30,B.d,be),k=B.s*(1-.5*bt)*(1+.25*Math.sin(t*22+i)*(reduce?0:1));
+    bits[i].setAttribute('transform',`translate(${f2(cx+Math.cos(B.a)*d)} ${f2(cy+Math.sin(B.a)*d)}) scale(${f2(k)})`);bits[i].setAttribute('opacity',bo.toFixed(3))});
+}
+
+// ---------- 그리기 ----------
+let lastNow=performance.now();
+function frame(now){
+  const t=(now-st.t0)/1000, s=st.step, dt=Math.min(.05,(now-lastNow)/1000);lastNow=now;
+  let corner=null,cDot=0,hero=null,hDot=null,ghost=null;
+  if(s==='select'){corner=CORNER;cDot=CORNER.dr;if(t>1&&!st.icDrag)start()} // 1초 정지 → 넣기 안내로
+  if(s==='prompt'){
+    // 모서리 심볼이 눈 자리로 → 점이 투입구 쪽을 봄
+    const tp=st.retry?t+1.3:t; // 재시도: 쉬고 난 뒤라 바라보기를 건너뛰고 바로 빠르게 내려감
+    const a=st.retry?1:ease(clamp(t/.8,0,1));const p=mix({x:CORNER.x,y:CORNER.y,r:CORNER.r,sw:CORNER.sw,dr:CORNER.dr},{x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw,dr:EYE.dr},a);
+    hero={x:p.x,y:p.y,r:p.r,sw:p.sw};const look=ease(clamp((tp-.7)/.6,0,1));
+    const L=look*165,dir=P().look; // 눈동자가 호 가장자리까지 확실히 굴러감
+    let dx=p.x+dir[0]*L,dy=p.y+dir[1]*L,dr=p.dr*lerp(1,.8,look);
+    // 지표: 바라본 다음, 점이 먼저 투입구까지 가서 '여기'를 짚고 돌아옴 (반복)
+    // 한 번만 투입구까지 내려가 멈춤 → 그 자리에서 박동처럼 아주 살짝만 (재촉하지 않게)
+    if(tp>1.3){const u=clamp((tp-1.3)/(st.retry?.45:.8),0,1),k=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1; // 살짝 지나쳤다 돌아오는 도착(back-out)
+      const tgt=P().tgt;
+      const lt=st.retry?1.75:2.1,land=tp>lt?Math.exp(-(tp-lt)*5):0; // 도착 순간 한 번 크게 '여기'
+      const bt=lt+.5,beat=tp>bt?Math.pow(Math.max(0,Math.sin((tp-bt)*Math.PI/1.2)),6):0; // 그 뒤엔 1.2초마다 작은 박동
+      dx=lerp(dx,tgt.x,k);dy=lerp(dy,tgt.y,k);dr=lerp(dr,14,Math.min(1,u))*(1+.55*land+.12*beat);
+      $('slotLine').setAttribute('stroke-width',8+10*land)}
+    hDot={x:dx,y:dy,r:dr};
+  }
+  if(s==='insert'){
+    // 손으로 끄는 동안은 손 위치 그대로, 놓으면 남은 만큼 0.45초 속도로 마저 들어감
+    if(!st.manual)st.insP=clamp((st.insP||0)+dt/.45,0,1);
+    const p=st.insP,e=st.manual?p:p*p;hero={x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw};
+    placeICcard(e);
+    // 점은 투입구에 멈춘 채 카드를 받아들이고, 카드가 다 들어가면 점이 눈 자리로 돌아감
+    // 내 쪽(화면 아래 밖)에서 실제 투입구가 있는 쪽 · 높이로 멀어지며 들어감
+    {const q=P();ghost={front:frontQuads(q.gh.vx,q.gh.vy,330,150,e),o:1};hDot={x:q.tgt.x,y:q.tgt.y,r:10}}
+    if(p>=1)go('read');
+  }
+  if(s==='read'){
+    placeICcard(1);
+    // 눈 → Macro로 확 당겨짐(0.45초) → 점을 축으로 호가 회전. 한 바퀴마다 가속 · 감속해 역동적으로.
+    const Z=.7,z=clamp(t/Z,0,1),zz=1-Math.pow(1-z,4);
+    const m=mix({x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw,dr:EYE.dr},MAC,zz);
+    const REV=1.6,u=Math.max(0,t-Z*.6)/REV,turn=360*(u+.11*Math.sin(2*Math.PI*u)); // 멈추지 않고 빨라졌다 느려졌다
+    const sp0=P().tgt; // 점은 투입구에서 출발해 확대된 중심으로
+    hero={x:m.x,y:m.y,r:m.r,sw:m.sw,a0:125+turn,a1:235+turn};hDot={x:lerp(sp0.x,m.x,zz),y:lerp(sp0.y,m.y,zz),r:lerp(10,m.dr,zz)};
+    if(t>=+icT.value){st.tries++;$('rTry').textContent=st.tries;if(st.tries<+tries.value){st.retry=true;placeICcard(0);if(st.failNew){st.missKind='ic';go('miss')}else go('prompt')}else{go('fail')}}
+  }
+  if(s==='fail'){corner=CORNER;cDot=0; // D 조연: 호만 남고, 점은 빠져나와 길잡이가 됨
+    const gs=st.msV?{x:MSVX,y:720}:{x:200,y:1400},ge=st.msV?{x:MSVX,y:1400}:{x:880,y:1400};
+    $('gDot').setAttribute('r',0);$('gLine').setAttribute('x1',gs.x);$('gLine').setAttribute('y1',gs.y);$('gLine').setAttribute('x2',ge.x);$('gLine').setAttribute('y2',ge.y);$('gLine').setAttribute('stroke-width',3);
+    // 지표: 모서리 호에서 점이 내려와 긁는 길의 시작점에 앉고, 실제 긁기 속도로 길을 한 번 보여 줌 (반복)
+    const v=+sp.value*25.4*U, run=680/v, drop=.6, hold=.5, cyc=drop+.25+run+hold;
+    const c=t<cyc?t:drop+((t-drop)%(cyc-drop));
+    const gp=k=>({x:lerp(gs.x,ge.x,k),y:lerp(gs.y,ge.y,k)});
+    if(c<drop){const e=ease(c/drop);hDot={x:lerp(CORNER.x,gs.x,e),y:lerp(CORNER.y,gs.y,e),r:lerp(4,14,e)}}
+    else if(c<drop+.25){hDot={...gs,r:14}}
+    else if(c<drop+.25+run){hDot={...gp((c-drop-.25)*v/680),r:14}}
+    else{const e=clamp((c-drop-.25-run)/hold,0,1);hDot={...ge,r:14*(1-e)}}
+  }
+  if(s==='swipe'){
+    // 호가 먼저 나오고, 선의 머리 = 카드 앞끝 위치(화면과 리더가 같은 축척)
+    hero={x:AX,y:AY,r:AR,sw:ASW}; // 부드럽게 따라가며 나타남
+    const head=st.card.x+CARD_L-GROOVE_X0,tail=head-CARD_L;
+    const cross=AX-AR, bump=st.kink*Math.exp(-Math.pow((head-cross-60)/110,2)); // 경계를 지날 때 한 번 (끄면 0 = 곧게 지나감)
+    const ang=rad(12)*bump, mx=(head+tail)/2, hl=CARD_L/2;
+    st.line={x1:mx-hl*Math.cos(ang),y1:AY+hl*Math.sin(ang),x2:mx+hl*Math.cos(ang),y2:AY-hl*Math.sin(ang)};
+  }
+  if(s==='auth'){
+    hero={x:AX,y:AY,r:AR,sw:ASW};
+    // 긁은 속도 그대로 앞으로만: 앞끝은 중심까지 가서 멈추고, 뒤끝은 같은 속도로 따라와 점이 됨 (뒤로 돌아가지 않음)
+    if(!st.shrinkFrom)st.shrinkFrom={head:st.line?Math.max(st.line.x1,st.line.x2):AX,tail:st.line?Math.min(st.line.x1,st.line.x2):AX};
+    const f=st.shrinkFrom,v=st.v||2000;
+    const head=Math.min(AX,f.head+v*t),tail=Math.min(AX,f.tail+v*t);
+    st.line={x1:tail,y1:AY,x2:head,y2:AY};
+    if(tail>=AX){st.line=null;hDot={x:FX(),y:FY(),r:ASW/2}} // 선의 둥근 끝 = 같은 지름의 점
+  }
+  if(s==='miss'&&st.missKind==='ic'){
+    // 멈춤: 돌던 Macro 호가 눈 자리로 물러나고, 점은 위로 올라가 눈 가운데로 돌아옴 → 한 번 깜빡 → 잠깐 쉼 → 다시 넣기 안내에서 투입구로 내려감
+    hero={x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw};
+    const blink=t>.45&&t<1.15?Math.pow(Math.sin(Math.PI*(t-.45)/.7),2):0; // 천천히 눈 감았다 뜨기(0.7초) = 쉬는 숨
+    hDot={x:EYE.x,y:EYE.y,r:EYE.dr*(1-blink)};
+    if(t>=1.45){st.retry=true;go('prompt')} // 깜빡 뒤 0.3초만 쉼 → 바로 다시 안내(빠르게 내려감)
+  }
+  if(s==='miss'&&st.missKind==='ms'){
+    // 호는 그대로(주연 유지) 가늘어지고, 긁은 선은 그 자리에 가는 흔적으로 → 점이 선의 시작점에 와서 박동
+    hero={x:AX,y:AY,r:AR,sw:ASW*.4};
+    const sx=60;const k=ease(clamp(t/.6,0,1)),beat=t>.6?Math.pow(Math.max(0,Math.sin((t-.6)*Math.PI/1.2)),6):0;
+    hDot={...VP(lerp(AX,sx,k),AY),r:lerp(6,16,k)*(1+.15*beat)};
+  }
+  if(s==='reject'&&st.failNew){
+    // 반전 없음. 확인의 점을 거두고(크기 0), 큰 호는 모서리 조연으로 물러남 — 마침표가 없다 = 끝나지 않았다
+    corner=t>.5?CORNER:null;cDot=0;hero=t<.5?{x:CORNER.x,y:CORNER.y,r:CORNER.r,sw:CORNER.sw}:null;hDot=null;
+  }
+  if(s==='done'){ // 호는 사라지고, 점 자리에서 글자가 왼쪽으로 펼쳐지며 점은 마침표로 줄어듦
+    hero=null;
+    // 면 전환: 점이 화면 전체를 덮는 검은 면으로 번짐 → 흑백 반전. 가운데 흰 점이 남아 마침표가 되고, 그 자리에서 흰 글자가 펼쳐짐
+    const fl=clamp(t/.6,0,1),fe=fl<1?1-Math.pow(1-fl,3):1;setDot('flood',FX(),FY(),lerp(ASW/2,2400,fe));
+    const r=ease(clamp((t-.2)/.45,0,1));setDot('period',FX(),FY(),lerp(0,12,r));
+    const rv=ease(clamp((t-.3)/.6,0,1)),rx=lerp(FX(),0,rv);const R=$('revealRect');R.setAttribute('x',rx);R.setAttribute('width',FX()+20-rx);
+    if(rv>=1){R.setAttribute('x',0);R.setAttribute('width',1080)}
+  }
+  if(s==='swipe'||s==='auth'||(s==='miss'&&st.missKind==='ms'))hero=VA(hero);
+  const cOn=drawCollab(s,t);if(cOn&&(s==='swipe'||s==='auth'||s==='miss')){hero=null}
+  sparkFrame(s,t,cOn?lastCollab:null,dt);flashFrame(s,t);
+  // 매장 이름 글자색: 바탕이 어두우면 흰색 (B 바탕, A의 승인 검정 면) — 로고 표식과 영문은 매장 색 그대로
+  if(brand)refreshLogo(false);
+  // 적용 — 목표값을 부드럽게 따라감. 사라질 때는 그 자리에서 굵기 · 크기만 0으로.
+  const K_=s==='read'?9:12; // 낮을수록 천천히 부드럽게 따라감
+  const ct=corner?{x:corner.x,y:corner.y,r:corner.r,sw:corner.sw}:(disp.corner?{...disp.corner,sw:0}:null);
+  if(ct){disp.corner=follow(disp.corner||{...ct,sw:0},ct,K_,dt)}disp.cdot=lerp(disp.cdot,corner?cDot:0,1-Math.exp(-K_*dt));
+  const ht=hero?{x:hero.x,y:hero.y,r:hero.r,sw:hero.sw,a0:hero.a0??125,a1:hero.a1??235}:(disp.hero?{...disp.hero,sw:0}:null);
+  if(ht){if(disp.hero&&Math.abs(disp.hero.a0-ht.a0)>400){disp.hero.a0=ht.a0;disp.hero.a1=ht.a1}disp.hero=follow(disp.hero||{...ht,sw:0},ht,K_,dt)}
+  const exact=s==='fail'||s==='insert'||(s==='prompt'&&(st.retry?t+1.3:t)>1.3); // 길잡이 점은 실제 긁기 속도 그대로
+  const dtg=hDot?{x:hDot.x,y:hDot.y,r:hDot.r}:(disp.dot?{...disp.dot,r:0}:null);
+  if(dtg)disp.dot=exact?{...dtg}:follow(disp.dot||{...dtg,r:0},dtg,K_+4,dt);
+  const C_=disp.corner;setArc('cornerArc',C_&&C_.sw>.3?C_:null);setDot('cornerDot',C_?C_.x:0,C_?C_.y:0,disp.cdot);
+  setArc('heroArc',disp.hero&&disp.hero.sw>.3?disp.hero:null);setDot('heroDot',disp.dot?disp.dot.x:0,disp.dot?disp.dot.y:0,disp.dot?disp.dot.r:0);
+  // 후광: 그래픽보다 조금 넓은 반투명 흰 띠 (흐림 필터는 매 프레임 비싸서 뺌)
+  const H_=disp.hero&&disp.hero.sw>.3?{...disp.hero,sw:disp.hero.sw+32}:null;setArc('heroHalo',H_);
+  setDot('dotHalo',disp.dot?disp.dot.x:0,disp.dot?disp.dot.y:0,disp.dot&&disp.dot.r>.5?disp.dot.r+16:0);
+  if(cOn&&s==='miss'){$('swipeLine').setAttribute('stroke-width',0);$('lineHalo').setAttribute('stroke-width',0)}
+  else if(s==='miss'&&st.missKind==='ms'&&st.missLine){const L=$('swipeLine'),k=clamp(t/.4,0,1),ml=VL(st.missLine);for(const [a_,v_] of [['x1',ml.x1],['y1',ml.y1],['x2',ml.x2],['y2',ml.y2]])L.setAttribute(a_,v_);L.setAttribute('stroke-width',lerp(ASW,8,ease(k)));$('lineHalo').setAttribute('stroke-width',0)}
+  else if(s==='reject'&&st.failNew&&st.line){const L=$('swipeLine');L.setAttribute('stroke-width',lerp(ASW,0,ease(clamp(t/.4,0,1))))}
+  else{const L=$('swipeLine'),LH=$('lineHalo');if((s==='swipe'||s==='auth')&&st.line&&!cOn){const ml=VL(st.line);for(const el of [L,LH]){el.setAttribute('x1',ml.x1);el.setAttribute('y1',ml.y1);el.setAttribute('x2',ml.x2);el.setAttribute('y2',ml.y2)}L.setAttribute('stroke-width',ASW);LH.setAttribute('stroke-width',ASW+32)}else{L.setAttribute('stroke-width',0);LH.setAttribute('stroke-width',0)}}
+  const G=$('cardGhost');const isFront=!!(ghost&&'front' in ghost);
+  $('cgBody').style.display=$('cgChip').style.display=isFront?'none':'';$('cgPoly').style.display=$('cgChipPoly').style.display=isFront?'':'none';
+  if(isFront){G.setAttribute('opacity',ghost.front?1:0);if(ghost.front){$('cgPoly').setAttribute('points',ghost.front.body);$('cgChipPoly').setAttribute('points',ghost.front.chip||'0,0')}}
+  else if(ghost){G.setAttribute('opacity',ghost.o);const b=$('cgBody'),c=$('cgChip');b.setAttribute('x',ghost.x);b.setAttribute('y',ghost.y);b.setAttribute('width',ghost.w);b.setAttribute('height',ghost.h);
+    const sc=ghost.sc||1;if(ghost.chip==='bottom'){c.setAttribute('width',50*sc);c.setAttribute('height',40*sc);c.setAttribute('x',ghost.x+ghost.w/2-25*sc);c.setAttribute('y',ghost.y+ghost.h-80*sc)}else{c.setAttribute('width',40);c.setAttribute('height',50);c.setAttribute('x',ghost.x+ghost.w-80);c.setAttribute('y',ghost.y+ghost.h/2-25)}}
+  else G.setAttribute('opacity',0);
+  // 자동 재생
+  if(st.auto){
+    if(s==='select'&&t>.8)start();
+    else if(s==='prompt'&&t>(st.retry?1.2:1.4))insert();
+    else if((s==='fail'||(s==='miss'&&st.missKind==='ms'))&&t>1.4)autoSwipe();
+    else if((s==='done'||s==='reject')&&t>2.6)go('select');
+  }
+  mascotFrame(now,t,s,dt);
+  requestAnimationFrame(frame);
+}
+
+try{if(localStorage.getItem('slipVer')==='B')setVer('B');const sp_=localStorage.getItem('slipPos');if(POS[sp_]){st.pos=sp_;document.querySelectorAll('[data-pos]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pos===sp_))}}catch(e){}
+// 주소 뒤 #pos=right&ver=B&brand=navy&step=prompt 로 바로 열기 (비교 · 캡처용)
+try{const h=new URLSearchParams(location.hash.slice(1));if(POS[h.get('pos')]){st.pos=h.get('pos');document.querySelectorAll('[data-pos]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pos===st.pos))}
+  if(h.get('ver')==='B')setVer('B');if(BRANDS[h.get('brand')]){brand=h.get('brand');chips();refreshLogo(true)}if(h.get('auto')==='1')st.auto=true;if(h.get('shot')==='1')document.documentElement.classList.add('shot');refreshLogo(true);if(h.get('brand')==='none')brand=null;if(h.get('color')==='logo'){colorMode='logo';document.querySelectorAll('[data-cmode]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.cmode==='logo'))}if(h.get('kink')==='0'){st.kink=0;document.querySelectorAll('[data-kink]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.kink==='0'))}if(h.get('ms')==='v'){st.msV=true;document.querySelectorAll('[data-ms]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.ms==='v'))}var hStep=h.get('step'),hP=h}catch(e){}
+syncCollabUI();
+try{const sel=!!(hP&&hP.get('brand')==='custom'),j=localStorage.getItem(CUSTOM_KEY),o=localStorage.getItem(OLD_KEY);if(j)setCustom(JSON.parse(j),sel);else if(o)setCustom(o,sel)}catch(e){}
+layoutSlot();go('select');if(hStep&&hStep!=='select'){if(hStep==='insert'){go('prompt');st.insP=.5;st.manual=true;go('insert')}else go(hStep);if(hStep==='swipe'){placeMS(GROOVE_X0-CARD_L+30+(+hP.get('demo')||.6)*840);st.v=+sp.value*25.4*U}}requestAnimationFrame(frame);
+if(reduce)$('hint').textContent+=' (모션 줄이기 설정이 켜져 있어 자동 재생은 직접 눌러야 시작합니다.)';
+})();
+</script>
+
+<script>
+// 아이패드: 설정 서랍 · 화면만 보기(왼쪽 위 '← 돌아가기' 버튼으로 나가기) (11-08)
+(()=>{const H=document.documentElement,mb=document.getElementById('menuBtn');
+  const setMenu=o=>{H.classList.toggle('menu',o);mb.setAttribute('aria-expanded',o);mb.textContent=o?'닫기':'설정'};
+  mb.onclick=()=>setMenu(!H.classList.contains('menu'));
+  document.getElementById('kiosk').addEventListener('pointerdown',()=>setMenu(false));
+  const full=o=>{H.classList.toggle('full',o);setMenu(false);try{if(o){const r=H.requestFullscreen||H.webkitRequestFullscreen;r&&Promise.resolve(r.call(H)).catch(()=>{})}else if(document.fullscreenElement)document.exitFullscreen()}catch(e){}};
+  document.getElementById('fullBtn').onclick=()=>full(true);
+  document.getElementById('exitFull').onclick=()=>full(false);document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&H.classList.contains('full')&&!/(^|[#&])full=1/.test(location.hash))H.classList.remove('full')});
+  if(/(^|[#&])full=1/.test(location.hash))H.classList.add('full');
+})();
+</script>
