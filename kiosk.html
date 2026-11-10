@@ -189,6 +189,7 @@ html:not(.trk0) #kiosk #btns text,html:not(.trk0) #kiosk #brandBtns text{letter-
 .info .chipL button,.info .chipL a{font:inherit;font-size:12.5px;font-weight:400;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);text-decoration:none;cursor:pointer}
 .info label.opt{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0}
 html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:max(12px,env(safe-area-inset-top,0px));z-index:20;opacity:.55;transition:opacity .2s}html.full #exitFull:hover,html.full #exitFull:active{opacity:1}
+#brandMob{display:none}
 /* ===== 11-10 모바일(폭 760 이하): 왼쪽 = 선택지 세로 칸, 오른쪽 = 키오스크가 남은 칸을 비율대로 꽉 채움 → 페이지 스크롤 없음 ===== */
 @media (max-width:760px){
   html,body{height:100dvh!important;overflow:hidden!important}
@@ -208,6 +209,21 @@ html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-ins
   .stage{display:block!important;height:100%!important;width:100%;min-width:0}
   #kiosk{width:100%!important;height:100%!important;min-height:0!important;max-width:100%}
   .cap{display:none!important}
+  /* 브랜드: 칩 대신 드롭다운 + 당신의 브랜드 따로 */
+  #brandChips{display:none!important}
+  .top .seg:has(#vA){display:none!important}
+  #brandMob{display:grid;gap:6px}
+  #brandSel{font:inherit;font-size:12.5px;width:100%;padding:7px 8px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+  .top .mobMine{display:grid;gap:4px}
+  .top .mobMine button{text-align:left}
+  /* 정리: 묶음마다 같은 간격, 라벨-버튼 간격 4, 묶음 간격 14 */
+  .top{gap:0!important;padding:4px 2px 8px!important}
+  .top .lbl{display:block;margin:14px 0 6px!important;font-size:11px;font-weight:600;letter-spacing:0}
+  .top>.lbl:first-child{margin-top:2px!important}
+  .top .seg{width:100%;box-sizing:border-box}
+  .top .seg button{padding:7px 10px;font-size:12.5px}
+  .top .seg button+button{border-top:1px solid var(--line)}
+  .top #reset{margin-top:16px!important;width:100%;padding:8px 10px!important;font-size:12.5px!important;border-radius:999px}
   html.full body,html.shot body{grid-template-columns:minmax(0,1fr)}
   html.full .wrap,html.shot .wrap{grid-column:1}
 }
@@ -568,8 +584,24 @@ function drawPartner(g,dk){
 }
 function refreshLogo(force){const flooded=(st.step==='done'&&(performance.now()-st.t0)/1000>.25)||(st.step==='select'&&st.attract),dk=(ver==='B')!==flooded;if(force||dk!==st.lastDk){st.lastDk=dk;drawBrandLogo(dk)}}
 function chips(){const c=$('brandChips');c.innerHTML='';[['','없음'],...Object.entries(BRANDS).filter(([k])=>k!=='custom').map(([k,b])=>[k,b.name]),['custom','당신의 브랜드']].forEach(([k,n])=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',(brand||'')===k);b.onclick=()=>{if(k==='custom'&&!BRANDS.custom){openBrandPop();return}brand=k||null;refreshLogo(true);chips();syncCollabUI();refreshLogo(true);go(st.step)};if(k==='custom'){b.classList.add('mine');if(BRANDS.custom){b.textContent=BRANDS.custom.name;const w=document.createElement('span');w.className='mineWrap';const x=document.createElement('button');x.className='x';x.textContent='×';x.setAttribute('aria-label',BRANDS.custom.name+' 지우기');x.onclick=removeCustom;w.append(b,x);c.appendChild(w);return}b.textContent='당신의 브랜드 +'}c.appendChild(b)});
-  if(BRANDS.custom){const u=document.createElement('button');u.textContent='로고 · 이름 고치기';u.className='up';u.onclick=openBrandPop;c.appendChild(u)}}
+  if(BRANDS.custom){const u=document.createElement('button');u.textContent='로고 · 이름 고치기';u.className='up';u.onclick=openBrandPop;c.appendChild(u)}mobBrand()}
 chips();
+/* 11-10 모바일: 매장 브랜드 = 드롭다운, 당신의 브랜드 = 따로 한 칸 */
+function mobBrand(){let m=document.getElementById('brandMob');const c=$('brandChips');
+  if(!m){m=document.createElement('div');m.id='brandMob';c.after(m)}
+  const custom=BRANDS.custom,cur=brand||'';
+  const opts=[['','없음'],...Object.entries(BRANDS).filter(([k])=>k!=='custom').map(([k,b])=>[k,b.name])];
+  m.innerHTML='';const sel=document.createElement('select');sel.id='brandSel';sel.setAttribute('aria-label','매장 브랜드');
+  opts.forEach(([k,n])=>{const o=document.createElement('option');o.value=k;o.textContent=n;sel.appendChild(o)});
+  if(cur==='custom'){const o=document.createElement('option');o.value='custom';o.textContent=custom?custom.name:'당신의 브랜드';sel.appendChild(o)}
+  sel.value=cur;sel.onchange=()=>{brand=sel.value||null;refreshLogo(true);chips();syncCollabUI();refreshLogo(true);go(st.step)};
+  const lb=document.createElement('span');lb.className='lbl';lb.textContent='당신의 브랜드';
+  const box=document.createElement('div');box.className='mobMine';
+  if(!custom){const b=document.createElement('button');b.textContent='로고 올리기 +';b.className='mine';b.onclick=openBrandPop;box.appendChild(b)}
+  else{const b=document.createElement('button');b.textContent=custom.name;b.setAttribute('aria-pressed',cur==='custom');b.onclick=()=>{brand='custom';refreshLogo(true);chips();syncCollabUI();refreshLogo(true);go(st.step)};
+    const e=document.createElement('button');e.textContent='고치기';e.className='up';e.onclick=openBrandPop;
+    const x=document.createElement('button');x.textContent='지우기';x.className='up';x.setAttribute('aria-label',custom.name+' 지우기');x.onclick=removeCustom;box.append(b,e,x)}
+  m.append(sel,lb,box)}
 function setButtons(list){
   const g=$('btns');g.innerHTML='';const bg=$('brandBtns');bg.innerHTML='';
   list.forEach(([label,filled,y,fn])=>{
