@@ -195,7 +195,7 @@ html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-ins
   body{display:grid!important;grid-template-columns:116px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:8px;
     padding:max(8px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))!important}
   .top{grid-column:1;grid-row:1;min-height:0;height:100%;overflow-y:auto;margin:0;max-width:none;
-    flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:4px;padding-bottom:84px;box-sizing:border-box}
+    flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:4px;padding-bottom:8px;box-sizing:border-box}
   .top>*{flex-shrink:0}
   .top .lbl{margin-top:6px;font-size:11px}
   .top .chips{gap:4px}
@@ -207,10 +207,7 @@ html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-ins
   .wrap{grid-column:2;grid-row:1;min-height:0;height:100%;padding:0!important}
   .stage{display:block!important;height:100%!important;width:100%;min-width:0}
   #kiosk{width:100%!important;height:100%!important;min-height:0!important;max-width:100%}
-  .cap{top:auto;right:auto;bottom:max(8px,env(safe-area-inset-bottom,0px));left:max(8px,env(safe-area-inset-left,0px));max-width:116px;width:116px;box-sizing:border-box;
-    padding:8px 10px;gap:6px;flex-direction:column;align-items:flex-start;border-radius:14px}
-  .cap b{font-size:11px;padding:5px 6px}
-  #capT{font-size:12.5px}#capR{font-size:11px}
+  .cap{display:none!important}
   html.full body,html.shot body{grid-template-columns:minmax(0,1fr)}
   html.full .wrap,html.shot .wrap{grid-column:1}
 }
