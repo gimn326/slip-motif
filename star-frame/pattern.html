@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLiP 틈 패턴 제너레이터</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* SLiP 서체 = Avenir Next(영문·숫자) + Pretendard(한글), 굵기마다 획 두께 맞춘 짝. */
+@font-face{font-family:"SLiP";font-weight:100;src:local("AvenirNext-UltraLight");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:100;src:local("Pretendard-Thin"),local("Pretendard Thin");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:400;src:local("AvenirNext-Regular");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:400;src:local("Pretendard-Light"),local("Pretendard Light");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:500;src:local("AvenirNext-Medium");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:500;src:local("Pretendard-Regular"),local("Pretendard Regular");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:600;src:local("AvenirNext-DemiBold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:600;src:local("Pretendard-SemiBold"),local("Pretendard SemiBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:700;src:local("AvenirNext-Bold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:700;src:local("Pretendard-ExtraBold"),local("Pretendard ExtraBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+
+*{font-synthesis:none}
+  :root{--ink:#111;--muted:#6b7077;--line:#d9dcdf;--soft:#f4f5f6}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:"SLiP", "Apple SD Gothic Neo", sans-serif;color:var(--ink);background:#eceef0}
+  .app{display:grid;grid-template-columns:340px 1fr;height:100%}
+  aside{background:#fff;border-right:1px solid var(--line);padding:22px 20px;overflow:auto}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .tabs a{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);text-decoration:none}
+  .tabs a.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  h1{font-size:20px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
+  .sub{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5}
+  fieldset{border:0;padding:0;margin:0 0 18px}
+  legend{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+  input,select{font:inherit;font-size:14px;color:var(--ink);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+  input[type=color]{padding:2px;height:38px}
+  input[readonly]{background:var(--soft);color:var(--muted)}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .presets button{font:inherit;font-size:12.5px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .btn{font:inherit;font-size:14px;font-weight:600;padding:10px 14px;border-radius:10px;border:1.5px solid var(--ink);background:#fff;cursor:pointer;width:100%;margin-bottom:8px}
+  .btn.pri{background:var(--ink);color:#fff}
+  .lock{font-size:12px;color:var(--muted);line-height:1.55;background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:6px}
+  .lock b{color:var(--ink);font-weight:600}
+  main{display:flex;align-items:center;justify-content:center;padding:24px;min-width:0;height:100vh;overflow:hidden}
+  main svg{box-shadow:0 8px 30px rgba(0,0,0,.08)}
+  .msg{font-size:12px;color:var(--muted);min-height:18px;margin-top:4px}
+  @media (max-width:800px){.app{grid-template-columns:1fr;height:auto}main{height:70vh}}
+</style>
+<div class="app">
+<aside>
+  <nav class="tabs"><a href="index.html">전환 모션</a><a href="corner.html">코너 프레임</a><a class="on" href="pattern.html">틈 패턴</a><a href="insta.html">인스타 게시물</a></nav>
+  <h1>SLiP 틈 패턴</h1>
+  <p class="sub">로고의 틈(별 + 십자 막대)을 이웃끼리 이어 붙인 패턴입니다. 막대 사이에 남는 흰 면은 곡률 60.7을 모서리로 가진 <b>실제 카드 비율</b>의 면이 됩니다.</p>
+
+  <fieldset>
+    <legend>대지 크기 (px)</legend>
+    <div class="presets" id="presets">
+      <button data-wh="1080,1920">키오스크 1080×1920</button>
+      <button data-wh="1920,1080">가로 1920×1080</button>
+      <button data-wh="3840,2160">4K 3840×2160</button>
+      <button data-wh="5000,5000">정사각 5000</button>
+    </div>
+    <div class="row">
+      <label>가로<input id="W" type="number" min="100" max="20000" value="3840"></label>
+      <label>세로<input id="H" type="number" min="100" max="20000" value="2160"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>카드 면 (고정 비율)</legend>
+    <div class="row">
+      <label>곡률 반지름 (고정)<input id="R" type="number" value="60.7" readonly></label>
+      <label>카드 면 크기<input id="CS" type="text" readonly></label>
+    </div>
+    <p class="lock">실제 카드(ISO/IEC 7810 ID-1) = 85.60 × 53.98 mm, 모서리 반지름 3.18 mm. 모서리 반지름을 60.7로 고정하면 카드 면은 <b>1633.94 × 1030.37</b>(비율 1.586 : 1)이 됩니다. 곡률과 카드 비율이 함께 고정이라, 카드 면 크기도 대지와 상관없이 늘 같습니다(대지가 클수록 더 많이 반복).</p>
+    <div class="row" style="margin-top:8px">
+      <label>카드 방향<select id="OR"><option value="h">가로 카드</option><option value="v">세로 카드</option></select></label>
+      <label>틈(막대) 반폭<input id="HW" type="number" min="1" max="60" step=".5" value="4.5"></label>
+    </div>
+    <div class="row">
+      <label>배열<select id="LY"><option value="grid">바둑판 (틈 = 십자 별)</option><option value="brick">엇갈림 (틈 = T자)</option></select></label>
+      <label>가운데 맞춤<select id="AL"><option value="star">별(틈)이 가운데</option><option value="card">카드가 가운데</option></select></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>색</legend>
+    <div class="row">
+      <label>틈 · 곡률 면<input id="C" type="color" value="#111111"></label>
+      <label>카드 면<input id="CC" type="color" value="#ffffff"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>내보내기</legend>
+    <button class="btn pri" id="exCopy">패턴 복사 (피그마에 붙여넣기)</button>
+    <button class="btn" id="exSave">패턴 SVG 저장 (대지 크기)</button>
+    <button class="btn" id="exTile">반복 단위(타일) SVG 저장</button>
+    <div class="msg" id="msg"></div>
+    <p class="lock">복사 · 저장한 패턴의 "틈" 레이어는 카드 자리가 뚫린 면(evenodd)이라, 아래에 사진을 깔면 카드 모양 창들로 보입니다. "카드 면" 레이어는 따로 들어 있어 끄거나 색을 바꿀 수 있습니다.</p>
+  </fieldset>
+</aside>
+<main><svg id="art" xmlns="http://www.w3.org/2000/svg"></svg></main>
+</div>
+<script>
+const $=id=>document.getElementById(id), r2=v=>Math.round(v*100)/100, clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+// 실제 카드 비율: 85.60 × 53.98 mm, 모서리 3.18 mm → 반지름 60.7 기준 px
+const R=60.7, K=R/3.18, CW=85.60*K, CH=53.98*K;
+function P(){const v=$('OR').value==='v';return{W:Math.max(100,+$('W').value||3840),H:Math.max(100,+$('H').value||2160),
+  hw:clamp(+$('HW').value||4.5,1,60),cw:v?CH:CW,ch:v?CW:CH,brick:$('LY').value==='brick',al:$('AL').value,C:$('C').value,CC:$('CC').value}}
+// 둥근 카드 면 하나(반지름 R, 시계 방향)
+function cardD(x,y,w,h){return `M${r2(x+R)},${r2(y)}H${r2(x+w-R)}A${R},${R} 0 0 1 ${r2(x+w)},${r2(y+R)}V${r2(y+h-R)}A${R},${R} 0 0 1 ${r2(x+w-R)},${r2(y+h)}H${r2(x+R)}A${R},${R} 0 0 1 ${r2(x)},${r2(y+h-R)}V${r2(y+R)}A${R},${R} 0 0 1 ${r2(x+R)},${r2(y)}Z`}
+// 카드 면 자리들: 간격(피치) = 카드 + 틈(2 × 반폭). 막대 중심선이 x = 0, PX, 2PX … 에 오게 → 교차점마다 로고 별(곡률 면 4개)
+function cards(p,W,H){const PX=p.cw+2*p.hw,PY=p.ch+2*p.hw,out=[];
+  // 가운데 맞춤: star = 대지 가운데에 막대 교차점 / card = 대지 가운데에 카드 가운데
+  let ox=W/2,oy=H/2;if(p.al==='card'){ox-=PX/2;oy-=PY/2}
+  const j0=Math.floor(-oy/PY)-1,j1=Math.ceil((H-oy)/PY)+1;
+  for(let j=j0;j<=j1;j++){const sh=p.brick&&(j%2!==0)?PX/2:0;
+    const i0=Math.floor((-ox-sh)/PX)-1,i1=Math.ceil((W-ox-sh)/PX)+1;
+    for(let i=i0;i<=i1;i++){const x=ox+sh+i*PX+p.hw,y=oy+j*PY+p.hw;
+      if(x>W||y>H||x+p.cw<0||y+p.ch<0)continue;out.push([x,y])}}
+  return out}
+function patternSVG(p,W,H,tag){const cs=cards(p,W,H);
+  const holes=cs.map(([x,y])=>cardD(x,y,p.cw,p.ch)).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${r2(W)}" height="${r2(H)}" viewBox="0 0 ${r2(W)} ${r2(H)}">
+  <defs><clipPath id="대지"><rect width="${r2(W)}" height="${r2(H)}"/></clipPath></defs>
+  <g id="SLiP 틈 패턴 ${tag} (곡률 ${R} · 카드 85.60×53.98 비율)" clip-path="url(#대지)">
+    <path id="카드 면" d="${holes}" fill="${p.CC}"/>
+    <path id="틈" d="M0,0H${r2(W)}V${r2(H)}H0Z${holes}" fill="${p.C}" fill-rule="evenodd"/>
+  </g>
+</svg>`}
+function render(){const p=P(),art=$('art');$('CS').value=`${r2(p.cw)} × ${r2(p.ch)}`;
+  art.setAttribute('viewBox',`0 0 ${p.W} ${p.H}`);
+  const m=art.parentNode,k=Math.min((m.clientWidth-48)/p.W,(m.clientHeight-48)/p.H);art.style.width=p.W*k+'px';art.style.height=p.H*k+'px';
+  art.innerHTML=patternSVG(p,p.W,p.H,'').replace(/^<svg[^>]*>|<\/svg>$/g,'')}
+document.querySelectorAll('aside input,aside select').forEach(i=>i.addEventListener('input',render));
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{const [w,h]=b.dataset.wh.split(',');$('W').value=w;$('H').value=h;render()});
+addEventListener('resize',render);
+function download(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'image/svg+xml'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+const say=m=>$('msg').textContent=m;
+$('exSave').onclick=()=>{const p=P();download(`slip-gap-pattern_${p.W}x${p.H}.svg`,patternSVG(p,p.W,p.H,`${p.W}x${p.H}`));say('패턴 SVG를 저장했습니다.')};
+$('exCopy').onclick=async()=>{const p=P(),svg=patternSVG(p,p.W,p.H,`${p.W}x${p.H}`);
+  try{await navigator.clipboard.writeText(svg);say('복사했습니다. 피그마에 ⌘V 하면 "카드 면" · "틈" 두 레이어로 들어옵니다.')}
+  catch(e){download(`slip-gap-pattern_${p.W}x${p.H}.svg`,svg);say('클립보드를 쓸 수 없어 SVG 파일로 저장했습니다.')}};
+// 반복 단위: 막대 교차점에서 교차점까지(바둑판 = 1칸, 엇갈림 = 세로 2칸) — 이어 붙이면 끊김 없이 이어짐
+$('exTile').onclick=()=>{const p=P(),PX=p.cw+2*p.hw,PY=p.ch+2*p.hw,TH=p.brick?2*PY:PY;
+  const q={...p,al:'tile'};
+  const cs=[];for(let j=-1;j<=(p.brick?2:1);j++){const sh=p.brick&&(j%2!==0)?PX/2:0;for(let i=-1;i<=1;i++)cs.push([sh+i*PX+p.hw,j*PY+p.hw])}
+  const holes=cs.map(([x,y])=>cardD(x,y,p.cw,p.ch)).join('');
+  download(`slip-gap-tile_${p.brick?'brick':'grid'}_${$('OR').value}.svg`,`<svg xmlns="http://www.w3.org/2000/svg" width="${r2(PX)}" height="${r2(TH)}" viewBox="0 0 ${r2(PX)} ${r2(TH)}">
+  <!-- SLiP 틈 패턴 반복 단위 · 곡률 ${R} · 카드 ${r2(p.cw)}×${r2(p.ch)} · 틈 반폭 ${p.hw} · 네 모서리가 막대 교차점 -->
+  <defs><clipPath id="t"><rect width="${r2(PX)}" height="${r2(TH)}"/></clipPath></defs>
+  <g clip-path="url(#t)"><path id="카드 면" d="${holes}" fill="${p.CC}"/><path id="틈" d="M0,0H${r2(PX)}V${r2(TH)}H0Z${holes}" fill="${p.C}" fill-rule="evenodd"/></g>
+</svg>`);say('반복 단위(타일)를 저장했습니다. 피그마 · 일러스트 패턴 채우기에 그대로 쓰면 됩니다.')};
+render();
+</script>

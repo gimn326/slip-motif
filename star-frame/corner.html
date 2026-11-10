@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLiP 코너 프레임 제너레이터</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* SLiP 서체 = Avenir Next(영문·숫자) + Pretendard(한글), 굵기마다 획 두께 맞춘 짝. */
+@font-face{font-family:"SLiP";font-weight:100;src:local("AvenirNext-UltraLight");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:100;src:local("Pretendard-Thin"),local("Pretendard Thin");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:400;src:local("AvenirNext-Regular");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:400;src:local("Pretendard-Light"),local("Pretendard Light");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:500;src:local("AvenirNext-Medium");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:500;src:local("Pretendard-Regular"),local("Pretendard Regular");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:600;src:local("AvenirNext-DemiBold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:600;src:local("Pretendard-SemiBold"),local("Pretendard SemiBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:700;src:local("AvenirNext-Bold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:700;src:local("Pretendard-ExtraBold"),local("Pretendard ExtraBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+
+*{font-synthesis:none}
+  :root{--ink:#111;--muted:#6b7077;--line:#d9dcdf;--soft:#f4f5f6}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:"SLiP", "Apple SD Gothic Neo", sans-serif;color:var(--ink);background:#eceef0}
+  .app{display:grid;grid-template-columns:340px 1fr;height:100%}
+  aside{background:#fff;border-right:1px solid var(--line);padding:22px 20px;overflow:auto}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .tabs a{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);text-decoration:none}
+  .tabs a.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  h1{font-size:20px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
+  .sub{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5}
+  fieldset{border:0;padding:0;margin:0 0 18px}
+  legend{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+  label.chk{flex-direction:row;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+  input,select{font:inherit;font-size:14px;color:var(--ink);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+  input[type=checkbox]{width:auto}
+  input[type=color]{padding:2px;height:38px}
+  input[readonly]{background:var(--soft);color:var(--muted)}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .presets button{font:inherit;font-size:12.5px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .btn{font:inherit;font-size:14px;font-weight:600;padding:10px 14px;border-radius:10px;border:1.5px solid var(--ink);background:#fff;cursor:pointer;width:100%;margin-bottom:8px}
+  .btn.pri{background:var(--ink);color:#fff}
+  .lock{font-size:12px;color:var(--muted);line-height:1.5;background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:6px}
+  main{display:flex;align-items:center;justify-content:center;padding:24px;min-width:0;height:100vh;overflow:hidden}
+  main svg{box-shadow:0 8px 30px rgba(0,0,0,.08)}
+  .msg{font-size:12px;color:var(--muted);min-height:18px;margin-top:4px}
+  @media (max-width:800px){.app{grid-template-columns:1fr;height:auto}main{height:70vh}}
+</style>
+<div class="app">
+<aside>
+  <nav class="tabs"><a href="index.html">전환 모션</a><a class="on" href="corner.html">코너 프레임</a><a href="pattern.html">틈 패턴</a><a href="insta.html">인스타 게시물</a></nav>
+  <h1>SLiP 코너 프레임</h1>
+  <p class="sub">카드 곡률(오목 모서리 반지름 60.7)로 만든 모서리 표식을 대지 네 귀퉁이에 놓습니다. 로고의 4분의 1(가로 막대 + 세로 막대 + 둘 사이 곡률 면)을 그대로 쓴 모양입니다.</p>
+
+  <fieldset>
+    <legend>대지 크기 (px)</legend>
+    <div class="presets" id="presets">
+      <button data-wh="1080,1920">키오스크 1080×1920</button>
+      <button data-wh="1920,1080">가로 1920×1080</button>
+      <button data-wh="1080,1080">정사각 1080</button>
+      <button data-wh="1080,1350">인스타 1080×1350</button>
+      <button data-wh="3840,1080">와이드 스크린 3840×1080</button>
+    </div>
+    <div class="row">
+      <label>가로<input id="W" type="number" min="100" max="10000" value="1920"></label>
+      <label>세로<input id="H" type="number" min="100" max="10000" value="1080"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>모서리 표식</legend>
+    <div class="row">
+      <label>곡률 반지름 (고정)<input id="R" type="number" value="60.7" readonly></label>
+      <label>막대 폭 (로고, 고정)<input id="HW" type="number" value="9" readonly></label>
+    </div>
+    <div class="row">
+      <label>팔 길이 가로 · 세로 (로고)<input id="L" type="text" value="267.9 · 250" readonly></label>
+      <label>가장자리 여백<input id="M" type="number" min="0" max="1000" value="48"></label>
+    </div>
+    <p class="lock">모서리 표식은 로고 십자의 4분의 1을 그대로 씁니다. 막대 폭 9, 곡률 반지름 60.7, 팔 길이 가로 267.9 · 세로 250 모두 로고와 같고 바꿀 수 없습니다. 바뀌는 건 여백과 색뿐입니다.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>색</legend>
+    <div class="row">
+      <label>표식<input id="C" type="color" value="#111111"></label>
+      <label>바탕(미리보기)<input id="BG" type="color" value="#eeeeee"></label>
+    </div>
+    <label class="chk"><input id="CM" type="checkbox"> 가운데에 SLiP 로고 십자(별 + 막대) 넣기</label>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="bgPick" style="margin:0">배경 이미지 넣기</button>
+      <button class="btn" id="bgClear" style="margin:0" disabled>배경 이미지 빼기</button>
+    </div>
+    <input type="file" id="bgFile" accept="image/*" hidden>
+    <p class="lock">배경 이미지는 대지를 꽉 채웁니다. 미리보기에도 보이고, 프레임 복사 · SVG 저장에도 맨 아래 레이어 "배경 이미지"로 같이 들어갑니다.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>내보내기</legend>
+    <button class="btn pri" id="exCopy">프레임 복사 (피그마에 붙여넣기)</button>
+    <button class="btn" id="exSave">프레임 SVG 저장</button>
+    <button class="btn" id="exPiece">모서리 표식 하나만 SVG 저장</button>
+    <div class="msg" id="msg"></div>
+  </fieldset>
+</aside>
+<main><svg id="art" xmlns="http://www.w3.org/2000/svg"></svg></main>
+</div>
+<script>
+const $=id=>document.getElementById(id), r2=v=>Math.round(v*100)/100, clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+// 모서리 표식 하나(꺾인 점 = 원점, 팔은 +x · +y 방향): 가로 막대 + 세로 막대 + 둘 사이의 곡률 면(로고 별의 4분의 1)
+//   로고 그대로: 막대 반폭 4.5(폭 9), 곡률 반지름 60.7, 팔 가로 267.9 · 세로 250(로고 중심에서 끝까지)
+//   곡률 면 = (hw..hw+R)² 정사각에서 중심 (hw+R, hw+R) · 반지름 R 원을 뺀 면
+const LOGO={hw:4.5,lx:267.9,ly:250};
+function pieceD(hw,lx,ly,R){const q=hw+R;
+  return `M${-hw},${-hw}H${lx}V${hw}H${r2(q)}A${R},${R} 0 0 0 ${hw},${r2(q)}V${ly}H${-hw}Z`}
+function P(){const R=+$('R').value;
+  return{W:Math.max(100,+$('W').value||1920),H:Math.max(100,+$('H').value||1080),R,hw:LOGO.hw,lx:LOGO.lx,ly:LOGO.ly,
+    M:Math.max(0,+$('M').value||0),C:$('C').value,BG:$('BG').value,CM:$('CM').checked}}
+// 네 귀퉁이: 왼쪽 위 그대로, 나머지는 좌우 · 상하 뒤집기 — 가로 팔은 늘 가로 267.9, 세로 팔은 늘 세로 250. 뒤집기만 하므로 곡률 그대로
+function corners(p){const d=pieceD(p.hw,p.lx,p.ly,p.R),o=p.M+p.hw;
+  return [['왼쪽 위',o,o,1,1],['오른쪽 위',p.W-o,o,-1,1],['오른쪽 아래',p.W-o,p.H-o,-1,-1],['왼쪽 아래',o,p.H-o,1,-1]]
+    .map(([n,x,y,sx,sy])=>`<path id="${n}" d="${d}" transform="translate(${r2(x)} ${r2(y)}) scale(${sx} ${sy})" fill="${p.C}"/>`)}
+// 가운데 로고 십자(별 + 막대), 로고 비율: 팔 위 · 아래 250 / 좌 · 우 267.9, 반지름 60.7 고정 → 대지 짧은 변의 40%를 넘으면 팔만 줄임
+function centerMark(p){const R=p.R,hw=p.hw,cx=p.W/2,cy=p.H/2,lim=Math.min(p.W,p.H)*.2,u=Math.max(hw+R+4,Math.min(250,lim)),l=Math.max(hw+R+4,Math.min(267.9,lim*1.07)),q=hw+R;
+  const X=v=>r2(cx+v),Y=v=>r2(cy+v);
+  return `<path id="가운데 로고 십자" fill="${p.C}" d="M${X(-hw)},${Y(-u)}H${X(hw)}V${Y(-q)}A${R},${R} 0 0 0 ${X(q)},${Y(-hw)}H${X(l)}V${Y(hw)}H${X(q)}A${R},${R} 0 0 0 ${X(hw)},${Y(q)}V${Y(u)}H${X(-hw)}V${Y(q)}A${R},${R} 0 0 0 ${X(-q)},${Y(hw)}H${X(-l)}V${Y(-hw)}H${X(-q)}A${R},${R} 0 0 0 ${X(-hw)},${Y(-q)}Z"/>`}
+// 배경 이미지(선택): 대지를 꽉 채움(가운데 기준 잘림). 파일 안에 그대로 들어가도록 data URL로 넣음
+let bgImg=null;
+$('bgPick').onclick=()=>$('bgFile').click();
+$('bgFile').onchange=()=>{const f=$('bgFile').files[0];$('bgFile').value='';if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{bgImg=rd.result;$('bgClear').disabled=false;render()};rd.readAsDataURL(f)};
+$('bgClear').onclick=()=>{bgImg=null;$('bgClear').disabled=true;render()};
+function frameSVG(p,withBg){
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${p.W}" height="${p.H}" viewBox="0 0 ${p.W} ${p.H}">
+${withBg?`  <rect width="${p.W}" height="${p.H}" fill="${p.BG}"/>\n`:''}${bgImg?`  <image id="배경 이미지" href="${bgImg}" xlink:href="${bgImg}" width="${p.W}" height="${p.H}" preserveAspectRatio="xMidYMid slice"/>\n`:''}  <g id="SLiP 코너 프레임 ${p.W}x${p.H} (곡률 ${p.R} 고정)">
+    ${corners(p).join('\n    ')}${p.CM?'\n    '+centerMark(p):''}
+  </g>
+</svg>`}
+function render(){const p=P();const art=$('art');
+  art.setAttribute('viewBox',`0 0 ${p.W} ${p.H}`);
+  const m=art.parentNode,k=Math.min((m.clientWidth-48)/p.W,(m.clientHeight-48)/p.H);art.style.width=p.W*k+'px';art.style.height=p.H*k+'px';
+  art.innerHTML=frameSVG(p,true).replace(/^<svg[^>]*>|<\/svg>$/g,'')}
+document.querySelectorAll('aside input').forEach(i=>i.addEventListener('input',render));
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{const [w,h]=b.dataset.wh.split(',');$('W').value=w;$('H').value=h;render()});
+addEventListener('resize',render);
+function download(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'image/svg+xml'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+const say=m=>$('msg').textContent=m;
+$('exSave').onclick=()=>{const p=P();download(`slip-corner-frame_${p.W}x${p.H}.svg`,frameSVG(p,false));say('코너 프레임 SVG를 저장했습니다(바탕 없음).')};
+$('exCopy').onclick=async()=>{const p=P(),svg=frameSVG(p,false);
+  try{await navigator.clipboard.writeText(svg);say('복사했습니다. 피그마에 ⌘V 하면 모서리 네 개가 이름 붙은 레이어로 들어옵니다.')}
+  catch(e){download(`slip-corner-frame_${p.W}x${p.H}.svg`,svg);say('클립보드를 쓸 수 없어 SVG 파일로 저장했습니다.')}};
+$('exPiece').onclick=()=>{const p=P(),sw=p.lx+p.hw,sh=p.ly+p.hw;
+  download(`slip-corner-piece.svg`,`<svg xmlns="http://www.w3.org/2000/svg" width="${r2(sw)}" height="${r2(sh)}" viewBox="${-p.hw} ${-p.hw} ${r2(sw)} ${r2(sh)}">
+  <!-- SLiP 모서리 표식 · 로고 십자의 4분의 1 · 곡률 반지름 ${p.R} · 막대 폭 ${p.hw*2} · 팔 가로 ${p.lx} · 세로 ${p.ly} -->
+  <path id="모서리 표식" d="${pieceD(p.hw,p.lx,p.ly,p.R)}" fill="${p.C}"/>
+</svg>`);say('모서리 표식 하나를 저장했습니다(왼쪽 위 방향, 뒤집어서 쓰면 됨).')};
+render();
+</script>

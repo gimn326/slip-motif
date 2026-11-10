@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLiP 별 프레임 제너레이터</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* SLiP 서체 = Avenir Next(영문·숫자) + Pretendard(한글), 굵기마다 획 두께 맞춘 짝. */
+@font-face{font-family:"SLiP";font-weight:100;src:local("AvenirNext-UltraLight");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:100;src:local("Pretendard-Thin"),local("Pretendard Thin");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:400;src:local("AvenirNext-Regular");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:400;src:local("Pretendard-Light"),local("Pretendard Light");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:500;src:local("AvenirNext-Medium");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:500;src:local("Pretendard-Regular"),local("Pretendard Regular");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:600;src:local("AvenirNext-DemiBold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:600;src:local("Pretendard-SemiBold"),local("Pretendard SemiBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+@font-face{font-family:"SLiP";font-weight:700;src:local("AvenirNext-Bold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
+@font-face{font-family:"SLiP";font-weight:700;src:local("Pretendard-ExtraBold"),local("Pretendard ExtraBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
+
+*{font-synthesis:none}
+  :root{--ink:#111;--muted:#6b7077;--line:#d9dcdf;--soft:#f4f5f6;--acc:#1F78CC}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:"SLiP", "Apple SD Gothic Neo", sans-serif;color:var(--ink);background:#eceef0}
+  .app{display:grid;grid-template-columns:340px 1fr;height:100%}
+  aside{background:#fff;border-right:1px solid var(--line);padding:22px 20px;overflow:auto}
+  h1{font-size:20px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
+  .sub{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5}
+  fieldset{border:0;padding:0;margin:0 0 18px}
+  legend{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em;margin-bottom:8px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+  input,select{font:inherit;font-size:14px;color:var(--ink);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+  input[type=color]{padding:2px;height:38px}
+  input[readonly]{background:var(--soft);color:var(--muted)}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .presets button,.btn{font:inherit;font-size:12.5px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .btn{font-size:14px;font-weight:600;padding:10px 14px;border-radius:10px;border:1.5px solid var(--ink);width:100%;margin-bottom:8px}
+  .btn.pri{background:var(--ink);color:#fff}
+  .lock{font-size:12px;color:var(--muted);line-height:1.5;background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:6px}
+  main{display:flex;flex-direction:column;min-width:0;height:100vh}
+  .stage{flex:1 1 0;display:flex;align-items:center;justify-content:center;padding:24px;min-height:0;overflow:hidden}
+  .stage svg{background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.04),0 8px 30px rgba(0,0,0,.08)}
+  .bar{display:flex;align-items:center;gap:12px;padding:12px 24px;background:#fff;border-top:1px solid var(--line)}
+  .bar input[type=range]{flex:1;padding:0}
+  .bar .t{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);min-width:110px;text-align:right}
+  .bar button{font:inherit;font-weight:600;font-size:14px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);background:#fff;cursor:pointer;min-width:84px}
+  .msg{font-size:12px;color:var(--muted);min-height:18px;margin-top:4px}
+  @media (max-width:800px){.app{grid-template-columns:1fr;height:auto}.stage{height:70vh}}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .tabs a{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid #d9dcdf;color:#6b7077;text-decoration:none}
+  .tabs a.on{background:#111;color:#fff;border-color:#111}
+</style>
+<div class="app">
+<aside>
+  <nav class="tabs"><a class="on" href="index.html">전환 모션</a><a href="corner.html">코너 프레임</a><a href="pattern.html">틈 패턴</a><a href="insta.html">인스타 게시물</a></nav>
+  <h1>SLiP 별 프레임 제너레이터</h1>
+  <p class="sub">대지 크기를 넣으면 곡률 고정값(오목 모서리 반지름 60.7)에 맞춰 SLiP 로고 모양 창이 열리는 전환(십자가 먼저 뻗고 → 틈이 벌어짐)을 자동으로 만듭니다. SVG와 모션(애니메이션 SVG · 영상)으로 내보낼 수 있습니다.</p>
+
+  <fieldset>
+    <legend>대지 크기 (px)</legend>
+    <div class="presets" id="presets">
+      <button data-wh="1080,1920">키오스크 1080×1920</button>
+      <button data-wh="1920,1080">가로 1920×1080</button>
+      <button data-wh="1080,1080">정사각 1080</button>
+      <button data-wh="1080,1350">인스타 1080×1350</button>
+      <button data-wh="390,844">모바일 390×844</button>
+    </div>
+    <div class="row">
+      <label>가로<input id="W" type="number" min="50" max="8000" value="1080"></label>
+      <label>세로<input id="H" type="number" min="50" max="8000" value="1920"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>곡률 (고정)</legend>
+    <div class="row">
+      <label>모서리 반지름<input id="R" type="number" value="60.7" readonly></label>
+      <label>십자 막대 반폭<input id="HW" type="number" value="4.5" readonly></label>
+    </div>
+    <div class="row">
+      <label>십자 위 · 아래 팔<input id="AU" type="number" value="250" readonly></label>
+      <label>십자 좌 · 우 팔<input id="AL" type="number" value="267.9" readonly></label>
+    </div>
+    <p class="lock">SLiP 로고(별 + 긴 십자 막대) 비율 그대로, 오목 모서리 반지름은 대지 크기와 상관없이 항상 60.7입니다. 십자 팔이 먼저 대지 끝까지 뻗고, 그다음 막대 틈이 벌어지며 곡률 면 네 개가 바깥으로 물러납니다 → 늘어나는 건 직선뿐, 곡률은 한 번도 변하지 않습니다.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>별이 나타나는 자리 (대지 기준 %)</legend>
+    <div class="row">
+      <label>가로 위치<input id="PX" type="number" min="0" max="100" value="50"></label>
+      <label>세로 위치<input id="PY" type="number" min="0" max="100" value="50"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>색</legend>
+    <div class="row">
+      <label>덮는 면<input id="C" type="color" value="#111111"></label>
+      <label>드러나는 화면(미리보기)<input id="BG" type="color" value="#ffffff"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>시간 (ms)</legend>
+    <div class="row">
+      <label>① 덮기<input id="T1" type="number" min="0" step="10" value="220"></label>
+      <label>② 로고 나타남<input id="T2" type="number" min="0" step="10" value="240"></label>
+    </div>
+    <div class="row">
+      <label>③ 십자 뻗음<input id="T3" type="number" min="50" step="10" value="320"></label>
+      <label>④ 틈 열림<input id="T5" type="number" min="50" step="10" value="480"></label>
+    </div>
+    <div class="row">
+      <label>끝난 뒤 머묾<input id="T4" type="number" min="0" step="10" value="400"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>내보내기</legend>
+    <button class="btn pri" id="exCopy">프레임 복사 (피그마에 붙여넣기)</button>
+    <button class="btn" id="exStill">프레임 SVG 저장</button>
+    <button class="btn" id="exAnim">애니메이션 SVG (모션)</button>
+    <button class="btn" id="exVideo">영상 WebM (모션)</button>
+    <button class="btn" id="exCode">웹사이트 코드 설정 복사</button>
+    <div class="msg" id="msg"></div>
+  </fieldset>
+</aside>
+<main>
+  <div class="stage"><svg id="art" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="bar">
+    <button id="play">재생</button>
+    <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="시간">
+    <span class="t" id="tlabel">0 ms</span>
+  </div>
+</main>
+</div>
+<script>
+// ---------- 기하: 오목 모서리 패널 (hx = hy = 막대 반폭이면 SLiP 별) ----------
+const r2=v=>Math.round(v*100)/100, clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), lerp=(a,b,t)=>a+(b-a)*t;
+const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function panelD(cx,cy,hx,hy,r){const X=v=>r2(cx+v),Y=v=>r2(cy+v);
+  return `M${X(-hx)},${Y(-hy-r)}H${X(hx)}A${r},${r} 0 0 0 ${X(hx+r)},${Y(-hy)}V${Y(hy)}A${r},${r} 0 0 0 ${X(hx)},${Y(hy+r)}H${X(-hx)}A${r},${r} 0 0 0 ${X(-hx-r)},${Y(hy)}V${Y(-hy)}A${r},${r} 0 0 0 ${X(-hx)},${Y(-hy-r)}Z`}
+
+const $=id=>document.getElementById(id);
+function P(){return{W:Math.max(50,+$('W').value||1080),H:Math.max(50,+$('H').value||1920),R:+$('R').value,HW:+$('HW').value,
+  px:clamp(+$('PX').value,0,100)/100,py:clamp(+$('PY').value,0,100)/100,C:$('C').value,BG:$('BG').value,
+  T1:Math.max(0,+$('T1').value),T2:Math.max(0,+$('T2').value),T3:Math.max(50,+$('T3').value),T4:Math.max(0,+$('T4').value),T5:Math.max(50,+$('T5').value),AU:+$('AU').value,AL:+$('AL').value}}
+const total=p=>p.T1+p.T2+p.T3+p.T5+p.T4;
+
+// SLiP 로고 구멍 모양: 십자 막대(반폭 hw, 팔 길이 u·r·d·l) + 가운데 별(막대 사이 오목 모서리 반지름 R)
+function crossD(cx,cy,hw,u,r,d,l,R){const q=hw+R,X=v=>r2(cx+v),Y=v=>r2(cy+v);
+  return `M${X(-hw)},${Y(-u)}H${X(hw)}V${Y(-q)}A${R},${R} 0 0 0 ${X(q)},${Y(-hw)}H${X(r)}V${Y(hw)}H${X(q)}A${R},${R} 0 0 0 ${X(hw)},${Y(q)}V${Y(d)}H${X(-hw)}V${Y(q)}A${R},${R} 0 0 0 ${X(-q)},${Y(hw)}H${X(-l)}V${Y(-hw)}H${X(-q)}A${R},${R} 0 0 0 ${X(-hw)},${Y(-q)}Z`}
+// 시간 t(ms)의 상태. 반지름 R은 언제나 고정
+function state(p,t){
+  const cov=easeIO(clamp(p.T1?t/p.T1:1,0,1));
+  const sx=p.W*p.px, sy=p.H*p.py, CX=p.W/2, CY=p.H/2, Rr=p.R;
+  if(t<p.T1)return{cov,hole:false};
+  // ② 로고 나타남: 제 크기(반지름 60.7) 그대로, 막대 틈 0 → 4.5, 자리는 나타나는 곳 → 대지 가운데
+  const a=clamp(p.T2?(t-p.T1)/p.T2:1,0,1), ea=easeIO(a);
+  const cx=lerp(sx,CX,ea), cy=lerp(sy,CY,ea);
+  let hw=p.HW*ea, au=p.AU, al=p.AL; // 팔은 처음부터 로고 길이, 막대 틈만 0 → 4.5로 열리며 나타남
+  let U=au,D=au,L=al,Rt=al;
+  // ③④ 멈칫 없이 한 번에 쭉: 로고가 나타나는 끝무렵부터 하나의 진행값 s(계속 빨라짐)로 이어감.
+  //   십자 팔은 s 앞쪽(0 → .5)에서 끝까지 뻗고, 틈은 팔이 아직 뻗는 중(s .3)부터 벌어지기 시작 → 움직임이 끊기지 않음
+  const u=clamp((t-p.T1-p.T2*.5)/(p.T2*.5+p.T3+p.T5),0,1), sp=u*u;
+  const eb=clamp(sp/.5,0,1); // 팔은 감속 없이 계속 빨라지며 대지 밖으로 빠져나감
+  U=lerp(au,cy+40,eb);D=lerp(au,p.H-cy+40,eb);L=lerp(al,cx+40,eb);Rt=lerp(al,p.W-cx+40,eb);
+  const c=clamp((sp-.3)/.7,0,1), ec=c*c;
+  const hwEnd=Math.min(p.W,p.H)/2+Rr+40;
+  hw=lerp(hw,hwEnd,ec);
+  if(c>0){U=Math.max(U,hw+Rr+cy);D=Math.max(D,hw+Rr+p.H-cy);L=Math.max(L,hw+Rr+cx);Rt=Math.max(Rt,hw+Rr+p.W-cx)}
+  return{cov,hole:c<1,cx,cy,hw,U,D,L,Rt,done:c>=1};
+}
+function holeD(p,s){return crossD(s.cx,s.cy,s.hw,s.U,s.Rt,s.D,s.L,p.R)}
+function frameD(p,s){const full=`M-10,-10H${p.W+10}V${p.H+10}H-10Z`;
+  if(s.done)return '';
+  return s.hole?full+holeD(p,s):full}
+
+// ---------- 미리보기 ----------
+const art=$('art');let cur=0,playing=false,last=0;
+function sampleContent(p){ // 드러나는 화면 자리 표시(내보내기에는 안 들어감)
+  const s=Math.min(p.W,p.H);
+  return `<rect width="${p.W}" height="${p.H}" fill="${p.BG}"/>
+  <text x="${r2(p.W*.07)}" y="${r2(p.H*.18)}" font-family="SLiP, Apple SD Gothic Neo, sans-serif" font-weight="600" font-size="${r2(s*.075)}" fill="#111">다음 화면</text>
+  <text x="${r2(p.W*.07)}" y="${r2(p.H*.18+s*.07)}" font-family="SLiP, Apple SD Gothic Neo, sans-serif" font-size="${r2(s*.035)}" fill="#6b7077">${p.W} × ${p.H}</text>`}
+function render(){const p=P();cur=clamp(cur,0,total(p));
+  art.setAttribute('viewBox',`0 0 ${p.W} ${p.H}`);{const st=art.parentNode,aw=st.clientWidth-48,ah=st.clientHeight-48,k=Math.min(aw/p.W,ah/p.H);art.style.width=Math.max(50,p.W*k)+'px';art.style.height=Math.max(50,p.H*k)+'px'} // 화면에 맞춰 줄여 보여 줌(내보내기는 원래 크기)
+  const s=state(p,cur);
+  art.innerHTML=sampleContent(p)+`<path d="${frameD(p,s)}" fill="${p.C}" fill-rule="evenodd" opacity="${r2(s.cov)}"/>`;
+  $('scrub').value=Math.round(cur/total(p)*1000);$('tlabel').textContent=`${Math.round(cur)} / ${total(p)} ms`}
+function loop(now){if(!playing)return;const p=P();cur+=now-last;last=now;if(cur>=total(p)){cur=total(p);playing=false;$('play').textContent='재생'}render();if(playing)requestAnimationFrame(loop)}
+$('play').onclick=()=>{const p=P();if(playing){playing=false;$('play').textContent='재생';return}if(cur>=total(p))cur=0;playing=true;$('play').textContent='멈춤';last=performance.now();requestAnimationFrame(loop)};
+$('scrub').oninput=e=>{playing=false;$('play').textContent='재생';cur=e.target.value/1000*total(P());render()};
+document.querySelectorAll('aside input').forEach(i=>i.addEventListener('input',render));
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{const [w,h]=b.dataset.wh.split(',');$('W').value=w;$('H').value=h;cur=0;render()});
+
+// ---------- 내보내기 ----------
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+const tag=p=>`${p.W}x${p.H}`;
+const say=m=>$('msg').textContent=m;
+
+// 프레임(테두리): 아래 막대로 고른 시점의 설정 그대로, 덮는 면을 불투명한 '테두리'로 + 로고 모양 '창'을 따로 → 붙여넣으면 바로 프레임으로 씀
+//  · 테두리 = 대지 전체에서 창을 뺀 면(evenodd), 페이드 없이 불투명
+//  · 대지 밖으로 나가는 십자 끝은 대지 크기로 잘라 둠(붙여넣었을 때 밖으로 삐져나오지 않게)
+//  · 창 = 같은 모양 경로(채움 없음). 피그마에서 사진 위에 놓고 마스크로 쓰거나, 테두리 아래에 사진을 깔면 됨
+function frameSVG(p){const s=state(p,cur);
+  const full=`M0,0H${p.W}V${p.H}H0Z`;
+  const hole=s.hole?holeD(p,s):'';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${p.W}" height="${p.H}" viewBox="0 0 ${p.W} ${p.H}">
+  <defs><clipPath id="대지"><rect width="${p.W}" height="${p.H}"/></clipPath></defs>
+  <g id="SLiP 별 프레임 ${p.W}x${p.H} ${Math.round(cur)}ms" clip-path="url(#대지)">
+    <path id="테두리" d="${s.done?'':full+hole}" fill="${p.C}" fill-rule="evenodd"/>
+${hole?`    <path id="창" d="${hole}" fill="none"/>
+`:''}  </g>
+</svg>`}
+function frameMsg(){const s=state(P(),cur);return s.done?'지금은 창이 다 열린 시점이라 테두리가 없습니다. 막대를 앞으로 옮겨 주세요.':!s.hole?'지금은 창이 생기기 전(덮기 구간)이라 면만 나옵니다.':''}
+$('exStill').onclick=()=>{const p=P();download(`slip-star-frame_${tag(p)}_${Math.round(cur)}ms.svg`,new Blob([frameSVG(p)],{type:'image/svg+xml'}));say(frameMsg()||'프레임(테두리 + 창) SVG를 저장했습니다.')};
+$('exCopy').onclick=async()=>{const p=P(),svg=frameSVG(p);
+  try{await navigator.clipboard.writeText(svg);say(frameMsg()||'프레임을 복사했습니다. 피그마에서 붙여넣기(⌘V)하면 테두리 · 창 두 레이어로 들어옵니다.')}
+  catch(e){download(`slip-star-frame_${tag(p)}_${Math.round(cur)}ms.svg`,new Blob([svg],{type:'image/svg+xml'}));say('클립보드를 쓸 수 없어 SVG 파일로 저장했습니다.')}};
+
+// 애니메이션 SVG: 60fps로 뽑은 키프레임을 SMIL로 이어 붙임(모든 키프레임이 같은 명령 구조라 매끄럽게 보간됨)
+$('exAnim').onclick=()=>{const p=P(),D=total(p),fps=60,n=Math.ceil(D/1000*fps);
+  const ds=[],ops=[],kt=[];
+  for(let i=0;i<=n;i++){const t=Math.min(D,i*1000/fps),s=state(p,t);kt.push((t/D).toFixed(4));ops.push(r2(s.cov));
+    const full=`M-10,-10H${p.W+10}V${p.H+10}H-10Z`;
+    // 구멍이 없을 때도 구조를 맞추려고 크기 0인 패널을 넣음(보이지 않음, 곡률과 무관)
+    const big=p.W+p.H;
+    if(s.done){ds.push(full+crossD(p.W/2,p.H/2,big,big*2,big*2,big*2,big*2,p.R))}
+    else ds.push(full+(s.hole?holeD(p,s):crossD(p.W*p.px,p.H*p.py,0,.001,.001,.001,.001,.001)))}
+  const dur=(D/1000).toFixed(3)+'s';
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${p.W}" height="${p.H}" viewBox="0 0 ${p.W} ${p.H}">
+  <!-- SLiP 별 프레임 전환 · ${p.W}×${p.H} · ${D}ms · 십자 먼저 뻗고 틈이 열림 · 오목 모서리 반지름 ${p.R} 고정(직선만 늘어남) · 반복 재생 -->
+  <path fill="${p.C}" fill-rule="evenodd" d="${ds[0]}" opacity="0">
+    <animate attributeName="d" dur="${dur}" repeatCount="indefinite" calcMode="linear" keyTimes="${kt.join(';')}" values="${ds.join(';')}"/>
+    <animate attributeName="opacity" dur="${dur}" repeatCount="indefinite" calcMode="linear" keyTimes="${kt.join(';')}" values="${ops.join(';')}"/>
+  </path>
+</svg>`;download(`slip-star-frame_${tag(p)}_motion.svg`,new Blob([svg],{type:'image/svg+xml'}));say(`애니메이션 SVG를 저장했습니다 (${n+1}개 키프레임, ${D}ms 반복).`)};
+
+// 영상 WebM: 캔버스에 실제 시간으로 그리며 녹화
+$('exVideo').onclick=async()=>{const p=P(),D=total(p);
+  if(!window.MediaRecorder){say('이 브라우저는 영상 저장을 지원하지 않습니다. 크롬에서 열어 주세요.');return}
+  const cv=document.createElement('canvas');cv.width=p.W;cv.height=p.H;const g=cv.getContext('2d');
+  const stream=cv.captureStream(60);const mime=['video/webm;codecs=vp9','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
+  const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:12e6});const chunks=[];rec.ondataavailable=e=>chunks.push(e.data);
+  const transparentBg=false;
+  const draw=t=>{const s=state(p,t);g.clearRect(0,0,p.W,p.H);g.fillStyle=p.BG;g.fillRect(0,0,p.W,p.H);
+    const d=frameD(p,s);if(d){g.globalAlpha=s.cov;g.fillStyle=p.C;g.fill(new Path2D(d),'evenodd');g.globalAlpha=1}};
+  say('영상 녹화 중… ('+D+'ms)');draw(0);rec.start();const t0=performance.now();
+  await new Promise(res=>{const step=now=>{const t=now-t0;draw(Math.min(t,D));if(t<D+120)requestAnimationFrame(step);else res()};requestAnimationFrame(step)});
+  rec.stop();await new Promise(r=>rec.onstop=r);download(`slip-star-frame_${tag(p)}.webm`,new Blob(chunks,{type:'video/webm'}));say('영상(WebM)을 저장했습니다. 바탕 = "드러나는 화면" 색.')};
+
+// 웹사이트 코드(star-frame.js 설정)
+$('exCode').onclick=async()=>{const p=P();
+  const code=`StarFrame.transition({\n  x: innerWidth * ${p.px}, y: innerHeight * ${p.py},\n  radius: ${p.R}, hw: ${p.HW}, color: '${p.C}',\n  cover: ${p.T1}, grow: ${p.T2}, reach: ${p.T3}, open: ${p.T5},\n  swap: () => { /* 새 화면으로 바꾸기 */ }\n});`;
+  try{await navigator.clipboard.writeText(code);say('웹사이트 코드 설정을 복사했습니다 (../별프레임_전환/star-frame.js와 함께 사용).')}catch(e){say(code)}};
+
+addEventListener('resize',render);
+render();
+</script>
