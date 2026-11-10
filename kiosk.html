@@ -4,7 +4,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SLiP 키오스크 체험</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 *{font-synthesis:none}
@@ -102,7 +101,7 @@ select{font:inherit;padding:6px 8px;border-radius:8px;border:1.5px solid var(--l
 /* 친근 모션판: 예전 호 · 점 그래픽은 숨기고 새 로고(별 + 앞뒤 고리)가 직접 움직임 */
 #cornerArc,#cornerDot,#heroArc,#heroDot,#heroHalo,#dotHalo,#lineHalo,#guide,#period,#doneArc{display:none}
 #vA,#vB{display:none}
-/* SLiP 서체 = Avenir Next(영문·숫자) + Pretendard(한글), 굵기마다 획 두께 맞춘 짝. 서체체계_비교/결정.md */
+/* SLiP 서체 = Avenir Next(영문·숫자) + Pretendard(한글), 굵기마다 획 두께 맞춘 짝. */
 @font-face{font-family:"SLiP";font-weight:100;src:local("AvenirNext-UltraLight");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
 @font-face{font-family:"SLiP";font-weight:100;src:local("Pretendard-Thin"),local("Pretendard Thin");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
 @font-face{font-family:"SLiP";font-weight:400;src:local("AvenirNext-Regular");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
@@ -113,8 +112,8 @@ select{font:inherit;padding:6px 8px;border-radius:8px;border:1.5px solid var(--l
 @font-face{font-family:"SLiP";font-weight:600;src:local("Pretendard-SemiBold"),local("Pretendard SemiBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
 @font-face{font-family:"SLiP";font-weight:700;src:local("AvenirNext-Bold");unicode-range:U+0000-024F,U+2000-206F,U+20A0-20CF,U+2100-214F}
 @font-face{font-family:"SLiP";font-weight:700;src:local("Pretendard-ExtraBold"),local("Pretendard ExtraBold");unicode-range:U+1100-11FF,U+3000-303F,U+3130-318F,U+AC00-D7A3,U+FF00-FFEF}
-/* 11-07 키오스크 세트 E (서체체계_비교/결정.md): 본문·캡션·금액 500 · 단계 제목·승인 문장·버튼·코치 600 · 제목 100은 브랜드 문구만(현재 화면엔 없음). 매장 브랜드 로고 · 협업 그림 글자는 제 굵기 유지 */
-/* 화면 = Pretendard 한 패밀리(한글·영문·숫자). 브랜드 세트만 SLiP(Avenir Next+Pretendard). 듀오링고식 이원 체계 — 서체체계_비교/결정.md */
+/* 11-07 키오스크 세트 E: 본문·캡션·금액 500 · 단계 제목·승인 문장·버튼·코치 600 · 제목 100은 브랜드 문구만(현재 화면엔 없음). 매장 브랜드 로고 · 협업 그림 글자는 제 굵기 유지 */
+/* 화면 = Pretendard 한 패밀리(한글·영문·숫자). 브랜드 세트만 SLiP(Avenir Next+Pretendard). 듀오링고식 이원 체계 — */
 #kiosk text{font-family:"Pretendard","Apple SD Gothic Neo",sans-serif!important;font-synthesis:none}
 #kiosk #brandLogo text,#kiosk #collab text{font-family:"SLiP","Apple SD Gothic Neo",sans-serif!important}
 #kiosk text:where(:not(#brandLogo *):not(#collab *)){font-weight:400!important}
@@ -140,7 +139,81 @@ html,body{height:100dvh}
 }
 html.full body{padding:0!important}html.full .top,html.full .cap,html.full .pop,html.full #menuBtn{display:none!important}html.full .wrap{padding:0!important}
 html.full #kiosk{height:100dvh!important}
+/* ===== 11-10 발전: 한글 음수 자간(굵기 600/400은 그대로, #track=0 이면 이전 값) ===== */
+html:not(.trk0) #kiosk #txt text[font-weight]{letter-spacing:-0.02em}
+html:not(.trk0) #kiosk #txt text:not([font-weight]),html:not(.trk0) #kiosk #doneT text:not(#doneTitle){letter-spacing:-0.01em}
+html:not(.trk0) #kiosk #doneTitle{letter-spacing:-0.03em}
+html:not(.trk0) #kiosk #btns text,html:not(.trk0) #kiosk #brandBtns text{letter-spacing:-0.02em}
+#kiosk #attract text{font-weight:600!important}
+/* ===== 11-10 발전: 오른쪽 고객용 설명 패널(키오스크 화면 밖) — 넓은 화면에서만, 키오스크 크기는 그대로 ===== */
+.info{display:none}
+.top .lbl2{font-size:11.5px;color:var(--muted);margin-top:8px}
+@media (min-width:1201px){
+  html:not(.shot):not(.full) .info{display:grid}
+  html:not(.shot):not(.full) .cap{display:none}
+  html:not(.shot):not(.full) #coach{display:none}
+  html:not(.shot):not(.full) .wrap{padding:0 calc(clamp(280px,22vw,360px) + 32px)}
+}
+.info{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:20px;bottom:20px;width:clamp(280px,22vw,360px);overflow:auto;z-index:3;
+  align-content:start;gap:22px;padding:22px 22px 26px;border-radius:18px;background:var(--panel);color:var(--ink);font-size:15px;line-height:1.5;user-select:text;-webkit-user-select:text}
+.info h3{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0}
+.info .stepT{font-size:20px;font-weight:600;line-height:1.35;margin:0}
+.info .say{margin:6px 0 0;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:15px}
+.info p{margin:0}
+.info .prog{display:grid;grid-template-columns:repeat(10,1fr);gap:0;position:relative;padding-bottom:22px}
+.info .prog button{all:unset;cursor:pointer;display:grid;justify-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.info .prog button i{display:block;width:10px;height:10px;border-radius:50%;background:var(--line)}
+.info .prog button.past i{background:#8fb9de}
+.info .prog button.on i{background:#1F78CC;box-shadow:0 0 0 4px rgba(31,120,204,.18)}
+.info .prog button.on{color:var(--ink);font-weight:600}
+.info .prog .fb{position:absolute;left:40%;width:50%;bottom:0;border-top:1px solid #1F78CC;font-size:11px;color:#1F78CC;text-align:center;padding-top:3px}
+.info .cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info .cmp div{border-radius:10px;padding:10px;font-size:13px;line-height:1.5}
+.info .cmp .gen{background:#e6e6e6;color:#333;filter:grayscale(1)}
+.info .cmp .slp{background:#D4ECFF;color:#000}
+.info .cmp b{display:block;font-size:11px;font-weight:600;margin-bottom:4px;opacity:.7}
+.info .brandBox{border:1px solid transparent;border-radius:12px;padding:10px 12px;transition:border-color .3s}
+.info .brandBox.hl{border-color:#1F78CC}
+.info .brandBox ul{margin:4px 0 8px;padding-left:18px;font-size:14px}
+.info details{border-top:1px solid var(--line);padding-top:10px}
+.info details summary{cursor:pointer;font-weight:600;font-size:14px}
+.info details[open] summary{margin-bottom:8px}
+.info table{border-collapse:collapse;width:100%;font-size:12.5px;line-height:1.45}
+.info td,.info th{border-top:1px solid var(--line);padding:5px 4px;vertical-align:top;text-align:left}
+.info th{font-weight:600;color:var(--muted)}
+.info .met{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.info .met b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.info .met span{font-size:12px;color:var(--muted)}
+.info .mini{font-size:12.5px;color:var(--muted)}
+.info .chipL{display:flex;flex-wrap:wrap;gap:6px}
+.info .chipL button,.info .chipL a{font:inherit;font-size:12.5px;font-weight:400;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);text-decoration:none;cursor:pointer}
+.info label.opt{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0}
 html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:max(12px,env(safe-area-inset-top,0px));z-index:20;opacity:.55;transition:opacity .2s}html.full #exitFull:hover,html.full #exitFull:active{opacity:1}
+/* ===== 11-10 모바일(폭 760 이하): 왼쪽 = 선택지 세로 칸, 오른쪽 = 키오스크가 남은 칸을 비율대로 꽉 채움 → 페이지 스크롤 없음 ===== */
+@media (max-width:760px){
+  html,body{height:100dvh!important;overflow:hidden!important}
+  body{display:grid!important;grid-template-columns:116px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:8px;
+    padding:max(8px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))!important}
+  .top{grid-column:1;grid-row:1;min-height:0;height:100%;overflow-y:auto;margin:0;max-width:none;
+    flex-direction:column;flex-wrap:nowrap;align-items:stretch;justify-content:flex-start;gap:4px;padding-bottom:84px;box-sizing:border-box}
+  .top>*{flex-shrink:0}
+  .top .lbl{margin-top:6px;font-size:11px}
+  .top .chips{gap:4px}
+  .top .seg{display:flex;flex-direction:column;border-radius:12px;overflow:hidden}
+  .top .seg button{text-align:left}
+  .top #collabWrap{flex-direction:column;align-items:stretch!important;gap:4px!important}
+  .top button,.top .seg button{padding:5px 8px;font-size:12px;line-height:1.3}
+  .top #reset{margin-top:8px}
+  .wrap{grid-column:2;grid-row:1;min-height:0;height:100%;padding:0!important}
+  .stage{display:block!important;height:100%!important;width:100%;min-width:0}
+  #kiosk{width:100%!important;height:100%!important;min-height:0!important;max-width:100%}
+  .cap{top:auto;right:auto;bottom:max(8px,env(safe-area-inset-bottom,0px));left:max(8px,env(safe-area-inset-left,0px));max-width:116px;width:116px;box-sizing:border-box;
+    padding:8px 10px;gap:6px;flex-direction:column;align-items:flex-start;border-radius:14px}
+  .cap b{font-size:11px;padding:5px 6px}
+  #capT{font-size:12.5px}#capR{font-size:11px}
+  html.full body,html.shot body{grid-template-columns:minmax(0,1fr)}
+  html.full .wrap,html.shot .wrap{grid-column:1}
+}
 </style>
 
 <button id="menuBtn" class="glassBtn" aria-expanded="false" aria-controls="topMenu">설정</button><button id="exitFull" class="glassBtn">← 돌아가기</button>
@@ -150,8 +223,35 @@ html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-ins
   <span class="lbl">MS 방향</span><span class="seg" role="group" aria-label="MS 긁는 방향"><button data-ms="h" aria-pressed="true">가로</button><button data-ms="v" aria-pressed="false">위→아래</button></span>
   <span class="lbl">리더 위치</span><span class="seg" role="group" aria-label="리더 위치"><button data-pos="down" aria-pressed="true">화면 아래</button><button data-pos="right" aria-pressed="false">오른쪽 옆</button><button data-pos="left" aria-pressed="false">왼쪽 옆</button></span>
   <span id="collabWrap" style="display:none;align-items:center;gap:8px"><span class="lbl">브랜드 협업</span><span class="seg" role="group" aria-label="브랜드 협업"><button id="cOff" aria-pressed="true">끄기 (원본)</button><button id="cOn" aria-pressed="false">켜기</button></span></span>
+  <span class="lbl">결과</span><span class="seg" role="group" aria-label="결과"><button id="okT" aria-pressed="true">승인</button><button id="noT" aria-pressed="false">거절</button></span>
+  <span class="lbl">자동 시연</span><span class="seg" role="group" aria-label="자동 시연"><button data-scen="A" aria-pressed="false" title="IC 실패 2회 → 긁기 → 승인">A 정상</button><button data-scen="B" aria-pressed="false" title="긁기 한 번 실패 → 다시 → 승인">B 다시</button><button data-scen="C" aria-pressed="false" title="긁기 → 거절">C 거절</button></span>
   <button id="fullBtn">화면만 보기 (아이패드 구동)</button><button id="reset" style="padding:6px 12px;font-size:13.5px">처음부터</button>
 </div>
+<aside class="info" id="info" aria-label="고객용 설명">
+  <div><div class="prog" id="prog"></div></div>
+  <div><h3>지금 고객이 보는 것</h3><p class="stepT" id="iStep"></p><p class="say" id="iSay"></p></div>
+  <div><h3>SLiP이 하는 일</h3><p id="iDo"></p></div>
+  <div><h3>이 순간의 불편 → 줄이는 방식</h3><p id="iPain"></p></div>
+  <div id="iCmpW" hidden><h3>일반 키오스크(익명) · SLiP</h3><div class="cmp"><div class="gen"><b>일반형</b><span id="iGen"></span></div><div class="slp"><b>SLiP</b><span id="iSlp"></span></div></div><p class="mini" id="iDiff" style="margin-top:6px"></p></div>
+  <div><h3>해 보기</h3><p id="iTry"></p></div>
+  <div class="brandBox" id="iBrand"><h3>매장 브랜드를 바꾸면</h3>
+    <b style="font-size:13px">바뀌는 것</b><ul><li>왼쪽 위 매장 로고</li><li>결제 방법 선택 화면 주 버튼 색</li><li>긁는 순간 협업 장면 <span id="iScene"></span></li></ul>
+    <b style="font-size:13px">바뀌지 않는 것(SLiP 고정)</b><ul><li>단계 순서 · 안내 문구 · 물빛 바탕 · 서체</li><li>오른쪽 위 SLiP 심볼 자리 · 모션 규칙</li><li>거절 화면 주 버튼 = 검정(빨강 금지)</li></ul>
+    <p class="mini">고정이 분명할수록 어느 매장에서나 손님이 같은 안내를 받습니다.</p></div>
+  <details><summary>운영 지표</summary><div class="met"><div><b id="mTry">0</b><span>IC 시도</span></div><div><b id="mSpd">—</b><span>긁기 속도</span></div><div><b id="mAdd">+0.0초</b><span>SLiP이 더한 시간</span></div></div>
+    <p class="mini" id="mNote" style="margin-top:6px"></p></details>
+  <details><summary>도입 범위표</summary><table>
+    <tr><th>구분</th><th>고객사가 정함</th><th>SLiP 고정</th><th>협의</th></tr>
+    <tr><td>로고</td><td>매장 로고 파일</td><td>SLiP 심볼 크기 · 자리(오른쪽 위)</td><td>대비 처리(배지 · 반전)</td></tr>
+    <tr><td>색</td><td>선택 화면 주 버튼 색</td><td>단계 바탕(흰 · 물빛 · 검정), 거절 화면 주 버튼 검정</td><td>—</td></tr>
+    <tr><td>문구</td><td>—</td><td>안내 문구 전체</td><td>다국어 · 리더 기종별 띠 방향</td></tr>
+    <tr><td>협업 장면</td><td>업종 장면 선택</td><td>별빛 규칙 · 곡률</td><td>새 장면 제작</td></tr>
+    <tr><td>하드웨어</td><td>리더 위치 · MS 방향</td><td>—</td><td>해상도 · 화면 비율 · 음성 출력</td></tr></table></details>
+  <details><summary>협업 장면 바로 재생</summary><div class="chipL" id="iScenes"></div><p class="mini" style="margin-top:6px">누르면 그 매장으로 바꿔 폴백 안내부터 자동으로 긁어 봅니다.</p></details>
+  <details><summary>음성 안내(데모)</summary><label class="opt"><input type="checkbox" id="vOn"> 단계가 바뀔 때 읽어 주기</label><table id="vTab"></table><p class="mini">스크립트 · 박자만 SLiP이 제공하고, 스피커 · 이어폰 출력은 기기 쪽이 맡습니다.</p></details>
+  <details><summary>보고서용 컷(가장 좋은 순간)</summary><div class="chipL" id="iShots"></div><p class="mini" style="margin-top:6px">새 탭으로 그 순간에 멈춘 화면이 열립니다.</p></details>
+  <details><summary>결정 후보 켜 보기</summary><div id="iOpts"></div></details>
+</aside>
 <div class="cap" id="cap" aria-live="polite"><b id="capN"></b><span><span id="capT"></span><small id="capR" hidden></small></span></div>
 <div class="wrap">
   <div class="stage">
@@ -197,7 +297,8 @@ html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-ins
             <text id="doneTitle" x="672" y="1012" font-size="96" font-weight="700" text-anchor="end" fill="#fff">승인되었습니다</text>
             <path id="doneArc" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
             <text x="80" y="1180" font-size="40" fill="#fff">주문번호 128</text>
-            <text x="80" y="1244" font-size="40" fill="#fff">카드를 가져가세요.</text>
+            <text id="doneSub" x="80" y="1244" font-size="40" fill="#fff">카드를 가져가세요.</text>
+            <text id="doneSlogan" x="80" y="1760" font-size="32" fill="#fff" opacity="0" style="display:none">실패는 피하지 못해도 인식은 변화한다.</text>
           </g>
           <g id="btns"></g>
           <!-- 그래픽 -->
@@ -246,7 +347,7 @@ html.full #exitFull{display:block;position:fixed;left:max(12px,env(safe-area-ins
         <text x="1300" y="828" font-size="22" fill="#8a9097" text-anchor="middle" font-family="Avenir Next Ultra Light, Pretendard, Apple SD Gothic Neo, sans-serif">헤드</text></g>
         <!-- 실물 카드 -->
         <g id="pcardMS" clip-path="url(#grooveClip)" style="cursor:grab"><g id="pcardMSg">
-          <rect x="0" y="0" width="345" height="218" rx="22" fill="var(--card)" stroke="var(--card-edge)" stroke-width="4"/>
+          <rect x="0" y="0" width="345" height="218" rx="12.8" fill="var(--card)" stroke="var(--card-edge)" stroke-width="4"/>
           <rect x="0" y="150" width="345" height="40" fill="#3b3f45"/>
         </g></g>
         <!-- 정면 투입구: 보는 사람 쪽으로 튀어나온 카드(원근) -->
@@ -301,7 +402,24 @@ window.addEventListener('load',()=>st0(()=>{const end=vt+T;while(vt<end){vt+=100
 (()=>{
 const $=id=>document.getElementById(id);
 const NS='http://www.w3.org/2000/svg';
-const U=1080/268;                // 화면 단위 / mm
+// ===== 11-10 발전: 주소 옵션(결정 후보는 전부 기본 꺼짐) =====
+const HQ=new URLSearchParams(location.hash.slice(1));
+const OPT={rejbtn:HQ.get('rejbtn')==='brand'?'brand':'ink',rejcover:HQ.get('rejcover')==='gray',idle:HQ.get('idle')==='1',donepat:HQ.get('donepat')==='1',
+  tiles:HQ.get('read')==='tiles',donecopy:HQ.get('donecopy')||'',slogan:HQ.get('slogan')==='1',btn2:HQ.get('btn2')==='gray',road:HQ.get('road')==='1',
+  miss3:HQ.get('miss3')==='calm',track:HQ.get('track')!=='0',voice:HQ.get('voice')==='1',fails:+HQ.get('fails')||0};
+if(!OPT.track)document.documentElement.classList.add('trk0');
+// 화면 문구는 이 표 한 곳에서 — 리더 기종(띠 방향 · 홈 위치)에 따라 납품 때 바꿈
+const COPY={
+  promptSub:['카드 앞면 칩이 위를 보게,','투입구에 넣어 주세요.'],
+  failSubH:['칩 대신 뒷면 검은 띠로 결제해요.','검은 띠가 아래로 가게 잡고,','아래 홈에 한 번 긁어 주세요.'],
+  failSubV:['칩 대신 뒷면 검은 띠로 결제해요.','검은 띠가 오른쪽으로 가게 잡고,','오른쪽 홈에 위에서 아래로 긁어 주세요.'],
+  msErr:'제대로 읽지 못했어요. 한 번 더 긁어 주세요.',
+  slow:'멈추지 말고 한 번에 쭉 긁어 주세요.',fast:'조금 천천히 긁어 주세요.',missDefault:'끝까지 한 번에 긁어 주세요.',
+  miss3:['계속 안 되면 다른 카드를 쓰시거나','직원에게 말씀해 주세요.'],
+  swipe:'끝까지 한 번에 긁어 주세요',auth:'결제하고 있어요',
+  doneTitle:{'':'승인되었습니다',haeyo:'결제됐어요',done:'결제가 완료됐어요'},doneSub:'카드와 영수증을 챙겨 가세요.',
+};
+const U=1080/268;               // 화면 단위 / mm
 const CARD_L=85.6*U, CARD_W=54*U; // 345 × 218
 const HEAD_X=620, GROOVE_X0=200, GROOVE_X1=1040, GROOVE_Y=2452;
 const AX=900, AY=1000, AR=340, ASW=56;     // 주연 호 (K6). 중심을 오른쪽에 둬서 긁기가 끝난 선이 늘 중심 앞에 있게
@@ -343,7 +461,7 @@ const VP=(x,y)=>st.msV?{x:CV.x-(y-AY),y:CV.y+(x-AX)}:{x,y};
 const VL=l=>{const a=VP(l.x1,l.y1),b=VP(l.x2,l.y2);return {x1:a.x,y1:a.y,x2:b.x,y2:b.y}};
 const VA=h=>h&&st.msV?{...h,...VP(h.x,h.y),a0:(h.a0??125)+90,a1:(h.a1??235)+90}:h;
 const st={step:'select',t0:performance.now(),tries:0,ok:true,dir:'front',pos:'down',msV:false,kink:0, /* 11-08: 12° 어긋남 끔으로 고정(선택 항목 삭제) */auto:false,failNew:true,missKind:'ms',missWhy:'',
-  card:{x:GROOVE_X0-CARD_L+30},drag:null,headIn:null,lineHead:-CARD_L,crossBump:0,authStart:0,shrinkFrom:null,retry:false,msErr:false};
+  card:{x:GROOVE_X0-CARD_L+30},drag:null,headIn:null,lineHead:-CARD_L,crossBump:0,authStart:0,shrinkFrom:null,retry:false,msErr:false,msFails:OPT.fails,attract:false,scen:'',scenFailed:false};
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---------- 패널 ----------
@@ -451,21 +569,21 @@ function drawPartner(g,dk){
   mk('text',{x:214,y:140,'font-size':46,'font-weight':700,fill:ink,id:'bName'}).textContent=b.name;
   mk('text',{x:216,y:180,'font-size':22,'letter-spacing':3,fill:v.subFill||b.color}).textContent=b.sub;
 }
-function refreshLogo(force){const flooded=st.step==='done'&&(performance.now()-st.t0)/1000>.25,dk=(ver==='B')!==flooded;if(force||dk!==st.lastDk){st.lastDk=dk;drawBrandLogo(dk)}}
+function refreshLogo(force){const flooded=(st.step==='done'&&(performance.now()-st.t0)/1000>.25)||(st.step==='select'&&st.attract),dk=(ver==='B')!==flooded;if(force||dk!==st.lastDk){st.lastDk=dk;drawBrandLogo(dk)}}
 function chips(){const c=$('brandChips');c.innerHTML='';[['','없음'],...Object.entries(BRANDS).filter(([k])=>k!=='custom').map(([k,b])=>[k,b.name]),['custom','당신의 브랜드']].forEach(([k,n])=>{const b=document.createElement('button');b.textContent=n;b.setAttribute('aria-pressed',(brand||'')===k);b.onclick=()=>{if(k==='custom'&&!BRANDS.custom){openBrandPop();return}brand=k||null;refreshLogo(true);chips();syncCollabUI();refreshLogo(true);go(st.step)};if(k==='custom'){b.classList.add('mine');if(BRANDS.custom){b.textContent=BRANDS.custom.name;const w=document.createElement('span');w.className='mineWrap';const x=document.createElement('button');x.className='x';x.textContent='×';x.setAttribute('aria-label',BRANDS.custom.name+' 지우기');x.onclick=removeCustom;w.append(b,x);c.appendChild(w);return}b.textContent='당신의 브랜드 +'}c.appendChild(b)});
   if(BRANDS.custom){const u=document.createElement('button');u.textContent='로고 · 이름 고치기';u.className='up';u.onclick=openBrandPop;c.appendChild(u)}}
 chips();
 function setButtons(list){
   const g=$('btns');g.innerHTML='';const bg=$('brandBtns');bg.innerHTML='';
   list.forEach(([label,filled,y,fn])=>{
-    if(filled&&brand){ // 주 버튼은 매장 색 (반전 · 면 전환 영향 없음)
+    if(filled&&brand&&!(st.step==='reject'&&OPT.rejbtn!=='brand')){ // 주 버튼은 매장 색 — 11-10: 거절 화면은 무채색(빨강 금지 규칙, #rejbtn=brand 이면 이전처럼 매장 색) (반전 · 면 전환 영향 없음)
       const b=document.createElementNS(NS,'g');b.style.cursor='pointer';
       const r=document.createElementNS(NS,'rect');r.setAttribute('x',80);r.setAttribute('y',y);r.setAttribute('width',920);r.setAttribute('height',170);r.setAttribute('rx',36);const bk=BRANDS[brand],dkB=ver==='B';r.setAttribute('fill',dkB&&bk.colorDark?bk.colorDark:bk.color); // 검정 브랜드 색은 검정 바탕에서 흰 버튼으로
       const t=document.createElementNS(NS,'text');t.setAttribute('x',540);t.setAttribute('y',y+101);t.setAttribute('font-size',46);t.setAttribute('font-weight',700);t.setAttribute('text-anchor','middle');t.setAttribute('fill',dkB&&bk.btnInkDark?bk.btnInkDark:bk.btnInk);t.textContent=label;
       b.append(r,t);if(fn)b.addEventListener('click',fn);bg.appendChild(b);return}
     const b=document.createElementNS(NS,'g');b.style.cursor='pointer';
     const r=document.createElementNS(NS,'rect');r.setAttribute('x',80);r.setAttribute('y',y);r.setAttribute('width',920);r.setAttribute('height',170);r.setAttribute('rx',36);
-    r.setAttribute('fill',filled?INK():PAPER());r.setAttribute('stroke',INK());r.setAttribute('stroke-width',4);
+    const g2=!filled&&OPT.btn2;r.setAttribute('fill',filled?INK():g2?'#DCDCDA':PAPER());r.setAttribute('stroke',INK());r.setAttribute('stroke-width',g2?0:4); // 11-10 후보: 보조 버튼 Wait Gray 면(#btn2=gray)
     const t=document.createElementNS(NS,'text');t.setAttribute('x',540);t.setAttribute('y',y+101);t.setAttribute('font-size',46);t.setAttribute('font-weight',700);t.setAttribute('text-anchor','middle');t.setAttribute('fill',filled?PAPER():INK());t.textContent=label;
     b.append(r,t);if(fn)b.addEventListener('click',fn);g.appendChild(b)});
 }
@@ -529,25 +647,27 @@ function go(step){
   $('coach').textContent=(step==='select'||step==='prompt')?(st.pos==='down'?'카드를 눌러 보세요 · 위로 밀면 직접 넣을 수 있어요':'옆 투입구의 카드를 눌러 보세요 · 위로 밀면 직접 넣어요'):(step==='fail'||(step==='miss'&&st.missKind==='ms'))?(st.msV?'오른쪽 세로 홈의 카드를 잡고 아래로 긁어 보세요':'카드를 잡고 오른쪽으로 긁어 보세요'):(step==='done'||step==='reject')?'카드를 눌러 처음부터':'';
   if(step!=='miss'&&step!=='reject')$('swipeLine').setAttribute('stroke-width',0);$('cardGhost').setAttribute('opacity',0);setDot('period',0,0,0);setDot('flood',FX(),FY(),0);
   if(step==='select'){
+    if(st.auto)st.scenFailed=false;
+    if(st.attract){setText([],[]);show('amt',false)}else{ // 11-10 후보: 대기 장면(#idle=1) — 아무 곳이나 누르면 결제 방법 선택으로
     setText(['결제 방법을','선택해 주세요']);show('btns',true);
-    setButtons([['카드 결제',true,1000,()=>start()],['간편 결제 (QR · 앱)',false,1210,null]]);
+    setButtons([['카드 결제',true,1000,()=>start()],['간편 결제 (QR · 앱)',false,1210,null]]);}
     act.textContent='카드 결제';hint.textContent='리더 위의 카드를 잡고 투입구 쪽으로 끌어 넣어 보세요. 바로 결제 중으로 바뀝니다. 화면의 ‘카드 결제’를 눌러도 됩니다.';
     placeICcard(0);placeMS(GROOVE_X0-CARD_L+30,false);
   }
   if(step==='prompt'){
-    setText(st.retry?['한 번 더','넣어 주세요']:['카드를','넣어 주세요'],st.retry?['칩을 읽지 못했어요.','카드를 다시 넣어 주세요.']:['IC칩이 위를 보게,','투입구에 넣어 주세요.']);show('slotLabel',true);
+    setText(st.retry?['한 번 더','넣어 주세요']:['카드를','넣어 주세요'],st.retry?['칩을 읽지 못했어요.','카드를 다시 넣어 주세요.']:COPY.promptSub);show('slotLabel',true);
     act.textContent='카드 넣기';hint.textContent='리더 위의 카드를 투입구 쪽으로 끌어 넣으세요. 화면 속 카드가 손을 따라 들어갑니다.';placeICcard(0);
   }
   if(step==='insert'){setText(['카드를','넣어 주세요']);show('slotLabel',true);act.disabled=true;hint.textContent='넣는 동작과 같은 방향 · 같은 위치로 화면에 카드가 들어갑니다. 덜 넣고 놓으면 되돌아가요.'}
-  if(step==='read'){show('amt',false);setText(['카드를 읽고 있어요'],['카드를 빼지 마세요.'],1560,64);act.disabled=true;hint.textContent='화면이 C3 Macro처럼 확 당겨지고, 점을 축으로 호가 돕니다. 읽는 동안 계속.'}
+  if(step==='read'){/* 11-10: 읽는 동안에도 결제 금액을 보임 */setText(['카드를 읽고 있어요'],['카드를 빼지 마세요.'],1560,64);act.disabled=true;hint.textContent='화면이 C3 Macro처럼 확 당겨지고, 점을 축으로 호가 돕니다. 읽는 동안 계속.'}
   if(step==='fail'){
-    setText(['카드를 빼고','긁어 주세요'],[st.msErr?'제대로 읽지 못했어요. 한 번 더 긁어 주세요.':'칩 대신 마그네틱으로 결제해요.',st.msV?'오른쪽 홈에 위에서 아래로 긁어 주세요.':'아래 홈에 한 번 긁어 주세요.']);show('guide',true);
+    {const fs=(st.msV?COPY.failSubV:COPY.failSubH).slice();if(st.msErr)fs[0]=COPY.msErr;setText(['카드를 빼고','긁어 주세요'],fs)}show('guide',true);
     placeICcard(0,false);placeMS(GROOVE_X0-CARD_L+30,true);act.textContent='자동으로 긁기';
     hint.textContent='리더 아래 카드를 잡고 홈을 따라 오른쪽으로 끌어 보세요. 끄는 속도 그대로 화면 속 로고의 팔이 따라 뻗습니다.';
   }
-  if(step==='swipe'){setText([],[]);act.disabled=true;hint.textContent='긁는 중'}
-  if(step==='auth'){setText([],[]);act.disabled=true;hint.textContent='승인 신호가 오면 바로 다음 화면으로 넘어갑니다.'}
-  if(step==='done'){show('amt',false);setText([],[]);show('doneT',true);
+  if(step==='swipe'){setText([COPY.swipe],[],1680,64);placeICcard(0,false);act.disabled=true;hint.textContent='긁는 중'} // 11-10: 아래 한 줄(y1680, IC 읽는 중과 같은 아래쪽 영역) — 협업 장면과 안 겹침
+  if(step==='auth'){setText([COPY.auth],[],1680,64);placeICcard(0,false);act.disabled=true;hint.textContent='승인 신호가 오면 바로 다음 화면으로 넘어갑니다.'}
+  if(step==='done'){show('amt',false);setText([],[]);show('doneT',true);$('doneTitle').textContent=COPY.doneTitle[OPT.donecopy]||COPY.doneTitle[''];$('doneSub').textContent=COPY.doneSub;$('doneSlogan').style.display=OPT.slogan?'':'none';$('doneSlogan').setAttribute('opacity',0);
     // 호는 마침표 점 옆에 — 점을 중심으로 한 '(' = 주연 호 + 가운데 점과 같은 심볼 짜임(K6). 문장은 호 바깥으로 비켜남
     // 반지름 42 · 굵기 = 반지름 ÷ 4 (T6-5 비율), 호 바깥 끝과 글자 사이 40
     const tt=$('doneTitle'),dr=42,dgap=40,tx=FX()-dr-F4(dr/8)-dgap;tt.setAttribute('x',tx);tt.setAttribute('y',FY()+12);tt.setAttribute('font-size',96);
@@ -557,16 +677,18 @@ function go(step){
     placeICcard(0);act.textContent='처음부터';hint.textContent='점이 화면 전체를 덮는 면으로 번지며 흑백이 뒤집히고, 가운데 남은 흰 점이 마침표가 됩니다.';placeMS(0,false)}
   if(step==='miss'){
     if(st.missKind==='ic'){setText(['칩을 읽지 못했어요'],['카드를 빼서 다시 넣어 주세요.'],560,72);{const q=P().tgt;disp.dot={x:q.x,y:q.y,r:10}}/* 점은 투입구 자리에서 시작해 위로 올라감 */hint.textContent='돌던 호가 멈춰 눈 자리로 물러나고, 점이 위로 올라가 눈 가운데서 한 번 깜빡이고 잠깐 쉰 뒤, 다시 투입구로 내려가 재결제를 안내합니다.'}
-    else{setText(['한 번 더','긁어 주세요'],[st.missWhy||'끝까지 한 번에 긁어 주세요.'],560,72);placeICcard(0,false);placeMS(GROOVE_X0-CARD_L+30,true);
+    else{setText(['한 번 더','긁어 주세요'],[st.missWhy||COPY.missDefault,...(st.msFails>=3?COPY.miss3:[])],560,72);placeICcard(0,false);placeMS(GROOVE_X0-CARD_L+30,true);
       hint.textContent='긁은 선은 지우지 않고 가는 흔적으로 남기고(앞으로만), 점이 선의 시작점에 와서 "여기서 다시"를 짚습니다. 바로 다시 긁을 수 있어요.'}
   }
   if(step==='reject'){setText(['결제가 승인되지','않았어요'],['다른 카드로 결제하거나','직원에게 문의해 주세요.']);show('btns',true);setButtons([['다른 카드로 결제',true,1150,null],['다른 결제 방법',false,1360,null]]);placeICcard(0);act.textContent='처음부터';
     hint.textContent=st.failNew?'새 안: 반전(면 전환) 없이, 점(확인)을 거두고 큰 호는 모서리 조연으로 물러납니다. 마침표가 없다 = 끝나지 않았다.':'원안: 거절 화면에는 그래픽을 쓰지 않습니다(신뢰).';placeMS(0,false)}
+  showAttract(step==='select'&&st.attract);if(OPT.road)placeRoad();show('road',OPT.road&&step==='fail');$('readTiles').setAttribute('opacity',0);
+  try{infoUpdate(step)}catch(e){console.error(e)}speak(step);
 }
 function showCap(step){const c=$('cap');if(!c)return;const i=STEPS.findIndex(s=>s[0]===step),S=STEPS[i];if(!S)return;
   $('capN').textContent=String(i+1).padStart(2,'0');$('capT').textContent=S[1].replace(' ★','');$('capR').textContent=S[2].replace(/^#[0-9A-F]{6}\s*·\s*/i,'').replace(/^(흰색|검정)\s*·\s*/,'');
   c.classList.remove('in');void c.offsetWidth;c.classList.add('in')}
-function start(){st.tries=0;st.retry=false;st.msErr=false;go('prompt')}
+function start(){st.tries=0;st.retry=false;st.msErr=false;st.msFails=0;st.attract=false;go('prompt')}
 function insert(){if(st.step!=='prompt')return;st.insP=0;st.manual=false;go('insert')}
 
 // 손으로 카드 넣기: 결제 방법 선택 · 넣기 안내 화면에서 리더의 카드를 투입구 쪽으로 끌면 바로 결제 중으로
@@ -587,7 +709,7 @@ el.addEventListener('pointerup',()=>{
   st.manual=false;if(st.insP<.3){st.insP=0;go(d.from==='select'?'select':'prompt')} // 덜 넣고 놓으면 되돌아감
 });});
 $('reset').onclick=reset;
-function reset(){st.auto=false;st.drag=null;go('select')}
+function reset(){st.auto=false;st.scen='';syncScen();st.drag=null;st.attract=OPT.idle;go('select')}
 
 // ---------- 긁기 ----------
 function svgPt(e){const s=$('kiosk'),p=s.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(s.getScreenCTM().inverse())}
@@ -608,16 +730,16 @@ function moveCard(x,now){
 function finishSwipe(){
   const dt=(st.headOut-st.headIn)/1000;const mmps=dt>0?(CARD_L/U)/dt:Infinity;const ips=mmps/25.4;st.v=mmps*U; // 화면 단위/초
   $('rSpeed').textContent=isFinite(ips)?`${ips.toFixed(1)} in/s · ${Math.round(mmps)} mm/s`:'—';
-  if(!(ips>=3&&ips<=60)){failSwipe(ips<3?`조금 더 빠르게 긁어 주세요. (${ips.toFixed(1)} in/s)`:`조금 더 천천히 긁어 주세요. (${ips.toFixed(0)} in/s)`);return}
-  st.drag=null;st.msErr=false;st.authStart=performance.now();st.shrinkFrom=null;go('auth');
+  if(!(ips>=3&&ips<=60)){failSwipe(ips<3?COPY.slow:COPY.fast);return} // 11-10: 손님 화면엔 숫자 없음(수치는 패널 운영 지표에만)
+  st.drag=null;st.msErr=false;st.msFails=0;st.authStart=performance.now();st.shrinkFrom=null;go('auth');
   setTimeout(()=>{if(st.step==='auth')go(st.ok?'done':'reject')},Math.max(+apT.value,collabActive()?1.05:0)*1000); // 협업: 별빛이 좌→우로 쏵 지나가 도착할 시간(최소 1.05초)
 }
 // 인식 실패: 헤드를 지나간 긁기만 '실패'로 봄. 헤드 전에 손을 떼면 조용히 안내로 돌아감
 function failSwipe(why){st.drag=null;const swiped=st.headIn!==null;
   if(!swiped){go('fail');return}
-  st.msErr=true;if(st.failNew){st.missKind='ms';st.missWhy=why||'끝까지 한 번에 긁어 주세요.';st.missLine=st.line?{...st.line}:null;go('miss')}else go('fail')}
+  st.msErr=true;st.msFails++;if(st.failNew){st.missKind='ms';st.missWhy=why||COPY.missDefault;st.missLine=st.line?{...st.line}:null;go('miss')}else go('fail')}
 function autoSwipe(){
-  if(!(st.step==='fail'||st.step==='miss'))return;beginSwipe();const v=+sp.value*25.4*U/1000; // 단위/ms
+  if(!(st.step==='fail'||st.step==='miss'))return;beginSwipe();const slowB=st.auto&&st.scen==='B'&&!st.scenFailed;if(slowB)st.scenFailed=true;const v=(slowB?2:+sp.value)*25.4*U/1000; // 단위/ms — 시연 B: 첫 긁기만 너무 느리게(2 in/s) → 인식 실패
   const x0=st.card.x,t0=performance.now();
   const tick=now=>{if(st.step!=='swipe')return;moveCard(x0+(now-t0)*v,now);if(st.step==='swipe')requestAnimationFrame(tick)};requestAnimationFrame(tick);
 }
@@ -936,8 +1058,48 @@ function ringD(cx,cy,a0,a1){const R_=RING,x0=cx+R_*Math.cos(rad(a0)),y0=cy+R_*Ma
 const MG=document.createElementNS(NS,'g');MG.id='mascot';
 MG.innerHTML='<clipPath id="mPlateClip"><circle r="200"/></clipPath><clipPath id="mKoClip"><circle r="220"/></clipPath><circle id="mPlate" r="200" fill="none"/><path id="mUp" fill="none" stroke-linecap="butt"/><path id="mKoX" fill="none" stroke-linejoin="round" clip-path="url(#mKoClip)"/><path id="mKoX2" fill="none" stroke-linejoin="round" clip-path="url(#mPlateClip)"/><path id="mX"/><path id="mKoL" fill="none" clip-path="url(#mKoClip)"/><path id="mKoL2" fill="none" clip-path="url(#mPlateClip)"/><path id="mLo" fill="none" stroke-linecap="butt"/>';
 $('hdr').parentNode.appendChild(MG);
+// ===================== 11-10 발전: 결정 후보 그래픽(전부 기본 꺼짐) =====================
+const mkS=(tag,at,par)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);if(par)par.appendChild(e);return e};
+// ① 대기 장면(#idle=1): 검정 바탕 벤토 4칸(R 34 · 틈 16). A = 매장 문구 자리 · B = 숨 쉬는 SLiP 로고 · C = E1–E4 크기 위계 · D = 카드 틈 패턴
+const ATT=mkS('g',{id:'attract',style:'display:none'});
+{const A=ATT;
+  mkS('rect',{x:80,y:380,width:920,height:620,rx:34,fill:'#FFFFFF'},A);
+  mkS('text',{x:128,y:860,'font-size':72,fill:'#111111'},A).textContent='화면을 눌러';
+  mkS('text',{x:128,y:957,'font-size':72,fill:'#111111'},A).textContent='주문을 시작하세요';
+  mkS('rect',{x:80,y:1016,width:452,height:824,rx:34,fill:'#A9D8FF'},A);
+  mkS('rect',{x:548,y:1016,width:452,height:404,rx:34,fill:'#DCDCDA'},A);
+  // E1–E4 = 별(십자)만, 팔 길이 1 · 1.5 · 2 · 3배. 곡률 60.7 그대로, 같은 비율 크기만
+  [[195.6,.5,680,1190],[130.4,.42,880,1130],[97.8,.36,862,1312],[65.2,.3,950,1350]].forEach(([a,k,x,y])=>mkS('path',{d:crossD(HW0,{u:a,r:a,d:a,l:a}),transform:`translate(${x} ${y}) scale(${k})`,fill:'#111111'},A));
+  const cp=mkS('clipPath',{id:'attClip'},A);mkS('rect',{x:548,y:1436,width:452,height:404,rx:34},cp);
+  const D=mkS('g',{'clip-path':'url(#attClip)'},A);const tw=200,th=tw/1.586,tg=16;
+  for(let y=1436-40;y<1840;y+=th+tg)for(let x=548-60;x<1000;x+=tw+tg)mkS('rect',{x:f2(x),y:f2(y),width:tw,height:f2(th),rx:f2(tw*.0371),fill:'#D4ECFF'},D);
+}
+MG.before(ATT);
+const ATT_LOGO={x:306,y:1428,s:.6};
+function showAttract(on){ATT.style.display=on?'':'none';if(on)show('slotLabel',false)}
+// ② 긁는 길 면(#road=1): 팔 아래 바닥 띠 680 × 56, R 28, #A9D8FF. 움직이지 않음
+const ROAD=mkS('rect',{id:'road',rx:28,fill:'#A9D8FF',style:'display:none'});MG.before(ROAD);
+function placeRoad(){const V=st.msV;if(V){ROAD.setAttribute('x',MSVX-28);ROAD.setAttribute('y',692);ROAD.setAttribute('width',56);ROAD.setAttribute('height',736)}else{ROAD.setAttribute('x',172);ROAD.setAttribute('y',1372);ROAD.setAttribute('width',736);ROAD.setAttribute('height',56)}}
+// ③ IC 읽는 중 카드 4장 틈(#read=tiles): 로고 둘레 카드 4장 — 안쪽 모서리 반지름 = 60.7 × 로고 배율, 장 사이 틈 = 막대 굵기 × 배율 → 네 모서리가 만나는 빈자리가 로고의 별
+const RT=mkS('g',{id:'readTiles',opacity:0});{const cp=mkS('clipPath',{id:'rtClip'},RT);mkS('rect',{id:'rtWin'},cp);const g=mkS('g',{'clip-path':'url(#rtClip)'},RT);for(let i=0;i<4;i++)mkS('rect',{class:'rtT',fill:'#D4ECFF'},g)}
+MG.before(RT);
+function readTilesFrame(t){
+  if(!OPT.tiles||st.step!=='read'){return}
+  const o=clamp((t-.5)/.4,0,1);RT.setAttribute('opacity',o.toFixed(3));if(o<=0)return;
+  const s=M.s,cx=M.x,cy=M.y,g=Math.max(0,M.hw)*s,r=MR*s,W=1633.94*s,H=1030.37*s;
+  const w=$('rtWin');w.setAttribute('x',f2(cx-M.l*s));w.setAttribute('y',f2(cy-M.u*s));w.setAttribute('width',f2((M.l+M.r)*s));w.setAttribute('height',f2((M.u+M.d)*s));w.setAttribute('rx',f2(r));
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sy],i)=>{const e=RT.querySelectorAll('.rtT')[i];e.setAttribute('x',f2(sx<0?cx-g-W:cx+g));e.setAttribute('y',f2(sy<0?cy-g-H:cy+g));e.setAttribute('width',f2(W));e.setAttribute('height',f2(H));e.setAttribute('rx',f2(r))});
+}
+// ④ 승인 완료 틈 패턴(#donepat=1): 카드 비율 타일 #A9D8FF 4열 × 2줄(틈 16, R 34) — 글 여백 80 안, 아래 끝 y 720. 머리(로고 줄)는 비움(파랑 위 흰 로고 금지)
+const DP=mkS('g',{id:'donePat',style:'display:none'});{const tw=(920-48)/4,th=tw/1.586;for(let r=0;r<2;r++)for(let c=0;c<4;c++)mkS('rect',{x:f2(80+c*(tw+16)),y:f2(720-(2-r)*th-(1-r)*16),width:f2(tw),height:f2(th),rx:34,fill:'#A9D8FF',opacity:0,'data-r':r},DP)}
+$('doneT').before(DP);
+function donePatFrame(t){
+  const on=OPT.donepat&&st.step==='done';DP.style.display=on?'':'none';if(!on)return;
+  const t0=collabActive()?1.0:.75;
+  DP.querySelectorAll('rect').forEach(e=>{const r=+e.getAttribute('data-r'),u=reduce?(t>t0?1:0):clamp((t-t0-r*.08)/.3,0,1);e.setAttribute('opacity',u.toFixed(3));e.setAttribute('transform',`translate(0 ${f2(-3*(1-u))})`)});
+}
 // 결제 실패 전환용 '별 프레임': 화면을 덮는 면 + 별 모양 창(evenodd). 창의 오목 모서리 반지름은 늘 60.7(곡률 고정), 직선 변만 늘어남
-const RF=document.createElementNS(NS,'path');RF.id='rejFrame';RF.setAttribute('fill','#111111');RF.setAttribute('fill-rule','evenodd');RF.setAttribute('d','');
+const RF=document.createElementNS(NS,'path');RF.id='rejFrame';RF.setAttribute('fill',OPT.rejcover?'#DCDCDA':'#111111'); /* 11-10 후보(#rejcover=gray): 덮개 Wait Gray */RF.setAttribute('fill-rule','evenodd');RF.setAttribute('d','');
 {const g=document.createElementNS(NS,'g');g.setAttribute('transform','translate(80 80)');g.setAttribute('clip-path','url(#screenClip)');g.appendChild(RF);$('kiosk').appendChild(g)} // 버튼 · 매장 로고까지 덮도록 화면 맨 위 층
 // 오목 모서리 패널(별 = hx=hy=막대 반폭일 때): 윗변 폭 2hx, 옆변 높이 2hy, 네 모서리는 반지름 r로 안쪽으로 파임
 function panelD(cx,cy,hx,hy,r){const X=v=>f2(cx+v),Y=v=>f2(cy+v);
@@ -963,7 +1125,7 @@ function mascotFrame(now,t,s,dt){
   let T, exact={};
   const look=P().look, armK=look[1]>0?'d':look[0]>0?'r':'l';
   const CS=brand?SLOT():{x:960,y:150,s:.2}; // 매장 로고가 있으면 오른쪽 위 SLiP 심볼 자리 · 크기에 앉음
-  if(s==='select'){T=base(CS.x,CS.y,CS.s,{hw:HW0+.8*Math.sin(t*2.2)*calm})}
+  if(s==='select'){const P_=st.attract?ATT_LOGO:CS;T=base(P_.x,P_.y,P_.s,{hw:HW0+.8*Math.sin(t*2.2)*calm})} // 대기 장면이면 B칸에서 같은 숨 쉬기
   else if(s==='prompt'||s==='insert'){
     // 크기는 같은 비율로만 줄임(곡률 · 고리 · 끊김 비율 그대로). 팔 길이 · 간격은 손대지 않음
     const side=st.pos!=='down',sl=P().slot,S=.35;let tg,dx,dy,D;
@@ -975,7 +1137,7 @@ function mascotFrame(now,t,s,dt){
       const C=brand?CS:{x:540,y:1250,s:.7},m=ease(clamp(tp/.9,0,1)); // 오른쪽 위 제자리에서 투입구 쪽으로 내려옴
       const my=ease(clamp(tp/.75,0,1)),mx=brand?ease(clamp((tp-.45)/.45,0,1)):m; // 세로 먼저(오른쪽 가장자리 따라) → 글자 아래에서 투입구 쪽으로 가로
       T=base(lerp(C.x,D.x,mx),lerp(C.y,D.y,my),lerp(C.s,S,m));
-      const ph=Math.max(0,tp-1.0)%1.4,poke=tp>1.0?Math.pow(Math.sin(Math.PI*clamp(ph/.45,0,1)),2)*calm:0;
+      const pk=Math.max(0,tp-1.0),ph=pk<1.4*4?pk%1.4:(pk-1.4*4)%4.0,poke= /* 11-10: 처음 4번은 1.4초마다, 그 뒤엔 4초마다(콕 모양 · 속도 그대로, 간격만) */tp>1.0?Math.pow(Math.sin(Math.PI*clamp(ph/.45,0,1)),2)*calm:0;
       T.x+=dx*42*poke;T.y+=dy*42*poke;
       // 11-08: 고리(호)는 움직이지 않음 — 심볼 모양 그대로
       exact.x=exact.y=exact.s=1;
@@ -1006,13 +1168,14 @@ function mascotFrame(now,t,s,dt){
     T=base(gs.x,gs.y,S,{rot:(V?90:0)});
     // 부드럽게(탕탕 튀지 않게): 쉼 → 오른팔이 긁는 길을 따라 천천히 뻗음(가속 · 감속, 튀어 나가거나 되튀지 않음) → 잠깐 머묾 → 천천히 거둠 → 반복
     // 뻗는 시간 = 실제 긁기 시간(길이 ÷ 속도)을 바탕으로 하되 최소 1.1초. 예비 동작(움츠림)과 되튐(스프링)은 뺌
-    const run=Math.max(1.1,len/v),rest=1.0,hold=.5,back=1.0,cyc=rest+run+hold+back,c=t%cyc;
+    const run=Math.max(1.1,len/v),rest=1.0,hold=.5,back=1.0,cyc=rest+run+hold+back,REST2=5.0,c2=(t-3*cyc)%(cyc-rest+REST2),c=t<3*cyc?t%cyc:(c2<REST2?0:c2-REST2+rest); // 11-10: 3번 보여 준 뒤엔 쉼 1초 → 5초(동작 모양 그대로)
     const sm=k=>k*k*(3-2*k); // 부드러운 가속 · 감속
     let e=0;
     if(c<rest)e=0;
     else if(c<rest+run)e=sm((c-rest)/run);
     else if(c<rest+run+hold)e=1;
     else e=1-sm((c-rest-run-hold)/back);
+    if(reduce)e=1; // 11-10 움직임 줄이기: 팔을 뻗은 그림으로 정지
     T.r=ARM0.r+e*len/S;exact.r=1;T.u=T.d=ARM0.u*(1-.12*e);
   }
   else if(collabActive()&&(s==='swipe'||s==='auth')){ // 인식 실패(miss)는 협업 여부와 상관없이 기본 도리도리 모션
@@ -1053,7 +1216,7 @@ function mascotFrame(now,t,s,dt){
   }
   else if(s==='miss'){
     // 긁기 인식 실패: "괜찮아요" — 고개를 도리도리(점점 잦아듦) 하고, 긁는 길 시작점에서 작게 통통
-    T=base(200,1250,.45);T.rot=14*wob(t,11,2.6)*calm;const beat=t>1?Math.pow(Math.max(0,Math.sin((t-1)*Math.PI/1.2)),6):0;
+    T=base(200,1250,.45);T.rot=(OPT.miss3&&st.msFails>=3?0:14*wob(t,11,2.6))*calm; /* 11-10 후보(#miss3=calm): 3번째부터 도리도리 없이 통통만 */const beat=t>1?Math.pow(Math.max(0,Math.sin((t-1)*Math.PI/1.2)),6):0;
     T.hw=HW0*(1+.6*beat*calm);T.d=ARM0.d*(1-.12*beat*calm);T.u=ARM0.u*(1+.12*beat*calm);
   }
   else if(s==='reject'){
@@ -1069,7 +1232,7 @@ function mascotFrame(now,t,s,dt){
   // 바탕색
   // 단계 색은 배경에만. 평소 바탕은 흰색이고, 파란 단계로 화면이 바뀌는 순간에만 가운데에서 원형 그라데이션이 번져 나가며(0.35초) 은은하게 사라짐(1.1초)
   const stepC=PAL[s]||'#FFFFFF',logoMode=false,blue=s!=='done'&&stepC!=='#FFFFFF';
-  const tgt=hx2(s==='done'?'#000000':stepC); // 결제 단계 색(연한 파랑)을 바탕에 그대로 깔기
+  const tgt=hx2(s==='done'||(s==='select'&&st.attract)?'#000000':stepC); // 결제 단계 색(연한 파랑)을 바탕에 그대로 깔기
   if(blue){const wc=hx2(stepC);washC=washC.map((c,i)=>lerp(c,wc[i],1-Math.exp(-6*dt)))}
   const wt=t/(WAIT?.6:1); // 실제 지난 시간
   // 로고 자리를 중심으로, 로고 크기에 비례해 번짐(로고 반지름 ×1 → ×4.5) → '여기를 보세요' 위치 단서. 모양은 늘 같은 정원.
@@ -1093,6 +1256,9 @@ function mascotFrame(now,t,s,dt){
   // 고리 끊김(넉아웃)은 바탕색으로 칠함 → 로고 자리(높이)의 그라데이션 색을 계산해 맞춤
   let bgNow=s==='done'&&t>.05?'#000000':rgbS(bgC);
   if(s!=='done'&&washA>.002){const u=clamp((Math.hypot(M.x-washX,M.y-washY)+RING*M.s)/Math.max(1,washR),0,1), /* 고리가 지나는 거리에서의 색 */op=washA*(u<.5?1:lerp(1,0,(u-.5)/.5));bgNow=rgbS(bgC.map((c,i)=>lerp(c,washC[i],op)))}
+  if(s==='select'&&st.attract)bgNow='#A9D8FF'; // 대기 장면: 로고가 B칸(#A9D8FF) 위
+  else if(s==='read'&&OPT.tiles&&+RT.getAttribute('opacity')>.5)bgNow='#D4ECFF'; // 카드 4장 위
+  else if(s==='fail'&&OPT.road)bgNow='#A9D8FF'; // 긁는 길 면 위
   // 그리기
   const ink=M.ink>.5?'#ffffff':(logoMode?rgbS(plC):'#111111');
   MG.setAttribute('transform',`translate(${f2(M.x)} ${f2(M.y)}) rotate(${f2(M.rot)}) scale(${f2(M.s*1000)/1000})`);
@@ -1113,7 +1279,8 @@ function mascotFrame(now,t,s,dt){
   if(s==='reject'){
     const rt=t/(WAIT?.6:1);
     if(!rejFrom)rejFrom={x:M.x,y:M.y,s:Math.max(.15,M.s)};
-    if(rt<1.05){
+    if(reduce){RF.setAttribute('d','');MG.setAttribute('opacity',clamp(rt/.4,0,1).toFixed(3))} // 11-10 움직임 줄이기: 별 프레임 없이 로고만 페이드
+    else if(rt<1.05){
       // 덮기 0.18초 → 로고 모양 창(별 + 십자, 반지름 60.7 고정)이 로고 자리에서 나타나 가운데로(0.25초) → 십자 팔이 화면 끝까지 뻗음(0.3초) → 막대 틈이 벌어지며 곡률 면 네 개가 바깥으로 물러남(0.42초)
       const cov=ease(clamp(rt/.18,0,1)),ea=ease(clamp((rt-.08)/.25,0,1));
       const r=MR,cx=lerp(rejFrom.x,540,ea),cy=lerp(rejFrom.y,960,ea);
@@ -1216,7 +1383,7 @@ function sparkFrame(s,t,c,dt){
 const BITS=Array.from({length:10},(_,i)=>({a:rad(i*36+18+(i%2?9:-6)),d:240+90*((i*7)%3),s:.16+.06*((i*5)%3)}));
 function flashFrame(s,t){
   const fs=$('flStar'),fb=$('flBloom'),bits=$('flBits').children;
-  if(!(s==='done'&&collabActive())||t>1.6){if(fs.getAttribute('d')){fs.setAttribute('d','');fb.setAttribute('r',0);for(const b of bits)b.setAttribute('opacity',0)}return}
+  if(!(s==='done'&&collabActive())||t>1.6||reduce){if(fs.getAttribute('d')){fs.setAttribute('d','');fb.setAttribute('r',0);for(const b of bits)b.setAttribute('opacity',0)}return}
   const cx=SP.end?SP.end.x:FX(),cy=SP.end?SP.end.y:FY(); // 빨대(세로)는 꽂힌 자리에서 전환
   // ① 별이 확 커지며(0.62 → 1) 십자 빛줄기가 화면 끝까지(0.2초) ② 막대 틈이 벌어져 화면 전체가 하얗게(0.12~0.42초) ③ 흰 빛이 걷힘(0.5~0.95초)
   const ea=clamp(t/.2,0,1),arm=lerp(MR,2600,ea*ea);
@@ -1236,7 +1403,7 @@ let lastNow=performance.now();
 function frame(now){
   const t=(now-st.t0)/1000, s=st.step, dt=Math.min(.05,(now-lastNow)/1000);lastNow=now;
   let corner=null,cDot=0,hero=null,hDot=null,ghost=null;
-  if(s==='select'){corner=CORNER;cDot=CORNER.dr;if(t>1&&!st.icDrag)start()} // 1초 정지 → 넣기 안내로
+  if(s==='select'){corner=CORNER;cDot=CORNER.dr;if(t>1&&!st.icDrag&&!st.attract)start()} // 1초 정지 → 넣기 안내로
   if(s==='prompt'){
     // 모서리 심볼이 눈 자리로 → 점이 투입구 쪽을 봄
     const tp=st.retry?t+1.3:t; // 재시도: 쉬고 난 뒤라 바라보기를 건너뛰고 바로 빠르게 내려감
@@ -1308,7 +1475,7 @@ function frame(now){
     hero={x:EYE.x,y:EYE.y,r:EYE.r,sw:EYE.sw};
     const blink=t>.45&&t<1.15?Math.pow(Math.sin(Math.PI*(t-.45)/.7),2):0; // 천천히 눈 감았다 뜨기(0.7초) = 쉬는 숨
     hDot={x:EYE.x,y:EYE.y,r:EYE.dr*(1-blink)};
-    if(t>=1.45){st.retry=true;go('prompt')} // 깜빡 뒤 0.3초만 쉼 → 바로 다시 안내(빠르게 내려감)
+    if(t>=3.5){st.retry=true;go('prompt')} // 11-10: 1.45 → 3.5초(두 줄을 다 읽고 카드를 뺄 시간). 깜빡 모션은 그대로, 쉼만 늘어남 // 깜빡 뒤 0.3초만 쉼 → 바로 다시 안내(빠르게 내려감)
   }
   if(s==='miss'&&st.missKind==='ms'){
     // 호는 그대로(주연 유지) 가늘어지고, 긁은 선은 그 자리에 가는 흔적으로 → 점이 선의 시작점에 와서 박동
@@ -1323,14 +1490,15 @@ function frame(now){
   if(s==='done'){ // 호는 사라지고, 점 자리에서 글자가 왼쪽으로 펼쳐지며 점은 마침표로 줄어듦
     hero=null;
     // 면 전환: 점이 화면 전체를 덮는 검은 면으로 번짐 → 흑백 반전. 가운데 흰 점이 남아 마침표가 되고, 그 자리에서 흰 글자가 펼쳐짐
-    const fl=clamp(t/.6,0,1),fe=fl<1?1-Math.pow(1-fl,3):1;setDot('flood',FX(),FY(),lerp(ASW/2,2400,fe));
+    const fl=clamp(t/.6,0,1),fe=reduce?1:fl<1?1-Math.pow(1-fl,3):1;setDot('flood',FX(),FY(),lerp(ASW/2,2400,fe));$('flood').setAttribute('opacity',reduce?clamp(t/.3,0,1).toFixed(3):1); // 움직임 줄이기: 번짐 대신 0.3초 페이드
     const r=ease(clamp((t-.2)/.45,0,1));setDot('period',FX(),FY(),lerp(0,12,r));
     const rv=ease(clamp((t-.3)/.6,0,1)),rx=lerp(FX(),0,rv);const R=$('revealRect');R.setAttribute('x',rx);R.setAttribute('width',FX()+20-rx);
-    if(rv>=1){R.setAttribute('x',0);R.setAttribute('width',1080)}
+    if(rv>=1||reduce){R.setAttribute('x',0);R.setAttribute('width',1080)}
+    if(OPT.slogan)$('doneSlogan').setAttribute('opacity',clamp((t-1.5)/.4,0,1).toFixed(3));
   }
   if(s==='swipe'||s==='auth'||(s==='miss'&&st.missKind==='ms'))hero=VA(hero);
   const cOn=drawCollab(s,t);if(cOn&&(s==='swipe'||s==='auth'||s==='miss')){hero=null}
-  sparkFrame(s,t,cOn?lastCollab:null,dt);flashFrame(s,t);
+  sparkFrame(s,t,cOn?lastCollab:null,dt);flashFrame(s,t);donePatFrame(t);
   // 매장 이름 글자색: 바탕이 어두우면 흰색 (B 바탕, A의 승인 검정 면) — 로고 표식과 영문은 매장 색 그대로
   if(brand)refreshLogo(false);
   // 적용 — 목표값을 부드럽게 따라감. 사라질 때는 그 자리에서 굵기 · 크기만 0으로.
@@ -1362,19 +1530,87 @@ function frame(now){
     if(s==='select'&&t>.8)start();
     else if(s==='prompt'&&t>(st.retry?1.2:1.4))insert();
     else if((s==='fail'||(s==='miss'&&st.missKind==='ms'))&&t>1.4)autoSwipe();
-    else if((s==='done'||s==='reject')&&t>2.6)go('select');
+    else if((s==='done'&&t>5.0)||(s==='reject'&&t>2.6))go('select'); // 11-10: 승인 화면 5초(주문번호 볼 시간), 거절 2.6초
   }
-  mascotFrame(now,t,s,dt);
+  mascotFrame(now,t,s,dt);readTilesFrame(t);if(s==='swipe'||s==='auth')metricsUpdate();
   requestAnimationFrame(frame);
 }
 
+// ===================== 11-10 발전: 오른쪽 고객용 설명 패널 · 진행 띠 · 자동 시연 · 음성 (키오스크 화면 밖) =====================
+const INFO={
+  select:['매장 화면 그대로입니다. SLiP 심볼은 오른쪽 위에서 작게 숨 쉬며 기다립니다.','평소 결제를 SLiP이 지배하지 않음 → 매장 로고 · 매장 색 버튼이 주인공'],
+  prompt:['로고가 투입구 바로 위로 내려와 "여기"를 콕 짚고, 고리(눈)가 투입구를 봅니다.','"어디에 넣지?" → 글과 위치를 짚는 몸짓. 4번 짚은 뒤엔 4초 간격으로 잦아들어 재촉하지 않음'],
+  insert:['카드가 들어가는 방향 그대로 로고가 쏙 다가가 꿀꺽 받습니다.','"들어갔나?" → 넣는 순간 바로 반응'],
+  read:['고리가 별 둘레를 돌며 기다림을 채웁니다. 결제 금액은 계속 보입니다.','"얼마 결제되지?" → 금액 줄 유지, 일반 스피너보다 덜 지루한 기다림'],
+  fail:['로고의 팔이 실제 긁기 속도로 홈을 따라 뻗어, 말 대신 동작으로 보여 줍니다.','"내 카드가 고장 났나?" 당황 → 빨강 경고 대신 물빛 바탕 · 탓하지 않는 문구 · 검은 띠 방향 안내'],
+  swipe:['긁는 앞끝을 로고(협업 장면에선 별빛)가 그대로 따라갑니다. 매장마다 다른 장면.','"제대로 긁고 있나?" → 손과 화면이 같은 속도로 움직이고, 아래 한 줄 안내'],
+  auth:['긁은 속도 그대로 몸이 미끄러져(SLiP) 마침표 자리로 갑니다.','"결제가 됐나?" 불안 → "결제하고 있어요" 한 줄, 움직임은 승인 응답 시간 안에서만'],
+  done:['검은 면이 번지고 흰 로고가 문장 끝 마침표가 됩니다.','"끝났나?" → 마침표 = 끝. 카드 · 영수증 챙기기 안내'],
+  miss:['로고가 도리도리("괜찮아요") 한 뒤 시작점에서 통통 — 바로 다시 긁을 수 있습니다.','민망함 → 기계가 책임지는 말투, 숫자 없는 안내. 세 번째부터는 다른 카드 · 직원 안내'],
+  reject:['별 프레임 전환 뒤 화면을 비우고, 로고는 모서리로 물러납니다(마침표 없음 = 끝나지 않음).','결제 실패의 당혹 → 빨강 없이, 다음 행동 두 가지 버튼'],
+};
+const GEN={fail:['IC 오류. 마그네틱을 사용하십시오.','카드를 빼고 긁어 주세요 + 팔 뻗기 시범','① 경고색 없음 ② 탓하지 않는 말 ③ 말 대신 동작'],
+  miss:['카드 읽기 오류. 다시 시도하십시오.','한 번 더 긁어 주세요 + 도리도리','① 숫자 · 오류 코드 없음 ② 같은 자리에서 바로 다시'],
+  reject:['승인 거절. (오류 05)','결제가 승인되지 않았어요 + 다음 행동 두 버튼','① 빨강 없음 ② 오류 코드 대신 다음 행동']};
+const VOICE={prompt:'카드를 투입구에 넣어 주세요',missic:'칩을 읽지 못했어요. 카드를 빼서 다시 넣어 주세요',fail:'카드를 빼고, 검은 띠가 아래로 가게 잡고, 아래 홈에 한 번 긁어 주세요',
+  auth:'결제하고 있어요',done:'결제되었습니다. 카드와 영수증을 챙겨 가세요',miss:'한 번 더 긁어 주세요',reject:'결제가 승인되지 않았어요. 다른 카드로 결제하거나 직원에게 문의해 주세요'};
+let voiceOn=OPT.voice;
+function speak(step){if(!voiceOn||!window.speechSynthesis)return;const k=step==='miss'&&st.missKind==='ic'?'missic':step,v=VOICE[k];if(!v)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(v);u.lang='ko-KR';u.rate=.95;speechSynthesis.speak(u)}catch(e){}}
+function screenSay(step){
+  if(step==='select'&&st.attract)return '(대기 장면) 화면을 눌러 / 주문을 시작하세요';
+  const L=[...$('txt').querySelectorAll('text')].map(t=>t.textContent).filter(Boolean);
+  if(step==='done')L.push($('doneTitle').textContent,'주문번호 128',$('doneSub').textContent);
+  const B=[...($('btns').style.display==='none'?[]:$('btns').querySelectorAll('text')),...$('brandBtns').querySelectorAll('text')].map(t=>'['+t.textContent+']');
+  return [...L,...B].join(' / ')||'—';
+}
+function tryText(step){const c=$('coach').textContent;return c||(step==='swipe'?'카드를 놓지 말고 끝까지 끌어 보세요.':'잠깐 기다리면 다음 단계로 넘어갑니다.')}
+function metricsUpdate(){const a=collabActive()?Math.max(0,1.05-(+apT.value)):0;$('mTry').textContent=st.tries;$('mSpd').textContent=($('rSpeed').textContent||'—').split(' · ')[0];
+  $('mAdd').textContent='+'+a.toFixed(1)+'초';
+  $('mNote').textContent=collabActive()?`협업 장면의 승인 대기 최소 1.05초는 승인 응답 시간(지금 설정 ${(+apT.value).toFixed(1)}초) 안에서 겹치므로, 응답이 1.05초보다 빠를 때만 차이가 납니다.`:'협업 장면이 없는 매장은 SLiP이 결제 시간에 더하는 시간이 없습니다.'}
+const prog=$('prog');
+STEPS.forEach(([k,n],i)=>{const b=document.createElement('button');b.dataset.k=k;b.title=n.replace(' ★','');b.innerHTML=`<i></i>${String(i+1).padStart(2,'0')}`;b.onclick=()=>jumpStep(k);prog.appendChild(b)});
+{const f=document.createElement('span');f.className='fb';f.textContent='SLiP이 활약하는 구간(05–09)';prog.appendChild(f)}
+function jumpStep(k){st.auto=false;st.scen='';syncScen();st.attract=false;st.ok=k!=='reject'?st.ok:st.ok;
+  if(k==='insert'){go('prompt');st.insP=.5;st.manual=true;go('insert')}else{if(k==='miss')st.missKind='ms';if(k==='fail'){placeICcard(0,false)}go(k)}
+  if(k==='swipe'){placeMS(GROOVE_X0-CARD_L+30+.6*840);st.v=+sp.value*25.4*U}}
+function infoUpdate(step){
+  const i=STEPS.findIndex(s=>s[0]===step),S=STEPS[i];if(!S)return;
+  prog.querySelectorAll('button').forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('past',j<i)});
+  $('iStep').textContent=String(i+1).padStart(2,'0')+' '+S[1].replace(' ★','')+(step==='miss'&&st.missKind==='ic'?' (칩)':'');
+  $('iSay').textContent=screenSay(step);const I=INFO[step]||['',''];$('iDo').textContent=I[0];$('iPain').textContent=I[1];
+  const G=GEN[step]&&!(step==='miss'&&st.missKind==='ic');$('iCmpW').hidden=!G;if(G){$('iGen').textContent=GEN[step][0];$('iSlp').textContent=GEN[step][1];$('iDiff').textContent=GEN[step][2]}
+  $('iTry').textContent=tryText(step);
+  $('iScene').textContent=brand&&COLLAB[brand]?'(지금: '+COLLAB[brand].name.split(' — ')[1]+')':'(이 매장은 장면 없음 → 기본 로고 모션)';
+  metricsUpdate();
+}
+function hlBrand(){const b=$('iBrand');b.classList.add('hl');clearTimeout(hlBrand.t);hlBrand.t=setTimeout(()=>b.classList.remove('hl'),3000);infoUpdate(st.step)}
+$('brandChips').addEventListener('click',()=>setTimeout(hlBrand,0));
+function setOk(v){st.ok=v;[['okB',v],['noB',!v],['okT',v],['noT',!v]].forEach(([id,p])=>$(id).setAttribute('aria-pressed',p))}
+$('okT').onclick=()=>setOk(true);$('noT').onclick=()=>setOk(false);$('okB').addEventListener('click',()=>setOk(true));$('noB').addEventListener('click',()=>setOk(false));
+function syncScen(){document.querySelectorAll('[data-scen]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scen===st.scen))}
+function startScenario(k){st.scen=k;st.auto=true;st.attract=false;st.scenFailed=false;setOk(k!=='C');syncScen();st.drag=null;go('select')}
+document.querySelectorAll('[data-scen]').forEach(b=>b.onclick=()=>{if(st.scen===b.dataset.scen){reset();return}startScenario(b.dataset.scen)});
+{const box=$('iScenes');Object.keys(BRANDS).filter(k=>k!=='custom'&&COLLAB[k]).forEach(k=>{const b=document.createElement('button');b.textContent=BRANDS[k].name+' · '+COLLAB[k].name.split(' — ')[1];
+  b.onclick=()=>{brand=k;chips();syncCollabUI();refreshLogo(true);st.scen='A';st.auto=true;st.attract=false;setOk(true);syncScen();st.tries=+tries.value;st.msErr=false;st.msFails=0;placeICcard(0,false);go('fail');hlBrand()};box.appendChild(b)})}
+{const T=$('vTab');Object.entries(VOICE).forEach(([k,v])=>{const r=T.insertRow();r.insertCell().textContent={missic:'칩 실패',prompt:'카드 넣기',fail:'폴백 안내',auth:'승인 중',done:'승인 완료',miss:'인식 실패',reject:'거절'}[k];r.insertCell().textContent=v});
+  $('vOn').checked=voiceOn;$('vOn').onchange=e=>{voiceOn=e.target.checked;if(voiceOn)speak(st.step)}}
+function shotLinks(){const box=$('iShots');box.innerHTML='';const b=brand||'none';
+  [['01 결제 방법','select',.5],['05 폴백 안내','fail',1],['06 긁는 중','swipe',.3],['08 승인 완료','done',3],['09 인식 실패','miss',2],['10 거절','reject',2.5]].forEach(([n,k,t])=>{
+    const a=document.createElement('a');a.textContent=n;a.target='_blank';a.href=`index.html#shot=1&brand=${b}&step=${k}&seek=${t}&demo=.5${st.msV?'&ms=v':''}`;box.appendChild(a)})}
+document.querySelector('#iShots').closest('details').addEventListener('toggle',shotLinks);
+{const box=$('iOpts'),L=[['rejbtn','brand','거절 화면 주 버튼을 매장 색으로(이전)'],['rejcover','gray','거절 덮개 회색'],['idle','1','대기 장면 벤토'],['donepat','1','승인 완료 틈 패턴'],['read','tiles','IC 읽는 중 카드 4장 틈'],['donecopy','haeyo','승인 문장 "결제됐어요"'],['slogan','1','슬로건 맺음 문장'],['btn2','gray','보조 버튼 회색 면'],['road','1','긁는 길 면'],['miss3','calm','3번째 실패부터 도리도리 끄기'],['track','0','자간 이전 값(0)']];
+  L.forEach(([k,v,n])=>{const l=document.createElement('label');l.className='opt';const c=document.createElement('input');c.type='checkbox';c.checked=HQ.get(k)===v;
+    c.onchange=()=>{const h=new URLSearchParams(location.hash.slice(1));if(c.checked)h.set(k,v);else h.delete(k);if(brand)h.set('brand',brand);h.set('step',st.step==='insert'?'prompt':st.step);location.hash=h.toString();location.reload()};
+    l.append(c,document.createTextNode(n));box.appendChild(l)})}
 try{if(localStorage.getItem('slipVer')==='B')setVer('B');const sp_=localStorage.getItem('slipPos');if(POS[sp_]){st.pos=sp_;document.querySelectorAll('[data-pos]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pos===sp_))}}catch(e){}
 // 주소 뒤 #pos=right&ver=B&brand=navy&step=prompt 로 바로 열기 (비교 · 캡처용)
 try{const h=new URLSearchParams(location.hash.slice(1));if(POS[h.get('pos')]){st.pos=h.get('pos');document.querySelectorAll('[data-pos]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pos===st.pos))}
   if(h.get('ver')==='B')setVer('B');if(BRANDS[h.get('brand')]){brand=h.get('brand');chips();refreshLogo(true)}if(h.get('auto')==='1')st.auto=true;if(h.get('shot')==='1')document.documentElement.classList.add('shot');refreshLogo(true);if(h.get('brand')==='none')brand=null;if(h.get('color')==='logo'){colorMode='logo';document.querySelectorAll('[data-cmode]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.cmode==='logo'))}if(h.get('kink')==='0'){st.kink=0;document.querySelectorAll('[data-kink]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.kink==='0'))}if(h.get('ms')==='v'){st.msV=true;document.querySelectorAll('[data-ms]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.ms==='v'))}var hStep=h.get('step'),hP=h}catch(e){}
 syncCollabUI();
 try{const sel=!!(hP&&hP.get('brand')==='custom'),j=localStorage.getItem(CUSTOM_KEY),o=localStorage.getItem(OLD_KEY);if(j)setCustom(JSON.parse(j),sel);else if(o)setCustom(o,sel)}catch(e){}
-layoutSlot();go('select');if(hStep&&hStep!=='select'){if(hStep==='insert'){go('prompt');st.insP=.5;st.manual=true;go('insert')}else go(hStep);if(hStep==='swipe'){placeMS(GROOVE_X0-CARD_L+30+(+hP.get('demo')||.6)*840);st.v=+sp.value*25.4*U}}requestAnimationFrame(frame);
+st.attract=OPT.idle&&!st.auto&&(!hStep||hStep==='select');layoutSlot();go('select');if(hStep&&hStep!=='select'){if(hStep==='insert'){go('prompt');st.insP=.5;st.manual=true;go('insert')}else go(hStep);if(hStep==='swipe'){placeMS(GROOVE_X0-CARD_L+30+(+hP.get('demo')||.6)*840);st.v=+sp.value*25.4*U}}requestAnimationFrame(frame);
+{const sc=(hP&&hP.get('auto')||'').toUpperCase();if(/^[ABC]$/.test(sc))startScenario(sc)}
 if(reduce)$('hint').textContent+=' (모션 줄이기 설정이 켜져 있어 자동 재생은 직접 눌러야 시작합니다.)';
 })();
 </script>
